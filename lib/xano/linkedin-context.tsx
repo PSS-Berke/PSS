@@ -84,14 +84,18 @@ function linkedInReducer(state: LinkedInState, action: LinkedInAction): LinkedIn
     case 'UPDATE_SESSION_IN_PAGES':
       return {
         ...state,
-        pages: state.pages.map(page => ({
-          ...page,
-          records: Array.isArray(page.records) 
-            ? page.records.map((session: LinkedInSession) =>
-                session.id === action.payload.id ? action.payload : session
-              )
-            : page.records
-        }))
+        pages: state.pages.map(page => {
+          let records = page.records;
+          if (Array.isArray(page.records)) {
+            records = page.records.map((session: LinkedInSession) =>
+              session.id === action.payload.id ? action.payload : session
+            );
+          }
+          return {
+            ...page,
+            records
+          };
+        })
       };
     default:
       return state;
