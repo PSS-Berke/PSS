@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { UserButton } from "@stackframe/stack";
+import { useAuth } from "@/lib/xano/auth-context";
 import { LucideIcon, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -150,6 +150,7 @@ export default function SidebarLayout(props: {
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
 
   return (
     <div className="w-full flex">
@@ -185,11 +186,27 @@ export default function SidebarLayout(props: {
             </div>
           </div>
 
-          <UserButton
-            colorModeToggle={() =>
-              setTheme(resolvedTheme === "light" ? "dark" : "light")
-            }
-          />
+          <div className="flex items-center gap-2">
+            {user && (
+              <>
+                <span className="text-sm text-muted-foreground hidden md:block">
+                  {user.email}
+                </span>
+                <button
+                  onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
+                  className="text-sm hover:underline px-2 py-1 rounded"
+                >
+                  {resolvedTheme === 'dark' ? '☀️' : '🌙'}
+                </button>
+                <button
+                  onClick={() => logout()}
+                  className="text-sm hover:underline text-red-600 px-2 py-1 rounded"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex-grow">{props.children}</div>
       </div>

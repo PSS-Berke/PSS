@@ -1,0 +1,209 @@
+API Endpoints
+1. Create New Campaign
+Endpoint: GET /new_campaign
+Purpose: Creates a new LinkedIn campaign with specified parameters and initializes a session.
+Query Parameters:
+
+name (string, optional): Campaign name
+additional_notes (string, optional): Additional campaign notes
+tone (string, optional): Content tone (e.g., "professional", "casual", "friendly")
+content_length (integer, optional): Desired post length
+marketing_type (string, optional): Type of marketing content
+
+Response: Returns user information after campaign creation
+Example Usage:
+const createCampaign = async (campaignData) => {
+  const params = new URLSearchParams(campaignData);
+  const response = await fetch(`${baseUrl}/new_campaign?${params}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Usage
+const newCampaign = await createCampaign({
+  name: "Q4 Product Launch",
+  tone: "professional",
+  content_length: 300,
+  marketing_type: "product_announcement",
+  additional_notes: "Focus on key features and benefits"
+});
+
+2. Initiate New Session
+Endpoint: GET /initiate_new_session
+Purpose: Creates or retrieves a session for the current user. Handles session management including enabling/disabling sessions and creating default campaigns.
+Query Parameters:
+
+session_id (string, optional): Specific session ID to use
+
+Response: Returns the created/retrieved session object
+Behavior:
+
+If no active session exists, creates a new one
+If active session exists, disables it and creates a new one
+Automatically creates "Single Posts" campaign if none exists
+Generates random 15-character session ID if not provided
+
+Example Usage:
+const initiateSession = async (sessionId = null) => {
+  const url = sessionId 
+    ? `${baseUrl}/initiate_new_session?session_id=${sessionId}`
+    : `${baseUrl}/initiate_new_session`;
+    
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Usage
+const session = await initiateSession();
+
+3. Send Message
+Endpoint: POST /send_message
+Purpose: Sends a message to the AI assistant and stores both user prompt and AI response in the conversation history.
+Request Body:
+json{
+  "prompt": "string"
+}
+Response: Returns the AI-generated response
+Behavior:
+
+Creates session if none exists
+Stores user message with role "user"
+Processes message through AI agent (placeholder: "mvp:call_agent")
+Stores AI response with role "ai"
+Returns AI response content
+
+Example Usage:
+const sendMessage = async (prompt) => {
+  const response = await fetch(`${baseUrl}/send_message`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ prompt })
+  });
+  return response.json();
+};
+
+// Usage
+const aiResponse = await sendMessage("Create a LinkedIn post about our new product launch");
+
+4. Get Messages
+Endpoint: GET /get_messages
+Purpose: Retrieves all messages from the current active session.
+Parameters: None
+Response: Array of message objects for the active session
+Example Usage:
+const getMessages = async () => {
+  const response = await fetch(`${baseUrl}/get_messages`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Usage
+const messages = await getMessages();
+console.log(messages); // Array of LinkedInMessage objects
+
+5. Get Pages
+Endpoint: GET /get_pages
+Purpose: Retrieves all campaigns and their associated sessions for the current user, grouped by campaign.
+Parameters: None
+Response: Array of campaign pages with nested session records
+SQL Query Used:
+SELECT 
+    x1_34.linkedin_campaigns_id,
+    c.name,
+    JSON_AGG(
+        JSON_BUILD_OBJECT(
+            'id', x1_34.id,
+            'created_at', x1_34.created_at,
+            'session_id', x1_34.session_id,
+            'last_activity', x1_34.last_activity,
+            'is_enabled', x1_34.is_enabled,
+            'user_id', x1_34.user_id,
+            'session_name', x1_34.session_name,
+            'is_deleted', x1_34.is_deleted
+        )
+    ) as records
+FROM x1_34
+LEFT JOIN x1_38 AS c ON c.id = x1_34.linkedin_campaigns_id
+WHERE x1_34.user_id = {{ $auth.id }}
+AND x1_34.is_deleted IS FALSE
+GROUP BY x1_34.linkedin_campaigns_id, c.name;
+Example Usage:
+javascriptconst getPages = async () => {
+  const response = await fetch(`${baseUrl}/get_pages`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Usage
+const pages = await getPages();
+// Returns array of CampaignPage objects
+
+6. Change Chat
+Endpoint: PATCH /change_chat
+Purpose: Switches the active session to a different session. Disables current active session and enables the specified session.
+Request Body:
+json{
+  "session_id": "string"
+}
+Response: Returns the updated session object
+Security: Includes precondition check to ensure user owns the target session
+Example Usage:
+const changeChat = async (sessionId) => {
+  const response = await fetch(`${baseUrl}/change_chat`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ session_id: sessionId })
+  });
+  return response.json();
+};
+
+// Usage
+const updatedSession = await changeChat("abc123def456");
+
+7. Delete Chat
+Endpoint: POST /delete_chat
+Purpose: Soft deletes a session by setting is_deleted to true.
+Request Body:
+json{
+  "session_id": "string"
+}
+Response: Returns the updated session object
+Note: This is a soft delete - the session remains in the database but is marked as deleted
+Example Usage:
+const deleteChat = async (sessionId) => {
+  const response = await fetch(`${baseUrl}/delete_chat`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ session_id: sessionId })
+  });
+  return response.json();
+};
+
+// Usage
+const deletedSession = await deleteChat("abc123def456");

@@ -42,9 +42,20 @@ A minimalistic multi-tenant Next.js starter template with minimal setup and a mo
     npm install
     ```
 
-3. Register an account on [Stack Auth](https://stack-auth.com), copy the keys from the dashboard, and paste them into the `.env.local` file. Then, enable "client team creation" on the team settings tab.
+3. Set up your backend. This template supports both Stack Auth and Xano:
 
-    If you want to learn more about Stack Auth or self-host it, check out the [Docs](https://docs.stack-auth.com) and [GitHub](https://github.com/stack-auth/stack).
+    **Option A: Stack Auth**
+    - Register an account on [Stack Auth](https://stack-auth.com), copy the keys from the dashboard, and paste them into the `.env.local` file. Then, enable "client team creation" on the team settings tab.
+    - If you want to learn more about Stack Auth or self-host it, check out the [Docs](https://docs.stack-auth.com) and [GitHub](https://github.com/stack-auth/stack).
+
+    **Option B: Xano**
+    - Create a `.env.local` file in the root directory
+    - Add your Xano configuration:
+    ```
+    NEXT_PUBLIC_XANO_BASE_URL=https://your-instance.n7e.xano.io/api:your-api-group
+    NEXT_PUBLIC_XANO_API_KEY=your_api_key_here
+    ```
+    - The template is pre-configured with Xano authentication endpoints
 
 4. Start the development server and go to [http://localhost:3000](http://localhost:3000)
 
@@ -57,9 +68,10 @@ A minimalistic multi-tenant Next.js starter template with minimal setup and a mo
 - Next.js 14 app router
 - TypeScript
 - Tailwind & Shadcn UI
-- Stack Auth
+- Authentication (Stack Auth or Xano)
 - Multi-tenancy (teams/orgs)
 - Dark mode
+- JWT token management
 
 ## Inspired by
 
