@@ -1,3 +1,5 @@
+base url = https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/
+
 API Endpoints
 1. Create New Campaign
 Endpoint: GET /new_campaign
@@ -32,40 +34,7 @@ const newCampaign = await createCampaign({
   additional_notes: "Focus on key features and benefits"
 });
 
-2. Initiate New Session
-Endpoint: GET /initiate_new_session
-Purpose: Creates or retrieves a session for the current user. Handles session management including enabling/disabling sessions and creating default campaigns.
-Query Parameters:
-
-session_id (string, optional): Specific session ID to use
-
-Response: Returns the created/retrieved session object
-Behavior:
-
-If no active session exists, creates a new one
-If active session exists, disables it and creates a new one
-Automatically creates "Single Posts" campaign if none exists
-Generates random 15-character session ID if not provided
-
-Example Usage:
-const initiateSession = async (sessionId = null) => {
-  const url = sessionId 
-    ? `${baseUrl}/initiate_new_session?session_id=${sessionId}`
-    : `${baseUrl}/initiate_new_session`;
-    
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  return response.json();
-};
-
-// Usage
-const session = await initiateSession();
-
-3. Send Message
+2. Send Message
 Endpoint: POST /send_message
 Purpose: Sends a message to the AI assistant and stores both user prompt and AI response in the conversation history.
 Request Body:
@@ -97,7 +66,7 @@ const sendMessage = async (prompt) => {
 // Usage
 const aiResponse = await sendMessage("Create a LinkedIn post about our new product launch");
 
-4. Get Messages
+3. Get Messages
 Endpoint: GET /get_messages
 Purpose: Retrieves all messages from the current active session.
 Parameters: None
@@ -117,7 +86,7 @@ const getMessages = async () => {
 const messages = await getMessages();
 console.log(messages); // Array of LinkedInMessage objects
 
-5. Get Pages
+4. Get Pages
 Endpoint: GET /get_pages
 Purpose: Retrieves all campaigns and their associated sessions for the current user, grouped by campaign.
 Parameters: None
@@ -158,7 +127,7 @@ javascriptconst getPages = async () => {
 const pages = await getPages();
 // Returns array of CampaignPage objects
 
-6. Change Chat
+5. Change Chat
 Endpoint: PATCH /change_chat
 Purpose: Switches the active session to a different session. Disables current active session and enables the specified session.
 Request Body:
@@ -183,7 +152,7 @@ const changeChat = async (sessionId) => {
 // Usage
 const updatedSession = await changeChat("abc123def456");
 
-7. Delete Chat
+6. Delete Chat
 Endpoint: POST /delete_chat
 Purpose: Soft deletes a session by setting is_deleted to true.
 Request Body:
@@ -207,3 +176,5 @@ const deleteChat = async (sessionId) => {
 
 // Usage
 const deletedSession = await deleteChat("abc123def456");
+
+

@@ -1,9 +1,16 @@
-import { getApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
+import { getApiUrl, getLinkedInApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
 import type { 
   User, 
   AuthResponse, 
   LoginCredentials, 
-  RegisterCredentials 
+  RegisterCredentials,
+  LinkedInSession,
+  LinkedInMessage,
+  CampaignPage,
+  CreateCampaignParams,
+  SendMessageRequest,
+  ChangeChatRequest,
+  DeleteChatRequest
 } from './types';
 
 class XanoApiError extends Error {
@@ -177,5 +184,161 @@ export const usersApi = {
   },
 };
 
+
+// LinkedIn Copilot API
+export const linkedInApi = {
+  async createCampaign(token: string, params: CreateCampaignParams = {}): Promise<User> {
+    const queryParams = new URLSearchParams();
+    
+    if (params.name) queryParams.append('name', params.name);
+    if (params.additional_notes) queryParams.append('additional_notes', params.additional_notes);
+    if (params.tone) queryParams.append('tone', params.tone);
+    if (params.content_length) queryParams.append('content_length', params.content_length.toString());
+    if (params.marketing_type) queryParams.append('marketing_type', params.marketing_type);
+
+    const endpoint = `${XANO_CONFIG.ENDPOINTS.LINKEDIN.NEW_CAMPAIGN}?${queryParams.toString()}`;
+    const url = getLinkedInApiUrl(endpoint);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+
+  async sendMessage(token: string, data: SendMessageRequest): Promise<string> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.SEND_MESSAGE);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async getMessages(token: string): Promise<LinkedInMessage[]> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.GET_MESSAGES);
+    const headers = getAuthHeaders(token);
+    
+    console.log('LinkedIn API: getMessages URL:', url);
+    console.log('LinkedIn API: getMessages headers:', headers);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    console.log('LinkedIn API: getMessages response status:', response.status);
+    console.log('LinkedIn API: getMessages response ok:', response.ok);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('LinkedIn API: getMessages error:', errorData);
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    const data = await response.json();
+    console.log('LinkedIn API: getMessages response data:', data);
+    return data;
+  },
+
+  async getPages(token: string): Promise<CampaignPage[]> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.GET_PAGES);
+    const headers = getAuthHeaders(token);
+    
+    console.log('LinkedIn API: getPages URL:', url);
+    console.log('LinkedIn API: getPages headers:', headers);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    console.log('LinkedIn API: getPages response status:', response.status);
+    console.log('LinkedIn API: getPages response ok:', response.ok);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('LinkedIn API: getPages error:', errorData);
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    const data = await response.json();
+    console.log('LinkedIn API: getPages response data:', data);
+    return data;
+  },
+
+  async changeChat(token: string, data: ChangeChatRequest): Promise<LinkedInSession> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.CHANGE_CHAT);
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async deleteChat(token: string, data: DeleteChatRequest): Promise<LinkedInSession> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.DELETE_CHAT);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+};
 
 export { XanoApiError };

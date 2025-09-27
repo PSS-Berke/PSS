@@ -7,6 +7,7 @@ import type { User, LoginCredentials, RegisterCredentials } from './types';
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   
@@ -51,6 +52,7 @@ const clearStoredTokens = (): void => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -59,11 +61,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     const initAuth = async () => {
-      const token = getStoredToken();
-      if (!token) {
+      const storedToken = getStoredToken();
+      if (!storedToken) {
+        setToken(null);
         setIsLoading(false);
         return;
       }
+      
+      setToken(storedToken);
 
       // Check if API key is configured
       if (!process.env.NEXT_PUBLIC_XANO_API_KEY) {
@@ -73,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const userData = await authApi.getMe(token);
+        const userData = await authApi.getMe(storedToken);
         setUser(userData);
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -95,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.login(credentials);
       setUser(response.user);
+      setToken(response.token);
       setStoredToken(response.token);
       
       if (response.refresh_token) {
@@ -116,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.register(credentials);
       setUser(response.user);
+      setToken(response.token);
       setStoredToken(response.token);
       
       if (response.refresh_token) {
@@ -139,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout failed:', error);
     } finally {
       setUser(null);
+      setToken(null);
       clearStoredTokens();
       router.push('/');
     }
@@ -160,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextType = {
     user,
+    token,
     isLoading,
     isAuthenticated,
     login,
