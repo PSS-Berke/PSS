@@ -86,9 +86,11 @@ function linkedInReducer(state: LinkedInState, action: LinkedInAction): LinkedIn
         ...state,
         pages: state.pages.map(page => ({
           ...page,
-          records: page.records.map(session =>
-            session.id === action.payload.id ? action.payload : session
-          )
+          records: Array.isArray(page.records) 
+            ? page.records.map((session: LinkedInSession) =>
+                session.id === action.payload.id ? action.payload : session
+              )
+            : page.records
         }))
       };
     default:
@@ -146,78 +148,6 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('LinkedIn: Error loading messages:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load messages' });
-    }
-  }, [token]);
-
-
-  // Change chat
-  const changeChat = useCallback(async (sessionId: string) => {
-    if (!token) return;
-    
-    console.log('LinkedIn: changeChat called with sessionId:', sessionId);
-    console.log('LinkedIn: Current session before switch:', state.currentSession?.session_id);
-    
-    try {
-      dispatch({ type: 'SET_SWITCHING_SESSION', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-      
-      const session = await linkedInApi.changeChat(token, { session_id: sessionId });
-      console.log('LinkedIn: Session switched to:', session);
-      dispatch({ type: 'SET_CURRENT_SESSION', payload: session });
-      dispatch({ type: 'UPDATE_SESSION_IN_PAGES', payload: session });
-      
-      // Load messages for the new session
-      await loadMessages();
-    } catch (error) {
-      console.error('LinkedIn: Error changing chat:', error);
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to change chat' });
-    } finally {
-      dispatch({ type: 'SET_SWITCHING_SESSION', payload: false });
-    }
-  }, [token, loadMessages, state.currentSession]);
-
-  // Delete chat
-  const deleteChat = useCallback(async (sessionId: string) => {
-    if (!token) return;
-    
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-      
-      const deletedSession = await linkedInApi.deleteChat(token, { session_id: sessionId });
-      dispatch({ type: 'UPDATE_SESSION_IN_PAGES', payload: deletedSession });
-      
-      // If we deleted the current session, clear it
-      if (state.currentSession?.session_id === sessionId) {
-        dispatch({ type: 'SET_CURRENT_SESSION', payload: null });
-        dispatch({ type: 'SET_MESSAGES', payload: [] });
-      }
-      
-      // Reload pages to get updated list
-      await loadPages();
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to delete chat' });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  }, [token, state.currentSession]);
-
-  // Create campaign
-  const createCampaign = useCallback(async (params: CreateCampaignParams) => {
-    if (!token) return;
-    
-    try {
-      dispatch({ type: 'SET_CREATING_CAMPAIGN', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-      
-      await linkedInApi.createCampaign(token, params);
-      
-      // Reload pages to get the new campaign
-      await loadPages();
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to create campaign' });
-    } finally {
-      dispatch({ type: 'SET_CREATING_CAMPAIGN', payload: false });
     }
   }, [token]);
 
@@ -290,6 +220,77 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token]);
 
+  // Change chat
+  const changeChat = useCallback(async (sessionId: string) => {
+    if (!token) return;
+    
+    console.log('LinkedIn: changeChat called with sessionId:', sessionId);
+    console.log('LinkedIn: Current session before switch:', state.currentSession?.session_id);
+    
+    try {
+      dispatch({ type: 'SET_SWITCHING_SESSION', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
+      const session = await linkedInApi.changeChat(token, { session_id: sessionId });
+      console.log('LinkedIn: Session switched to:', session);
+      dispatch({ type: 'SET_CURRENT_SESSION', payload: session });
+      dispatch({ type: 'UPDATE_SESSION_IN_PAGES', payload: session });
+      
+      // Load messages for the new session
+      await loadMessages();
+    } catch (error) {
+      console.error('LinkedIn: Error changing chat:', error);
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to change chat' });
+    } finally {
+      dispatch({ type: 'SET_SWITCHING_SESSION', payload: false });
+    }
+  }, [token, loadMessages, state.currentSession]);
+
+  // Delete chat
+  const deleteChat = useCallback(async (sessionId: string) => {
+    if (!token) return;
+    
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
+      const deletedSession = await linkedInApi.deleteChat(token, { session_id: sessionId });
+      dispatch({ type: 'UPDATE_SESSION_IN_PAGES', payload: deletedSession });
+      
+      // If we deleted the current session, clear it
+      if (state.currentSession?.session_id === sessionId) {
+        dispatch({ type: 'SET_CURRENT_SESSION', payload: null });
+        dispatch({ type: 'SET_MESSAGES', payload: [] });
+      }
+      
+      // Reload pages to get updated list
+      await loadPages();
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to delete chat' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, [token, state.currentSession, loadPages]);
+
+  // Create campaign
+  const createCampaign = useCallback(async (params: CreateCampaignParams) => {
+    if (!token) return;
+    
+    try {
+      dispatch({ type: 'SET_CREATING_CAMPAIGN', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
+      await linkedInApi.createCampaign(token, params);
+      
+      // Reload pages to get the new campaign
+      await loadPages();
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to create campaign' });
+    } finally {
+      dispatch({ type: 'SET_CREATING_CAMPAIGN', payload: false });
+    }
+  }, [token, loadPages]);
+
   // Send message
   const sendMessage = useCallback(async (prompt: string) => {
     if (!token || !prompt.trim()) return;
@@ -337,7 +338,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: 'SET_SENDING_MESSAGE', payload: false });
     }
-  }, [token, user, state.currentSession, loadMessages, createCampaign]);
+  }, [token, user, state.currentSession, loadMessages, state.isLoading, state.pages.length]);
 
   // Auto-load pages when user is authenticated and context is mounted
   useEffect(() => {
