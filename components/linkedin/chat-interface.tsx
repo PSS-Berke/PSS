@@ -66,9 +66,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Welcome to LinkedIn Copilot</h3>
-            <p className="text-muted-foreground mb-4">
-              I am here to help you create engaging LinkedIn content. What would you like to work on today?
-            </p>
+            
             <div className="text-sm text-muted-foreground">
               Try asking me to:
               <ul className="mt-2 space-y-1">
