@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { LinkedInModule } from "@/components/linkedin/linkedin-module";
 import { LinkedInProvider } from "@/lib/xano/linkedin-context";
+import { SocialMediaModule } from "@/components/social/social-media-module";
+import { SocialMediaProvider } from "@/lib/xano/social-media-context";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -18,24 +20,22 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Other dashboard content */}
-      <div>
-        <h2 className="text-xl font-semibold">Overview</h2>
-        <p className="text-muted-foreground">Some general dashboard content here...</p>
-      </div>
-
-      {/* LinkedIn section only */}
+      
+      {/* LinkedIn section */}
       <section>
         <LinkedInProvider>
           <LinkedInModule />
         </LinkedInProvider>
       </section>
 
-      {/* More modules */}
+      {/* Social Media Copilot section */}
       <section>
-        <h2 className="text-xl font-semibold">Other Module</h2>
-        <p className="text-muted-foreground">Other integrations or data here...</p>
+        <SocialMediaProvider>
+          <SocialMediaModule />
+        </SocialMediaProvider>
       </section>
+
+      {/* More modules */}
     </div>
   );
 }

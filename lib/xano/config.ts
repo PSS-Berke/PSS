@@ -3,6 +3,7 @@ export const XANO_CONFIG = {
   // These will be set via environment variables
   BASE_URL: process.env.NEXT_PUBLIC_XANO_BASE_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf',
   LINKEDIN_BASE_URL: process.env.NEXT_PUBLIC_LINKEDIN_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR',
+  SOCIAL_BASE_URL: process.env.NEXT_PUBLIC_SOCIAL_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ydIfcjKj',
   API_KEY: process.env.NEXT_PUBLIC_XANO_API_KEY || '',
   
   // API Endpoints - configured for your Xano setup
@@ -21,6 +22,9 @@ export const XANO_CONFIG = {
       CHANGE_CHAT: '/change_chat',
       DELETE_CHAT: '/delete_chat',
     },
+    SOCIAL: {
+      POSTS: '/post',
+    },
   },
 } as const;
 
@@ -32,6 +36,11 @@ export const getApiUrl = (endpoint: string): string => {
 // Helper function to get LinkedIn API URL
 export const getLinkedInApiUrl = (endpoint: string): string => {
   return `${XANO_CONFIG.LINKEDIN_BASE_URL}${endpoint}`;
+};
+
+// Helper function to get Social Media API URL
+export const getSocialApiUrl = (endpoint: string): string => {
+  return `${XANO_CONFIG.SOCIAL_BASE_URL}${endpoint}`;
 };
 
 // Helper function to get headers with auth token

@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/xano/auth-context";
 import { BadgePercent, BarChart4, Columns3, Globe, Locate, Settings2, ShoppingBag, ShoppingCart, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+
 const navigationItems: SidebarItem[] = [
   {
     name: "Overview",

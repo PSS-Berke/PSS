@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { linkedInApi } from './api';
 import type { 
   LinkedInSession, 
@@ -128,6 +128,8 @@ const LinkedInContext = createContext<LinkedInContextType | undefined>(undefined
 export function LinkedInProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(linkedInReducer, initialState);
   const { user, token } = useAuth();
+  const isLoadingPagesRef = useRef(false);
+  const hasInitializedRef = useRef(false);
 
 
   // Clear error
@@ -157,24 +159,24 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
 
   // Load pages
   const loadPages = useCallback(async () => {
-    if (!token) {
-      console.log('LinkedIn: No token available for loadPages');
+    if (isLoadingPagesRef.current) {
+      console.log('LinkedIn: loadPages already in progress, skipping duplicate call');
       return;
     }
-    
-    try {
-      console.log('LinkedIn: Loading pages with token:', token.substring(0, 20) + '...');
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-      
-      const pages = await linkedInApi.getPages(token);
-      
-      // Parse JSON strings in records (Xano JSON_AGG returns strings)
-      const parsedPages = pages.map(page => {
+    isLoadingPagesRef.current = true;
+
+    if (!token) {
+      console.log('LinkedIn: No token available for loadPages');
+      isLoadingPagesRef.current = false;
+      return;
+    }
+
+    const parsePageRecords = (rawPages: CampaignPage[]): CampaignPage[] =>
+      rawPages.map(page => {
         let records = page.records;
-        if (typeof page.records === 'string') {
+        if (typeof records === 'string') {
           try {
-            records = JSON.parse(page.records);
+            records = JSON.parse(records);
           } catch (error) {
             console.error('LinkedIn: Failed to parse records JSON:', error);
             records = [];
@@ -185,44 +187,47 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
           records
         };
       });
-      
-      dispatch({ type: 'SET_PAGES', payload: parsedPages });
-      
-      // If no campaigns exist, create a default one
-      if (parsedPages.length === 0) {
-        console.log('LinkedIn: No campaigns found, creating default campaign...');
-        try {
-          await linkedInApi.createCampaign(token, { name: 'Single Posts' });
-          console.log('LinkedIn: Default campaign created, reloading pages...');
-          // Reload pages to get the new campaign
-          const updatedPages = await linkedInApi.getPages(token);
-          const updatedParsedPages = updatedPages.map(page => {
-            let records = page.records;
-            if (typeof page.records === 'string') {
-              try {
-                records = JSON.parse(page.records);
-              } catch (error) {
-                console.error('LinkedIn: Failed to parse records JSON:', error);
-                records = [];
-              }
-            }
-            return {
-              ...page,
-              records
-            };
-          });
-          dispatch({ type: 'SET_PAGES', payload: updatedParsedPages });
-        } catch (campaignError) {
-          console.error('LinkedIn: Failed to create default campaign:', campaignError);
+
+    const assignActiveSessionFromPages = async (pagesData: CampaignPage[]) => {
+      const activeSession = pagesData.reduce<LinkedInSession | null>((found, page) => {
+        if (found) return found;
+        const records = Array.isArray(page.records) ? page.records : [];
+        return records.find(session => session.is_enabled && !session.is_deleted) || null;
+      }, null);
+
+      const hadCurrentSession = state.currentSession?.id != null;
+
+      if (activeSession) {
+        const isSameSession = state.currentSession?.id === activeSession.id;
+        dispatch({ type: 'SET_CURRENT_SESSION', payload: activeSession });
+
+        if (!isSameSession || state.messages.length === 0) {
+          await loadMessages();
         }
+      } else if (hadCurrentSession) {
+        dispatch({ type: 'SET_CURRENT_SESSION', payload: null });
+        dispatch({ type: 'SET_MESSAGES', payload: [] });
       }
+    };
+
+    try {
+      console.log('LinkedIn: Loading pages with token:', token.substring(0, 20) + '...');
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      const pages = await linkedInApi.getPages(token);
+      const parsedPages = parsePageRecords(pages);
+
+      dispatch({ type: 'SET_PAGES', payload: parsedPages });
+      await assignActiveSessionFromPages(parsedPages);
     } catch (error) {
       console.error('LinkedIn: Error loading pages:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load pages' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
+      isLoadingPagesRef.current = false;
     }
-  }, [token]);
+  }, [token, loadMessages, state.currentSession?.id, state.messages.length]);
 
   // Change chat
   const changeChat = useCallback(async (sessionId: string) => {
@@ -347,11 +352,17 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
   // Auto-load pages when user is authenticated and context is mounted
   useEffect(() => {
     console.log('LinkedIn: useEffect triggered - user:', !!user, 'token:', !!token);
-    if (user && token && state.pages.length === 0) {
+    if (user && token && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
       console.log('LinkedIn: Auto-loading pages...');
       loadPages();
     }
-  }, [user, token, loadPages, state.pages.length]);
+
+    if (!user || !token) {
+      hasInitializedRef.current = false;
+      isLoadingPagesRef.current = false;
+    }
+  }, [user, token, loadPages]);
 
   const value: LinkedInContextType = {
     state,

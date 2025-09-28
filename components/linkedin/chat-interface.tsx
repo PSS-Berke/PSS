@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
-import { Send, Loader2, Bot, User } from 'lucide-react';
+import { Send, Loader2, Bot, User, Copy, Check } from 'lucide-react';
 
 interface ChatInterfaceProps {
   className?: string;
@@ -16,6 +16,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { state, sendMessage } = useLinkedIn();
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const copyResetTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debug logging
   console.log('ChatInterface: Current state:', {
@@ -30,6 +32,14 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.messages]);
 
+  useEffect(() => {
+    return () => {
+      if (copyResetTimeout.current) {
+        clearTimeout(copyResetTimeout.current);
+      }
+    };
+  }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +53,37 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const formatTimestamp = (timestamp: number | string) => {
     const date = new Date(typeof timestamp === 'number' ? timestamp : timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleCopy = async (content: string, messageId: string) => {
+    if (!content) return;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = content;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      setCopiedMessageId(messageId);
+      if (copyResetTimeout.current) {
+        clearTimeout(copyResetTimeout.current);
+      }
+      copyResetTimeout.current = setTimeout(() => {
+        setCopiedMessageId(null);
+        copyResetTimeout.current = null;
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy message', error);
+    }
   };
 
   return (
@@ -79,13 +120,18 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
             </div>
           </div>
         ) : (
-          state.messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex gap-3 ${
-                msg.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
+          state.messages.map((msg) => {
+            const messageId = String(msg.id);
+            const isUserMessage = msg.role === 'user';
+            const isAiMessage = msg.role === 'ai';
+
+            return (
+              <div
+                key={msg.id}
+                className={`flex gap-3 ${
+                  isUserMessage ? 'justify-end' : 'justify-start'
+                }`}
+              >
               {msg.role === 'ai' && (
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -93,18 +139,36 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
                   </div>
                 </div>
               )}
-              
+
               <Card className={`max-w-[80%] p-3 ${
-                msg.role === 'user' 
-                  ? 'bg-primary text-primary-foreground' 
+                isUserMessage
+                  ? 'bg-primary text-primary-foreground'
                   : 'bg-muted'
               }`}>
-                <div className="whitespace-pre-wrap text-sm">
-                  {msg.content}
+                <div className="flex items-start gap-2">
+                  <div className="whitespace-pre-wrap text-sm flex-1">
+                    {msg.content}
+                  </div>
+                  {isAiMessage && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
+                      onClick={() => handleCopy(msg.content ?? '', messageId)}
+                      aria-label={copiedMessageId === messageId ? 'Copied' : 'Copy message'}
+                    >
+                      {copiedMessageId === messageId ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                 </div>
                 <div className={`text-xs mt-2 ${
-                  msg.role === 'user' 
-                    ? 'text-primary-foreground/70' 
+                  isUserMessage
+                    ? 'text-primary-foreground/70'
                     : 'text-muted-foreground'
                 }`}>
                   {formatTimestamp(msg.created_at)}
@@ -119,7 +183,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
                 </div>
               )}
             </div>
-          ))
+            );
+          })
         )}
         
         {state.isSendingMessage && (

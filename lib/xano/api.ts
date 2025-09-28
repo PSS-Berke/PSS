@@ -1,4 +1,4 @@
-import { getApiUrl, getLinkedInApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
+import { getApiUrl, getLinkedInApiUrl, getSocialApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
 import type { 
   User, 
   AuthResponse, 
@@ -10,7 +10,10 @@ import type {
   CreateCampaignParams,
   SendMessageRequest,
   ChangeChatRequest,
-  DeleteChatRequest
+  DeleteChatRequest,
+  SocialPost,
+  SocialPostPayload,
+  SocialPostUpdatePayload
 } from './types';
 
 class XanoApiError extends Error {
@@ -338,6 +341,85 @@ export const linkedInApi = {
     }
 
     return response.json();
+  },
+};
+
+// Social Media Copilot API
+export const socialCopilotApi = {
+  async getPosts(token: string): Promise<SocialPost[]> {
+    const url = getSocialApiUrl(XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async createPost(token: string, data: SocialPostPayload): Promise<SocialPost> {
+    const url = getSocialApiUrl(XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async updatePost(token: string, postId: number, data: SocialPostUpdatePayload): Promise<SocialPost> {
+    const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async deletePost(token: string, postId: number): Promise<void> {
+    const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
   },
 };
 

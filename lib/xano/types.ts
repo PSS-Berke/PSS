@@ -98,3 +98,39 @@ export interface DeleteChatRequest {
   session_id: string;
 }
 
+// Social Media Copilot Types
+export interface SocialPost {
+  id: number;
+  post_title: string;
+  post_description?: string;
+  rich_content_html?: string;
+  rich_content_text?: string;
+  content?: string;
+  url_1?: string;
+  url_2?: string;
+  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all';
+  scheduled_date: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SocialPostPayload {
+  post_title: string;
+  post_description?: string;
+  rich_content_html?: string;
+  rich_content_text?: string;
+  content: string;
+  url_1?: string;
+  url_2?: string;
+  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all';
+  scheduled_date: string;
+  published?: boolean;
+}
+
+export type SocialPostUpdatePayload = Partial<SocialPostPayload> & {
+  scheduled_date?: string;
+  published?: boolean;
+  content?: string;
+};
+
