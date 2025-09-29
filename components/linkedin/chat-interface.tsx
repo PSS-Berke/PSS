@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -18,6 +18,19 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const { state, sendMessage } = useLinkedIn();
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const copyResetTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sortedMessages = useMemo(() => {
+    const getTimestamp = (value: number | string | null | undefined) => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const parsed = Date.parse(value);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    };
+
+    return [...state.messages].sort((a, b) => getTimestamp(a.created_at) - getTimestamp(b.created_at));
+  }, [state.messages]);
 
   // Debug logging
   console.log('ChatInterface: Current state:', {
@@ -103,7 +116,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {state.messages.length === 0 ? (
+        {sortedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Welcome to LinkedIn Copilot</h3>
@@ -120,7 +133,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
             </div>
           </div>
         ) : (
-          state.messages.map((msg) => {
+          sortedMessages.map((msg) => {
             const messageId = String(msg.id);
             const isUserMessage = msg.role === 'user';
             const isAiMessage = msg.role === 'ai';
