@@ -39,14 +39,16 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
   const events = useMemo<CalendarEvent[]>(() => {
     return posts.map((post) => {
       const scheduledDate = new Date(post.scheduled_date);
-      const hour = scheduledDate.getHours();
-      const isOutsideBusinessHours = hour < 9 || hour >= 19;
+      const isMidnight =
+        scheduledDate.getHours() === 0 &&
+        scheduledDate.getMinutes() === 0 &&
+        scheduledDate.getSeconds() === 0;
 
       return {
         id: post.id.toString(),
         title: post.post_title,
         start: post.scheduled_date,
-        allDay: isOutsideBusinessHours,
+        allDay: isMidnight,
         extendedProps: {
           contentType: post.content_type,
           published: post.published,
@@ -61,9 +63,10 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
     const contentType = extendedProps.contentType as SocialPost['content_type'];
     const published = Boolean(extendedProps.published);
     const scheduled = new Date(extendedProps.rawDate as string);
+    const isWeeklyView = arg.view.type === 'timeGridWeek';
 
     return (
-      <div className="flex h-full flex-col rounded-lg border border-border/60 bg-white px-3 py-2 shadow-sm">
+      <div className="flex h-full flex-col rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm">
         <div className="flex items-center justify-between">
           <span
             className={cn(
@@ -85,14 +88,16 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
         <div className="mt-2 line-clamp-2 text-sm font-semibold text-foreground">
           {title}
         </div>
-        <div className="mt-1 text-xs text-muted-foreground">
-          {scheduled.toLocaleString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </div>
+        {!isWeeklyView ? (
+          <div className="mt-1 text-xs text-muted-foreground">
+            {scheduled.toLocaleString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -130,9 +135,9 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
       try {
         await onReschedulePost(postId, isoDate);
 
-        const hour = nextStart.getHours();
-        const isOutsideBusinessHours = hour < 9 || hour >= 19;
-        arg.event.setAllDay(isOutsideBusinessHours);
+        arg.event.setStart(nextStart);
+        const shouldBeAllDay = arg.event.allDay;
+        arg.event.setAllDay(shouldBeAllDay);
         arg.event.setExtendedProp('rawDate', isoDate);
       } catch (error) {
         console.error('Calendar: Failed to reschedule post', error);
@@ -143,7 +148,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
   );
 
   return (
-    <div className="calendar-wrapper rounded-xl border border-border/60 bg-white p-3">
+    <div className="calendar-wrapper rounded-xl border border-border/60 bg-card p-3">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"

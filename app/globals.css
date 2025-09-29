@@ -68,6 +68,44 @@
   }
 }
 
+@layer components {
+  .calendar-wrapper .fc {
+    --fc-border-color: hsl(var(--border));
+    --fc-page-bg-color: hsl(var(--card));
+    --fc-neutral-bg-color: hsl(var(--muted));
+    --fc-neutral-text-color: hsl(var(--muted-foreground));
+    --fc-list-event-hover-bg-color: hsl(var(--muted));
+    --fc-today-bg-color: hsl(var(--primary) / 0.12);
+    --fc-event-border-color: hsl(var(--border));
+    --fc-event-bg-color: hsl(var(--card));
+    --fc-text-color: hsl(var(--foreground));
+  }
+
+  .calendar-wrapper .fc-theme-standard th,
+  .calendar-wrapper .fc-theme-standard td {
+    border-color: hsl(var(--border));
+  }
+
+  .calendar-wrapper .fc .fc-col-header-cell {
+    background-color: hsl(var(--muted));
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .calendar-wrapper .fc .fc-col-header-cell-cushion {
+    color: inherit;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .calendar-wrapper .fc .fc-daygrid-day-number,
+  .calendar-wrapper .fc .fc-timegrid-slot-label {
+    color: hsl(var(--foreground));
+  }
+}
+
 .loader {
   top: 0;
   left: 0;
