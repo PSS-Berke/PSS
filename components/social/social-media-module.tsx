@@ -3,8 +3,17 @@
 
 const defaultContentType: SocialPost['content_type'] = 'linkedin';
 
-import React, { useMemo, useState } from 'react';
-import { Calendar, Loader2, Plus, RefreshCw, Tag, Timer } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Tag,
+  Timer,
+} from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,6 +90,45 @@ export function SocialMediaModule({ className }: { className?: string }) {
   }, [formState, isCreating, selectedPost]);
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
+
+  const handleReschedulePost = useCallback(
+    async (postId: number, nextDate: string) => {
+      const targetPost = state.posts.find((post) => post.id === postId);
+      if (!targetPost) {
+        throw new Error('Post not found');
+      }
+
+      const nextPublishDate = new Date(nextDate).toISOString();
+
+      const contentValue = targetPost.content ?? targetPost.rich_content_text ?? '';
+
+      await updatePost(postId, {
+        post_title: targetPost.post_title,
+        post_description: targetPost.post_description ?? '',
+        rich_content_text: targetPost.rich_content_text ?? contentValue,
+        content: contentValue,
+        rich_content_html: targetPost.rich_content_html ?? '',
+        url_1: targetPost.url_1 ?? '',
+        url_2: targetPost.url_2 ?? '',
+        content_type: targetPost.content_type,
+        scheduled_date: nextPublishDate,
+        published: targetPost.published,
+      });
+
+      if (selectedPost?.id === postId) {
+        setSelectedPost((prev) =>
+          prev
+            ? {
+                ...prev,
+                scheduled_date: nextPublishDate,
+              }
+            : prev
+        );
+        setFormState((prev) => ({ ...prev, scheduled_date: nextPublishDate }));
+      }
+    },
+    [state.posts, updatePost, selectedPost]
+  );
 
   const upcomingSevenDays = useMemo(() => {
     const now = new Date();
@@ -457,7 +505,11 @@ const renderTabButton = (
           </div>
         </div>
 
-        <SocialMediaCalendar posts={state.posts} onSelectPost={handleOpenPost} />
+        <SocialMediaCalendar
+          posts={state.posts}
+          onSelectPost={handleOpenPost}
+          onReschedulePost={handleReschedulePost}
+        />
       </div>
     );
   };
@@ -614,8 +666,16 @@ const renderTabButton = (
               />
               Refresh
             </Button>
-            <Button variant="ghost" size="sm">
-              {isExpanded ? 'Hide' : 'Show'}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 flex items-center justify-center"
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>

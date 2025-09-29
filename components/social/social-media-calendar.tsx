@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
-import type { EventContentArg, EventClickArg } from '@fullcalendar/core';
+import type { EventContentArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -20,6 +20,7 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
 interface SocialMediaCalendarProps {
   posts: SocialPost[];
   onSelectPost?: (post: SocialPost) => void;
+  onReschedulePost?: (postId: number, nextDate: string) => Promise<void>;
 }
 
 interface CalendarEvent {
@@ -34,7 +35,7 @@ interface CalendarEvent {
   };
 }
 
-export function SocialMediaCalendar({ posts, onSelectPost }: SocialMediaCalendarProps) {
+export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: SocialMediaCalendarProps) {
   const events = useMemo<CalendarEvent[]>(() => {
     return posts.map((post) => {
       const scheduledDate = new Date(post.scheduled_date);
@@ -108,6 +109,39 @@ export function SocialMediaCalendar({ posts, onSelectPost }: SocialMediaCalendar
     [posts, onSelectPost]
   );
 
+  const handleEventDrop = useCallback(
+    async (arg: EventDropArg) => {
+      if (!onReschedulePost) return;
+
+      const postId = Number(arg.event.id);
+      if (Number.isNaN(postId)) {
+        arg.revert();
+        return;
+      }
+
+      const nextStart = arg.event.start ?? (arg.event.startStr ? new Date(arg.event.startStr) : null);
+      if (!nextStart || Number.isNaN(nextStart.getTime())) {
+        arg.revert();
+        return;
+      }
+
+      const isoDate = nextStart.toISOString();
+
+      try {
+        await onReschedulePost(postId, isoDate);
+
+        const hour = nextStart.getHours();
+        const isOutsideBusinessHours = hour < 9 || hour >= 19;
+        arg.event.setAllDay(isOutsideBusinessHours);
+        arg.event.setExtendedProp('rawDate', isoDate);
+      } catch (error) {
+        console.error('Calendar: Failed to reschedule post', error);
+        arg.revert();
+      }
+    },
+    [onReschedulePost]
+  );
+
   return (
     <div className="calendar-wrapper rounded-xl border border-border/60 bg-white p-3">
       <FullCalendar
@@ -131,6 +165,9 @@ export function SocialMediaCalendar({ posts, onSelectPost }: SocialMediaCalendar
         firstDay={1}
         aspectRatio={1.75}
         eventClick={handleEventClick}
+        editable={Boolean(onReschedulePost)}
+        eventDrop={handleEventDrop}
+        eventDurationEditable={false}
       />
     </div>
   );

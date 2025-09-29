@@ -15,13 +15,7 @@ const navigationItems: SidebarItem[] = [
   },
   {
     type: 'label',
-    name: 'Management',
-  },
-  {
-    name: "Products",
-    href: "/dashboard/products",
-    icon: ShoppingBag,
-    type: "item",
+    name: 'Core',
   },
   {
     name: "People",
@@ -30,47 +24,9 @@ const navigationItems: SidebarItem[] = [
     type: "item",
   },
   {
-    name: "Segments",
-    href: "/dashboard/segments",
-    icon: Columns3,
-    type: "item",
-  },
-  {
-    name: "Regions",
-    href: "/dashboard/regions",
-    icon: Locate,
-    type: "item",
-  },
-  {
-    type: 'label',
-    name: 'Monetization',
-  },
-  {
     name: "Revenue",
     href: "/dashboard/revenue",
     icon: BarChart4,
-    type: "item",
-  },
-  {
-    name: "Orders",
-    href: "/dashboard/orders",
-    icon: ShoppingCart,
-    type: "item",
-  },
-  {
-    name: "Discounts",
-    href: "/dashboard/discounts",
-    icon: BadgePercent,
-    type: "item",
-  },
-  {
-    type: 'label',
-    name: 'Settings',
-  },
-  {
-    name: "Configuration",
-    href: "/dashboard/configuration",
-    icon: Settings2,
     type: "item",
   },
 ];

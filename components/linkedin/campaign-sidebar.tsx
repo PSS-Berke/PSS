@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
 import { 
   Plus, 
@@ -334,14 +334,17 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
         )}
       </div>
 
-      {/* Create Campaign Sheet */}
-      <Sheet open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <SheetContent side="right" className="w-96">
-          <SheetHeader>
-            <SheetTitle>Create New Campaign</SheetTitle>
-          </SheetHeader>
-          
-          <form onSubmit={handleCreateCampaign} className="space-y-4 mt-6">
+      {/* Create Campaign Dialog */}
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto">
+          <DialogHeader className="space-y-1">
+            <DialogTitle>Create New Campaign</DialogTitle>
+            <DialogDescription>
+              Enter the campaign details to start generating LinkedIn content.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateCampaign} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Campaign Name *</label>
               <Input
@@ -415,8 +418,8 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
               </Button>
             </div>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

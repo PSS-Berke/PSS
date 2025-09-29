@@ -2,12 +2,13 @@
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/xano/auth-context";
-import { LucideIcon, Menu, Plus } from "lucide-react";
+import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import React, { useState } from "react";
+import type { User } from "@/lib/xano/types";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,6 +19,7 @@ import {
 } from "./ui/breadcrumb";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Button } from "./ui/button";
 import { AddModule } from "./add-module";
 
 function useSegment(basePath: string) {
@@ -84,8 +86,8 @@ function SidebarContent(props: {
   sidebarTop?: React.ReactNode;
   basePath: string;
   onAddModule?: () => void;
+  user?: User | null;
 }) {
-  const path = usePathname();
   const segment = useSegment(props.basePath);
 
   return (
@@ -136,6 +138,24 @@ function SidebarContent(props: {
 
         <div className="flex-grow" />
       </div>
+
+      {props.user ? (
+        <div className="border-t border-border px-4 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+              <UserCircle2 className="h-6 w-6 text-muted-foreground" />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {props.user.company ?? "Company"}
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {props.user.email}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -214,6 +234,7 @@ export default function SidebarLayout(props: {
           sidebarTop={sidebarTop}
           basePath={props.basePath}
           onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
+          user={user}
         />
       </div>
       <div className="flex flex-col flex-grow w-0 md:ml-[260px]">
@@ -237,6 +258,7 @@ export default function SidebarLayout(props: {
                   sidebarTop={sidebarTop}
                   basePath={props.basePath}
                   onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
+                  user={user}
                 />
               </SheetContent>
             </Sheet>
@@ -249,21 +271,25 @@ export default function SidebarLayout(props: {
           <div className="flex items-center gap-2">
             {user && (
               <>
-                <span className="text-sm text-muted-foreground hidden md:block">
-                  {user.email}
-                </span>
-                <button
-                  onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
-                  className="text-sm hover:underline px-2 py-1 rounded"
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                  className="relative h-9 w-9 rounded-full"
                 >
-                  {resolvedTheme === 'dark' ? '☀️' : '🌙'}
-                </button>
-                <button
+                  <Sun className="h-[1.1rem] w-[1.1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-[1.1rem] w-[1.1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+                <Button
                   onClick={() => logout()}
-                  className="text-sm hover:underline text-red-600 px-2 py-1 rounded"
+                  variant="ghost"
+                  className="gap-2 px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
                 >
+                  <LogOut className="h-4 w-4" />
                   Logout
-                </button>
+                </Button>
               </>
             )}
           </div>

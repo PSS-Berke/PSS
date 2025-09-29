@@ -2,6 +2,8 @@
 
 import { useAuth } from "@/lib/xano/auth-context";
 import { useTheme } from "next-themes";
+import { LogOut } from "lucide-react";
+import { Button } from "./ui/button";
 import { Logo } from "./logo";
 
 export default function HandlerHeader() {
@@ -25,12 +27,14 @@ export default function HandlerHeader() {
               >
                 {theme === 'dark' ? 'Light' : 'Dark'}
               </button>
-              <button
+              <Button
                 onClick={() => logout()}
-                className="text-sm hover:underline text-red-600"
+                variant="ghost"
+                className="gap-2 px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
               >
+                <LogOut className="h-4 w-4" />
                 Logout
-              </button>
+              </Button>
             </div>
           )}
         </div>
