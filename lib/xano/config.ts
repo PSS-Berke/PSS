@@ -21,6 +21,10 @@ export const XANO_CONFIG = {
       GET_PAGES: '/get_pages',
       CHANGE_CHAT: '/change_chat',
       DELETE_CHAT: '/delete_chat',
+      EDIT_CHAT_NAME: '/edit_chat_name',
+      INITIATE_SESSION: '/initiate_new_session',
+      EDIT_CAMPAIGN: '/edit_linkedin_campaign',
+      CAMPAIGN_DETAILS: '/campaign_details',
     },
     SOCIAL: {
       POSTS: '/post',

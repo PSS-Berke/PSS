@@ -6,11 +6,16 @@ import type {
   RegisterCredentials,
   LinkedInSession,
   LinkedInMessage,
+  LinkedInCampaign,
+  LinkedInCampaignDetails,
   CampaignPage,
   CreateCampaignParams,
   SendMessageRequest,
   ChangeChatRequest,
   DeleteChatRequest,
+  EditChatNameRequest,
+  InitiateSessionRequest,
+  EditCampaignPayload,
   SocialPost,
   SocialPostPayload,
   SocialPostUpdatePayload
@@ -191,20 +196,12 @@ export const usersApi = {
 // LinkedIn Copilot API
 export const linkedInApi = {
   async createCampaign(token: string, params: CreateCampaignParams = {}): Promise<User> {
-    const queryParams = new URLSearchParams();
-    
-    if (params.name) queryParams.append('name', params.name);
-    if (params.additional_notes) queryParams.append('additional_notes', params.additional_notes);
-    if (params.tone) queryParams.append('tone', params.tone);
-    if (params.content_length) queryParams.append('content_length', params.content_length.toString());
-    if (params.marketing_type) queryParams.append('marketing_type', params.marketing_type);
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.NEW_CAMPAIGN);
 
-    const endpoint = `${XANO_CONFIG.ENDPOINTS.LINKEDIN.NEW_CAMPAIGN}?${queryParams.toString()}`;
-    const url = getLinkedInApiUrl(endpoint);
-    
     const response = await fetch(url, {
-      method: 'GET',
+      method: 'POST',
       headers: getAuthHeaders(token),
+      body: JSON.stringify(params),
     });
 
     if (!response.ok) {
@@ -342,6 +339,129 @@ export const linkedInApi = {
 
     return response.json();
   },
+
+  async editChatName(token: string, data: EditChatNameRequest): Promise<LinkedInSession> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.EDIT_CHAT_NAME);
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async initiateSession(token: string, data: InitiateSessionRequest): Promise<LinkedInSession> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.INITIATE_SESSION);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async editCampaign(token: string, data: EditCampaignPayload): Promise<LinkedInCampaign> {
+    const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.EDIT_CAMPAIGN);
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async getCampaignDetails(token: string, campaignId: number): Promise<LinkedInCampaignDetails> {
+    const endpoint = `${XANO_CONFIG.ENDPOINTS.LINKEDIN.CAMPAIGN_DETAILS}?campaign_id=${campaignId}`;
+    const url = getLinkedInApiUrl(endpoint);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+};
+
+type SocialPostRequestData = SocialPostPayload | SocialPostUpdatePayload;
+
+const buildSocialPostRequestBody = (
+  data: SocialPostRequestData,
+  postId?: number
+) => {
+  const normalizedScheduledDate = (() => {
+    if (!data.scheduled_date) {
+      return null;
+    }
+    const date = new Date(data.scheduled_date);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  })();
+
+  const fallbackDescription =
+    (data as Partial<SocialPostPayload> & { post_descrription?: string })
+      .post_descrription ?? data.post_description ?? '';
+
+  const fallbackContent =
+    (data as Partial<SocialPostPayload> & { post_content?: string }).post_content ??
+    data.content ??
+    data.rich_content_text ??
+    fallbackDescription ??
+    '';
+
+  const requestPayload = {
+    post_id: postId ?? (data as { post_id?: number }).post_id ?? 0,
+    post_title: data.post_title ?? '',
+    post_descrription: fallbackDescription,
+    post_content: fallbackContent,
+    url_1: data.url_1 ?? '',
+    url_2: data.url_2 ?? '',
+    content_type: data.content_type ?? '',
+    scheduled_date: normalizedScheduledDate,
+  };
+
+  return requestPayload;
 };
 
 // Social Media Copilot API
@@ -367,10 +487,11 @@ export const socialCopilotApi = {
 
   async createPost(token: string, data: SocialPostPayload): Promise<SocialPost> {
     const url = getSocialApiUrl(XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS);
+    const requestBody = buildSocialPostRequestBody(data);
     const response = await fetch(url, {
       method: 'POST',
       headers: getAuthHeaders(token),
-      body: JSON.stringify(data),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -387,10 +508,11 @@ export const socialCopilotApi = {
 
   async updatePost(token: string, postId: number, data: SocialPostUpdatePayload): Promise<SocialPost> {
     const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
+    const requestBody = buildSocialPostRequestBody(data, postId);
     const response = await fetch(url, {
       method: 'PATCH',
       headers: getAuthHeaders(token),
-      body: JSON.stringify(data),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

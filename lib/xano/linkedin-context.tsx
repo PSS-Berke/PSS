@@ -6,9 +6,28 @@ import type {
   LinkedInSession, 
   LinkedInMessage, 
   CampaignPage, 
-  CreateCampaignParams 
+  CreateCampaignParams,
+  EditCampaignPayload,
+  LinkedInCampaignDetails,
 } from './types';
 import { useAuth } from './auth-context';
+
+const generateSessionId = (length = 15): string => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+    const randomValues = new Uint8Array(length);
+    globalThis.crypto.getRandomValues(randomValues);
+    return Array.from(randomValues, (value) => characters.charAt(value % characters.length)).join('');
+  }
+
+  let result = '';
+  for (let index = 0; index < length; index += 1) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+
+  return result;
+};
 
 // State interface
 interface LinkedInState {
@@ -43,7 +62,10 @@ type LinkedInAction =
   | { type: 'ADD_MESSAGE'; payload: LinkedInMessage }
   | { type: 'SET_PAGES'; payload: CampaignPage[] }
   | { type: 'ADD_CAMPAIGN_PAGE'; payload: CampaignPage }
-  | { type: 'UPDATE_SESSION_IN_PAGES'; payload: LinkedInSession };
+  | { type: 'UPDATE_SESSION_IN_PAGES'; payload: LinkedInSession }
+  | { type: 'ADD_SESSION_TO_CAMPAIGN'; payload: LinkedInSession }
+  | { type: 'UPDATE_CAMPAIGN'; payload: CampaignPage }
+  | { type: 'SET_CAMPAIGN_DETAILS'; payload: LinkedInCampaignDetails };
 
 // Initial state
 const initialState: LinkedInState = {
@@ -97,6 +119,51 @@ function linkedInReducer(state: LinkedInState, action: LinkedInAction): LinkedIn
           };
         })
       };
+    case 'ADD_SESSION_TO_CAMPAIGN':
+      return {
+        ...state,
+        pages: state.pages.map(page => {
+          if (page.linkedin_campaigns_id === action.payload.linkedin_campaigns_id) {
+            const entries = Array.isArray(page.records) ? page.records : [];
+            const exists = entries.some(session => session.id === action.payload.id);
+            return {
+              ...page,
+              records: exists ? entries : [action.payload, ...entries]
+            };
+          }
+          return page;
+        })
+      };
+    case 'UPDATE_CAMPAIGN':
+      return {
+        ...state,
+        pages: state.pages.map(page =>
+          page.linkedin_campaigns_id === action.payload.linkedin_campaigns_id
+            ? {
+                ...page,
+                ...action.payload,
+                records: Array.isArray(action.payload.records) ? action.payload.records : page.records,
+              }
+            : page
+        ),
+      };
+    case 'SET_CAMPAIGN_DETAILS':
+      return {
+        ...state,
+        pages: state.pages.map(page =>
+          page.linkedin_campaigns_id === action.payload.id
+            ? {
+                ...page,
+                name: action.payload.name,
+                additional_notes: action.payload.additional_notes,
+                marketing_type: action.payload.marketing_type,
+                post_length: action.payload.post_length,
+                tone: action.payload.tone,
+                created_at: action.payload.created_at,
+              }
+            : page
+        ),
+      };
     default:
       return state;
   }
@@ -109,10 +176,14 @@ interface LinkedInContextType {
   // Session management
   changeChat: (sessionId: string) => Promise<void>;
   deleteChat: (sessionId: string) => Promise<void>;
+  editChatName: (sessionId: number, name: string) => Promise<LinkedInSession | null>;
+  initiateSession: (campaignId: number | null) => Promise<LinkedInSession | null>;
   
   // Campaign management
   createCampaign: (params: CreateCampaignParams) => Promise<void>;
   loadPages: () => Promise<void>;
+  submitCampaignUpdate: (payload: EditCampaignPayload) => Promise<CampaignPage | null>;
+  fetchCampaignDetails: (campaignId: number) => Promise<LinkedInCampaignDetails | null>;
   
   // Messaging
   sendMessage: (prompt: string) => Promise<void>;
@@ -281,6 +352,63 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token, state.currentSession, loadPages]);
 
+  const editChatName = useCallback(async (sessionId: number, name: string) => {
+    if (!token) return null;
+
+    try {
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      const updatedSession = await linkedInApi.editChatName(token, {
+        name,
+        linkedin_sessions_id: sessionId,
+      });
+
+      dispatch({ type: 'UPDATE_SESSION_IN_PAGES', payload: updatedSession });
+
+      if (state.currentSession?.id === updatedSession.id) {
+        dispatch({ type: 'SET_CURRENT_SESSION', payload: updatedSession });
+      }
+
+      return updatedSession;
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to update chat name',
+      });
+
+      throw error;
+    }
+  }, [token, state.currentSession?.id]);
+
+  const initiateSession = useCallback(async (campaignId: number | null) => {
+    if (!token) return null;
+
+    try {
+      dispatch({ type: 'SET_SWITCHING_SESSION', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      const newSession = await linkedInApi.initiateSession(token, {
+        linkedin_campaigns_id: campaignId,
+        session_id: generateSessionId(),
+      });
+
+      dispatch({ type: 'SET_CURRENT_SESSION', payload: newSession });
+      dispatch({ type: 'ADD_SESSION_TO_CAMPAIGN', payload: newSession });
+
+      await loadMessages();
+      await loadPages();
+      return newSession;
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to add chat to campaign',
+      });
+      return null;
+    } finally {
+      dispatch({ type: 'SET_SWITCHING_SESSION', payload: false });
+    }
+  }, [token, loadMessages, loadPages]);
+
   // Create campaign
   const createCampaign = useCallback(async (params: CreateCampaignParams) => {
     if (!token) return;
@@ -368,8 +496,55 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     state,
     changeChat,
     deleteChat,
+    editChatName,
+    initiateSession,
     createCampaign,
     loadPages,
+    submitCampaignUpdate: async (payload) => {
+      if (!token) return null;
+
+      try {
+        dispatch({ type: 'SET_ERROR', payload: null });
+        const updatedCampaign = await linkedInApi.editCampaign(token, payload);
+
+        const mappedCampaign: CampaignPage = {
+          linkedin_campaigns_id: updatedCampaign.id,
+          name: updatedCampaign.name,
+          additional_notes: updatedCampaign.additional_notes,
+          marketing_type: updatedCampaign.marketing_type,
+          post_length: updatedCampaign.post_length,
+          tone: updatedCampaign.tone,
+          records: [],
+        };
+
+        dispatch({ type: 'UPDATE_CAMPAIGN', payload: mappedCampaign });
+        await loadPages();
+        return mappedCampaign;
+      } catch (error) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to update campaign',
+        });
+        return null;
+      }
+    },
+    fetchCampaignDetails: async (campaignId) => {
+      if (!token) return null;
+
+      try {
+        const details = await linkedInApi.getCampaignDetails(token, campaignId);
+
+        dispatch({ type: 'SET_CAMPAIGN_DETAILS', payload: details });
+
+        return details;
+      } catch (error) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to load campaign details',
+        });
+        return null;
+      }
+    },
     sendMessage,
     loadMessages,
     clearError,

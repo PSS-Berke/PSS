@@ -47,7 +47,7 @@ export interface LinkedInSession {
   user_id: number;
   session_name: string;
   is_deleted: boolean;
-  linkedin_campaigns_id: number;
+  linkedin_campaigns_id: number | null;
 }
 
 export interface LinkedInMessage {
@@ -69,12 +69,18 @@ export interface LinkedInCampaign {
   marketing_type?: string;
   post_length?: number;
   tone?: string;
+  target_audience?: string;
 }
+
+export type LinkedInCampaignDetails = LinkedInCampaign & {
+  post_length?: number | string | null;
+};
 
 export interface CampaignPage {
   linkedin_campaigns_id: number;
   name: string;
   records: LinkedInSession[] | string; // Can be string from JSON_AGG or parsed array
+  target_audience?: string;
 }
 
 // API Request/Response Types
@@ -84,6 +90,7 @@ export interface CreateCampaignParams {
   tone?: string;
   content_length?: number;
   marketing_type?: string;
+  target_audience?: string;
 }
 
 export interface SendMessageRequest {
@@ -96,6 +103,26 @@ export interface ChangeChatRequest {
 
 export interface DeleteChatRequest {
   session_id: string;
+}
+
+export interface EditChatNameRequest {
+  name: string;
+  linkedin_sessions_id: number;
+}
+
+export interface InitiateSessionRequest {
+  session_id: string;
+  linkedin_campaigns_id: number | null;
+}
+
+export interface EditCampaignPayload {
+  campaign_id: number;
+  name: string;
+  additional_notes: string;
+  marketing_type: string;
+  post_length: number;
+  tone: string;
+  target_audience: string;
 }
 
 // Social Media Copilot Types

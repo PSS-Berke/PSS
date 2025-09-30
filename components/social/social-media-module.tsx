@@ -4,6 +4,7 @@
 const defaultContentType: SocialPost['content_type'] = 'linkedin';
 
 import React, { useCallback, useMemo, useState } from 'react';
+import type { Delta, Sources } from 'quill';
 import {
   Calendar,
   ChevronDown,
@@ -30,9 +31,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useSocialMedia } from '@/lib/xano/social-media-context';
 import type { SocialPost, SocialPostPayload } from '@/lib/xano/types';
+import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from './rich-text-editor';
 import { SocialMediaCalendar } from './social-media-calendar';
 
 type TabKey = 'calendar' | 'tasks';
@@ -270,13 +272,33 @@ const renderTabButton = (
       const nextState = { ...prev, [field]: value };
       if (field === 'rich_content_text' && typeof value === 'string') {
         nextState.content = value;
+        if (!prev.rich_content_html) {
+          nextState.rich_content_html = value;
+        }
       }
       if (field === 'content' && typeof value === 'string') {
         nextState.rich_content_text = value;
+        if (!prev.rich_content_html) {
+          nextState.rich_content_html = value;
+        }
       }
       return nextState;
     });
   };
+
+  const handleRichContentChange = useCallback(
+    (html: string, _delta: Delta, _source: Sources, editor: UnprivilegedEditor) => {
+      setFormError(null);
+      const textContent = editor?.getText?.() ? editor.getText().trim() : '';
+      setFormState((prev) => ({
+        ...prev,
+        rich_content_html: html,
+        rich_content_text: textContent,
+        content: textContent,
+      }));
+    },
+    []
+  );
 
   const parseScheduledDate = (value?: string) => {
     if (!value) return null;
@@ -764,11 +786,16 @@ const renderTabButton = (
                 <div className="grid gap-2">
                   <Label htmlFor="rich_content_text">Post Content</Label>
                   {isFormEditable ? (
-                    <Textarea
+                    <RichTextEditor
                       id="rich_content_text"
-                      value={activeFormData.rich_content_text ?? ''}
-                      onChange={(event) => handleChange('rich_content_text', event.target.value)}
-                      rows={6}
+                      value={activeFormData.rich_content_html ?? ''}
+                      onChange={handleRichContentChange}
+                      placeholder="Write engaging copy for your post..."
+                    />
+                  ) : selectedPost?.rich_content_html ? (
+                    <div
+                      className="prose prose-sm max-w-none rounded-md border border-border/60 bg-muted/30 p-3 text-foreground"
+                      dangerouslySetInnerHTML={{ __html: selectedPost.rich_content_html }}
                     />
                   ) : (
                     <div className="rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-foreground">
