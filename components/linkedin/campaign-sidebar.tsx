@@ -721,15 +721,15 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
                         <div key={campaign.linkedin_campaigns_id} className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
                             <div 
-                              className="flex items-center gap-1 flex-1 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors"
+                              className="flex items-start gap-1 flex-1 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors"
                               onClick={() => toggleCampaignExpanded(campaign.linkedin_campaigns_id as number)}
                             >
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                               )}
-                              <h4 className="font-medium text-sm text-foreground truncate">
+                              <h4 className="font-medium text-sm text-foreground break-words flex-1 min-w-0">
                                 {campaign.name}
                               </h4>
                               <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
