@@ -81,6 +81,10 @@ export interface CampaignPage {
   name: string;
   records: LinkedInSession[] | string; // Can be string from JSON_AGG or parsed array
   target_audience?: string;
+  additional_notes?: string;
+  marketing_type?: string;
+  post_length?: number;
+  tone?: string;
 }
 
 // API Request/Response Types

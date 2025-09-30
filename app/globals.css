@@ -69,22 +69,6 @@
 }
 
 @layer components {
-  .ql-toolbar.ql-snow {
-    @apply rounded-t-md border border-border/60 bg-muted/40;
-  }
-
-  .ql-container.ql-snow {
-    @apply rounded-b-md border border-border/60 bg-background;
-  }
-
-  .ql-editor {
-    @apply min-h-[180px] text-sm text-foreground;
-  }
-
-  .ql-editor.ql-blank::before {
-    @apply text-muted-foreground;
-  }
-
   .calendar-wrapper .fc {
     --fc-border-color: hsl(var(--border));
     --fc-page-bg-color: hsl(var(--card));
