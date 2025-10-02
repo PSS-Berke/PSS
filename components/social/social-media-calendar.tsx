@@ -66,11 +66,11 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
     const isWeeklyView = arg.view.type === 'timeGridWeek';
 
     return (
-      <div className="flex h-full flex-col rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm">
+      <div className="flex h-full flex-col rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize text-white',
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize text-white whitespace-normal',
               CONTENT_COLORS[contentType]
             )}
           >
@@ -78,18 +78,18 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
           </span>
           <span
             className={cn(
-              'flex h-3 w-3 items-center justify-center rounded-full border',
+              'flex h-3 w-3 items-center justify-center rounded-full border flex-shrink-0',
               published
                 ? 'border-[#C33527] bg-[#C33527]'
                 : 'border-border bg-transparent'
             )}
           />
         </div>
-        <div className="mt-2 line-clamp-2 text-sm font-semibold text-foreground">
+        <div className="mt-2 text-sm font-semibold text-foreground break-words">
           {title}
         </div>
         {!isWeeklyView ? (
-          <div className="mt-1 text-xs text-muted-foreground">
+          <div className="mt-1 text-xs text-muted-foreground whitespace-normal">
             {scheduled.toLocaleString(undefined, {
               month: 'short',
               day: 'numeric',
