@@ -36,10 +36,11 @@ class XanoApiError extends Error {
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
-  token?: string
+  token?: string,
+  skipApiKey: boolean = false
 ): Promise<T> {
-  // Check if API key is configured
-  if (!XANO_CONFIG.API_KEY) {
+  // Check if API key is configured (skip for public endpoints like login/register)
+  if (!skipApiKey && !XANO_CONFIG.API_KEY) {
     throw new XanoApiError(
       'Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.',
       401,
@@ -48,8 +49,10 @@ async function apiRequest<T>(
   }
 
   const url = getApiUrl(endpoint);
-  const headers = getAuthHeaders(token);
-  
+  const headers = skipApiKey
+    ? { 'Content-Type': 'application/json' }
+    : getAuthHeaders(token);
+
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -60,7 +63,7 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    
+
     // Handle specific error cases
     if (response.status === 404) {
       throw new XanoApiError(
@@ -69,7 +72,7 @@ async function apiRequest<T>(
         errorData
       );
     }
-    
+
     if (response.status === 403) {
       throw new XanoApiError(
         'Invalid credentials or insufficient permissions. Please check your API key and endpoint configuration.',
@@ -77,7 +80,7 @@ async function apiRequest<T>(
         errorData
       );
     }
-    
+
     throw new XanoApiError(
       errorData.message || `HTTP ${response.status}: ${response.statusText}`,
       response.status,
@@ -96,9 +99,11 @@ export const authApi = {
       {
         method: 'POST',
         body: JSON.stringify(credentials),
-      }
+      },
+      undefined,
+      true // Skip API key for public login endpoint
     );
-    
+
     // For now, we'll create a minimal user object since the API only returns the token
     // In a real app, you might want to decode the JWT to get user info or call /auth/me
     return {
@@ -119,9 +124,11 @@ export const authApi = {
       {
         method: 'POST',
         body: JSON.stringify(credentials),
-      }
+      },
+      undefined,
+      true // Skip API key for public register endpoint
     );
-    
+
     // For now, we'll create a minimal user object since the API only returns the token
     return {
       user: {

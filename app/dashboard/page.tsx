@@ -3,6 +3,8 @@ import { LinkedInModule } from "@/components/linkedin/linkedin-module";
 import { LinkedInProvider } from "@/lib/xano/linkedin-context";
 import { SocialMediaModule } from "@/components/social/social-media-module";
 import { SocialMediaProvider } from "@/lib/xano/social-media-context";
+import { CallPrepModule } from "@/components/call-prep/call-prep-module";
+import { CallPrepProvider } from "@/lib/xano/call-prep-context";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -33,6 +35,13 @@ export default function DashboardPage() {
         <SocialMediaProvider>
           <SocialMediaModule />
         </SocialMediaProvider>
+      </section>
+
+      {/* Call Prep Assistant section */}
+      <section>
+        <CallPrepProvider>
+          <CallPrepModule />
+        </CallPrepProvider>
       </section>
 
       {/* More modules */}
