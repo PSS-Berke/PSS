@@ -45,7 +45,7 @@ function CardSection({ title, content, cardKey }: CardSectionProps) {
 
 export function BattleCardContent() {
   const { state } = useBattleCard();
-  const activeBattleCard = state.activeBattleCard;
+  const activeBattleCard = state.activeCard;
 
   if (!activeBattleCard) {
     return (
