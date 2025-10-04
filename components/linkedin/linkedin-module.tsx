@@ -16,6 +16,7 @@ interface LinkedInModuleProps {
 export function LinkedInModule({ className }: LinkedInModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { state } = useLinkedIn();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pages = Array.isArray(state.pages) ? state.pages : [];
 
   const toggleExpanded = () => {
@@ -80,11 +81,11 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
       {isExpanded && (
         <CardContent>
           <div className="flex gap-6">
-            <div className="w-80 flex-shrink-0">
-              <CampaignSidebar />
+            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}>
+              <CampaignSidebar isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
             </div>
             <div className="flex-1 min-w-0">
-              <ChatInterface />
+              <ChatInterface sidebarCollapsed={isSidebarCollapsed} />
             </div>
           </div>
         </CardContent>
