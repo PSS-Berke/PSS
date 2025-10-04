@@ -15,9 +15,6 @@ import {
   Timer,
   Linkedin,
   Instagram,
-  Facebook,
-  Youtube,
-  Twitter,
 } from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
 
@@ -51,11 +48,6 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
   linkedin: 'bg-[#0077B5] text-white',
   instagram: 'bg-[#E4405F] text-white',
   tiktok: 'bg-black text-white',
-  facebook: 'bg-[#1877F2] text-white',
-  twitter: 'bg-[#1DA1F2] text-white',
-  youtube: 'bg-[#FF0000] text-white',
-  pinterest: 'bg-[#E60023] text-white',
-  snapchat: 'bg-[#FFFC00] text-black',
   all: 'bg-[#C33527] text-white',
 };
 
@@ -68,12 +60,8 @@ const getPlatformIcon = (contentType: SocialPost['content_type']) => {
       return <Linkedin {...iconProps} />;
     case 'instagram':
       return <Instagram {...iconProps} />;
-    case 'facebook':
-      return <Facebook {...iconProps} />;
-    case 'twitter':
-      return <Twitter {...iconProps} />;
-    case 'youtube':
-      return <Youtube {...iconProps} />;
+    case 'tiktok':
+      return null; // No TikTok icon in lucide-react
     default:
       return null;
   }
@@ -857,11 +845,6 @@ const renderTabButton = (
                         <option value="linkedin">LinkedIn</option>
                         <option value="instagram">Instagram</option>
                         <option value="tiktok">TikTok</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="twitter">Twitter/X</option>
-                        <option value="youtube">YouTube</option>
-                        <option value="pinterest">Pinterest</option>
-                        <option value="snapchat">Snapchat</option>
                         <option value="all">All Platforms</option>
                       </select>
                     ) : (
