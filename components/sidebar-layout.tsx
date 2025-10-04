@@ -228,7 +228,7 @@ export default function SidebarLayout(props: {
 
   return (
     <div className="w-full flex">
-      <div className="flex w-[260px] flex-col border-r border-border bg-background/95 md:fixed md:left-0 md:top-0 md:h-screen">
+      <div className="flex w-[260px] flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen">
         <SidebarContent
           items={props.items}
           sidebarTop={sidebarTop}
@@ -237,7 +237,7 @@ export default function SidebarLayout(props: {
           user={user}
         />
       </div>
-      <div className="flex flex-col flex-grow w-0 md:ml-[260px]">
+      <div className="flex flex-col flex-grow w-0 ml-[260px]">
         <div className="h-14 border-b flex items-center justify-between sticky top-0 bg-white dark:bg-black z-10 px-4 md:px-6">
           <div className="hidden md:flex">
             <HeaderBreadcrumb baseBreadcrumb={props.baseBreadcrumb} basePath={props.basePath} items={props.items} />
