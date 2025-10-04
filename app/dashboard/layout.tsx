@@ -3,31 +3,27 @@
 import React from 'react';
 import SidebarLayout, { SidebarItem } from "@/components/sidebar-layout";
 import { useAuth } from "@/lib/xano/auth-context";
-import { BadgePercent, BarChart4, Columns3, Globe, Locate, Settings2, ShoppingBag, ShoppingCart, Users } from "lucide-react";
+import { Home, Zap, BarChart4 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from '@/components/loading-spinner';
 
 
 const navigationItems: SidebarItem[] = [
   {
-    name: "Overview",
+    name: "Home",
     href: "/dashboard",
-    icon: Globe,
+    icon: Home,
     type: "item",
   },
   {
-    type: 'label',
-    name: 'Core',
-  },
-  {
-    name: "People",
-    href: "/dashboard/people",
-    icon: Users,
+    name: "Automations",
+    href: "/dashboard/automations",
+    icon: Zap,
     type: "item",
   },
   {
-    name: "Revenue",
-    href: "/dashboard/revenue",
+    name: "Analytics",
+    href: "/dashboard/analytics",
     icon: BarChart4,
     type: "item",
   },

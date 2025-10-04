@@ -16,6 +16,7 @@ interface BattleCardModuleProps {
 export function BattleCardModule({ className }: BattleCardModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { state } = useBattleCard();
+  const campaigns = Array.isArray(state.campaigns) ? state.campaigns : [];
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -28,13 +29,22 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
     if (state.isGenerating) {
       return <Badge variant="default">Generating...</Badge>;
     }
-    if (state.activeBattleCard) {
+    if (state.activeCard) {
       return <Badge variant="default">Active Card</Badge>;
     }
-    if (state.battleCards.length > 0) {
+    if (campaigns.length > 0) {
       return <Badge variant="outline">Ready</Badge>;
     }
-    return <Badge variant="secondary">No Cards</Badge>;
+    return <Badge variant="secondary">No Campaigns</Badge>;
+  };
+
+  const getCardCount = () => {
+    return campaigns.reduce((total, campaign) => {
+      if (Array.isArray(campaign.records)) {
+        return total + campaign.records.length;
+      }
+      return total;
+    }, 0);
   };
 
   return (
@@ -58,9 +68,9 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
 
           <div className="flex items-center gap-3">
             {getStatusBadge()}
-            {state.battleCards.length > 0 && (
+            {campaigns.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                {state.battleCards.length} battle {state.battleCards.length === 1 ? 'card' : 'cards'}
+                {campaigns.length} campaigns • {getCardCount()} cards
               </div>
             )}
             <Button variant="ghost" size="sm">
@@ -73,7 +83,7 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
       {isExpanded && (
         <CardContent>
           <div className="flex gap-6">
-            <div className="w-80 flex-shrink-0">
+            <div className="flex-1 min-w-0">
               <BattleCardSidebar />
             </div>
             <div className="flex-1 min-w-0">

@@ -169,6 +169,7 @@ export type SocialPostUpdatePayload = Partial<SocialPostPayload> & {
 };
 
 // Battle Card Copilot Types
+// Battle Card Types
 export interface BattleCard {
   id: number;
   created_at: number | string;
@@ -183,10 +184,39 @@ export interface BattleCard {
   strengths: string;
   customer_references: string;
   user_id: number;
+  battle_card_campaign_id?: number | null;
+}
+
+export interface BattleCardCampaign {
+  id: number;
+  created_at: number | string;
+  name: string;
+  description?: string;
+  user_id: number;
+}
+
+export interface BattleCardCampaignPage {
+  battle_card_campaign_id: number;
+  name: string;
+  description?: string;
+  created_at?: number | string;
+  records: BattleCard[] | string;
 }
 
 export interface CreateBattleCardRequest {
   competitor_name: string;
   service_name: string;
+  battle_card_campaign_id?: number | null;
+}
+
+export interface CreateBattleCardCampaignRequest {
+  name: string;
+  description?: string;
+}
+
+export interface EditBattleCardCampaignPayload {
+  battle_card_campaign_id: number;
+  name: string;
+  description?: string;
 }
 

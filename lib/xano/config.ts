@@ -34,6 +34,10 @@ export const XANO_CONFIG = {
       GET_CARDS: '/battle_card_main',
       GENERATE_CARD: '/generate_battle_card',
       DELETE_CARD: '/battle_card_main',
+      GET_CAMPAIGNS: '/get_battle_card_campaigns',
+      CREATE_CAMPAIGN: '/new_battle_card_campaign',
+      EDIT_CAMPAIGN: '/edit_battle_card_campaign',
+      DELETE_CAMPAIGN: '/battle_card_campaigns',
     },
   },
 } as const;
