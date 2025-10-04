@@ -67,7 +67,7 @@ export function BattleCardSidebar() {
         </div>
 
         <div className="space-y-2">
-          {state.battleCards.map((card) => (
+          {state.battleCards.filter(card => card && card.id).map((card) => (
             <div
               key={card.id}
               onClick={() => setActiveBattleCard(card)}
