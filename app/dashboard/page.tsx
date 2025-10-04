@@ -5,6 +5,8 @@ import { SocialMediaModule } from "@/components/social/social-media-module";
 import { SocialMediaProvider } from "@/lib/xano/social-media-context";
 import { CallPrepModule } from "@/components/call-prep/call-prep-module";
 import { CallPrepProvider } from "@/lib/xano/call-prep-context";
+import { BattleCardModule } from "@/components/battle-card/battle-card-module";
+import { BattleCardProvider } from "@/lib/xano/battle-card-context";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -42,6 +44,13 @@ export default function DashboardPage() {
         <CallPrepProvider>
           <CallPrepModule />
         </CallPrepProvider>
+      </section>
+
+      {/* Battle Card Copilot section */}
+      <section>
+        <BattleCardProvider>
+          <BattleCardModule />
+        </BattleCardProvider>
       </section>
 
       {/* More modules */}
