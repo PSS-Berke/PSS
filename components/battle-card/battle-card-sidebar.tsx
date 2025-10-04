@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 
 export function BattleCardSidebar() {
-  const { state, generateCard, deleteCard, setActiveCard } = useBattleCard();
+  const { state, generateBattleCard, deleteBattleCard, setActiveBattleCard } = useBattleCard();
   const [showNewCardModal, setShowNewCardModal] = useState(false);
   const [competitorName, setCompetitorName] = useState('');
   const [serviceName, setServiceName] = useState('');
@@ -27,13 +27,9 @@ export function BattleCardSidebar() {
     }
 
     try {
-      // Get first campaign ID if available
-      const campaignId = state.campaigns.length > 0 ? state.campaigns[0].battle_card_campaign_id : null;
-
-      await generateCard({
+      await generateBattleCard({
         competitor_name: competitorName,
         service_name: serviceName,
-        battle_card_campaign_id: campaignId,
       });
       setShowNewCardModal(false);
       setCompetitorName('');
@@ -51,17 +47,11 @@ export function BattleCardSidebar() {
     }
 
     try {
-      await deleteCard(cardId);
+      await deleteBattleCard(cardId);
     } catch (error) {
       console.error('Failed to delete battle card:', error);
     }
   };
-
-  // Flatten all cards from all campaigns
-  const allCards = state.campaigns.reduce((cards, campaign) => {
-    const records = Array.isArray(campaign.records) ? campaign.records : [];
-    return [...cards, ...records];
-  }, [] as typeof state.campaigns[0]['records'] extends (infer T)[] ? T[] : never);
 
   return (
     <>
@@ -78,12 +68,12 @@ export function BattleCardSidebar() {
         </div>
 
         <div className="space-y-2">
-          {allCards.filter(card => card && card.id).map((card) => (
+          {state.battleCards.filter(card => card && card.id).map((card) => (
             <div
               key={card.id}
-              onClick={() => setActiveCard(card)}
+              onClick={() => setActiveBattleCard(card)}
               className={`p-3 rounded-lg cursor-pointer transition-all ${
-                state.activeCard?.id === card.id
+                state.activeBattleCard?.id === card.id
                   ? 'bg-primary/10 border-2 border-primary'
                   : 'bg-muted hover:bg-muted/80 border-2 border-transparent'
               }`}
@@ -110,7 +100,7 @@ export function BattleCardSidebar() {
           ))}
         </div>
 
-        {allCards.length === 0 && (
+        {state.battleCards.length === 0 && (
           <div className="text-center py-8">
             <Target className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No battle cards yet</p>

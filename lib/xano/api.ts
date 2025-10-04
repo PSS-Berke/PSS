@@ -21,11 +21,7 @@ import type {
   SocialPostPayload,
   SocialPostUpdatePayload,
   BattleCard,
-  CreateBattleCardRequest,
-  BattleCardCampaign,
-  BattleCardCampaignPage,
-  CreateBattleCardCampaignRequest,
-  EditBattleCardCampaignPayload
+  CreateBattleCardRequest
 } from './types';
 
 export class XanoApiError extends Error {
@@ -569,65 +565,6 @@ export const socialCopilotApi = {
 
 // Battle Card Copilot API
 export const battleCardApi = {
-  async getCampaigns(token: string): Promise<BattleCardCampaignPage[]> {
-    const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CAMPAIGNS);
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getAuthHeaders(token),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new XanoApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData
-      );
-    }
-
-    return response.json();
-  },
-
-  async createCampaign(token: string, data: CreateBattleCardCampaignRequest): Promise<BattleCardCampaign> {
-    const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.CREATE_CAMPAIGN);
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: getAuthHeaders(token),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new XanoApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData
-      );
-    }
-
-    return response.json();
-  },
-
-  async editCampaign(token: string, data: EditBattleCardCampaignPayload): Promise<BattleCardCampaign> {
-    const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.EDIT_CAMPAIGN);
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: getAuthHeaders(token),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new XanoApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData
-      );
-    }
-
-    return response.json();
-  },
-
   async getBattleCards(token: string, userId: number): Promise<BattleCard[]> {
     const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CARDS}?user_id=${userId}`);
     const response = await fetch(url, {
