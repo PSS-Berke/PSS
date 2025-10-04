@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useReducer,
+  useRef,
 } from 'react';
 import { socialCopilotApi } from './api';
 import type {
@@ -89,6 +90,7 @@ interface SocialMediaContextValue {
   state: SocialMediaState;
   refreshPosts: () => Promise<void>;
   togglePublish: (postId: number, nextStatus: boolean) => Promise<void>;
+  updateStatus: (postId: number, status: 'draft' | 'approved' | 'published') => Promise<void>;
   updatePost: (
     postId: number,
     payload: SocialPostUpdatePayload
@@ -108,6 +110,12 @@ export function SocialMediaProvider({
 }) {
   const [state, dispatch] = useReducer(socialMediaReducer, initialState);
   const { token, user } = useAuth();
+  const postsRef = useRef<SocialPost[]>(state.posts);
+
+  // Keep ref updated with latest posts
+  useEffect(() => {
+    postsRef.current = state.posts;
+  }, [state.posts]);
 
   const fetchPosts = useCallback(async () => {
     if (!token) {
@@ -156,31 +164,53 @@ export function SocialMediaProvider({
     await fetchPosts();
   }, [fetchPosts]);
 
-  const togglePublish = useCallback(
-    async (postId: number, nextStatus: boolean) => {
+  const updateStatus = useCallback(
+    async (postId: number, newStatus: 'draft' | 'approved' | 'published') => {
       if (!token) return;
 
       dispatch({ type: 'SET_MUTATING', payload: { id: postId, isMutating: true } });
       dispatch({ type: 'SET_ERROR', payload: null });
 
       try {
+        // Use ref to get current posts without adding to dependencies
+        const currentPost = postsRef.current.find(post => post.id === postId);
+        if (!currentPost) {
+          throw new Error('Post not found');
+        }
+
+        // Send full post data with updated status
         const updated = await socialCopilotApi.updatePost(token, postId, {
-          published: nextStatus,
+          post_title: currentPost.post_title,
+          post_description: currentPost.post_description ?? '',
+          rich_content_text: currentPost.rich_content_text ?? currentPost.content ?? '',
+          content: currentPost.content ?? currentPost.rich_content_text ?? '',
+          rich_content_html: currentPost.rich_content_html ?? '',
+          url_1: currentPost.url_1 ?? '',
+          url_2: currentPost.url_2 ?? '',
+          content_type: currentPost.content_type,
+          scheduled_date: currentPost.scheduled_date,
+          published: newStatus === 'published',
+          status: newStatus,
         });
         dispatch({ type: 'UPDATE_POST', payload: updated });
       } catch (error) {
-        console.error('Social Media: Failed to toggle publish', error);
+        console.error('Social Media: Failed to update status', error);
         dispatch({
           type: 'SET_ERROR',
           payload:
             error instanceof Error
               ? error.message
-              : 'Failed to update publish status',
+              : 'Failed to update post status',
         });
       } finally {
         dispatch({ type: 'SET_MUTATING', payload: { id: postId, isMutating: false } });
       }
   }, [token]);
+
+  const togglePublish = useCallback(
+    async (postId: number, nextStatus: boolean) => {
+      await updateStatus(postId, nextStatus ? 'published' : 'draft');
+  }, [updateStatus]);
 
   const updatePost = useCallback(
     async (postId: number, payload: SocialPostUpdatePayload) => {
@@ -269,6 +299,7 @@ export function SocialMediaProvider({
     state,
     refreshPosts,
     togglePublish,
+    updateStatus,
     updatePost,
     createPost,
     deletePost,

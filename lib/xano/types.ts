@@ -142,6 +142,7 @@ export interface SocialPost {
   content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all';
   scheduled_date: string;
   published: boolean;
+  status?: 'draft' | 'approved' | 'published';
   created_at: string;
   updated_at: string;
 }
@@ -157,11 +158,13 @@ export interface SocialPostPayload {
   content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all';
   scheduled_date: string;
   published?: boolean;
+  status?: 'draft' | 'approved' | 'published';
 }
 
 export type SocialPostUpdatePayload = Partial<SocialPostPayload> & {
   scheduled_date?: string;
   published?: boolean;
+  status?: 'draft' | 'approved' | 'published';
   content?: string;
 };
 

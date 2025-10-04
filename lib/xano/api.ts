@@ -466,6 +466,8 @@ const buildSocialPostRequestBody = (
     url_2: data.url_2 ?? '',
     content_type: data.content_type ?? '',
     scheduled_date: normalizedScheduledDate,
+    published: data.published ?? false,
+    status: data.status ?? 'draft',
   };
 
   return requestPayload;
@@ -516,6 +518,9 @@ export const socialCopilotApi = {
   async updatePost(token: string, postId: number, data: SocialPostUpdatePayload): Promise<SocialPost> {
     const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
     const requestBody = buildSocialPostRequestBody(data, postId);
+
+    console.log('Social API: updatePost request body:', requestBody);
+
     const response = await fetch(url, {
       method: 'PATCH',
       headers: getAuthHeaders(token),
@@ -531,7 +536,9 @@ export const socialCopilotApi = {
       );
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('Social API: updatePost response:', result);
+    return result;
   },
 
   async deletePost(token: string, postId: number): Promise<void> {

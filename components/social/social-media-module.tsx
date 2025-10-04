@@ -13,6 +13,11 @@ import {
   RefreshCw,
   Tag,
   Timer,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Youtube,
+  Twitter,
 } from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
 
@@ -46,17 +51,40 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
   linkedin: 'bg-[#0077B5] text-white',
   instagram: 'bg-[#E4405F] text-white',
   tiktok: 'bg-black text-white',
+  facebook: 'bg-[#1877F2] text-white',
+  twitter: 'bg-[#1DA1F2] text-white',
+  youtube: 'bg-[#FF0000] text-white',
+  pinterest: 'bg-[#E60023] text-white',
+  snapchat: 'bg-[#FFFC00] text-black',
   all: 'bg-[#C33527] text-white',
 };
 
 const DEFAULT_CONTENT_TYPE: SocialPost['content_type'] = 'linkedin';
+
+const getPlatformIcon = (contentType: SocialPost['content_type']) => {
+  const iconProps = { className: "h-3.5 w-3.5" };
+  switch (contentType) {
+    case 'linkedin':
+      return <Linkedin {...iconProps} />;
+    case 'instagram':
+      return <Instagram {...iconProps} />;
+    case 'facebook':
+      return <Facebook {...iconProps} />;
+    case 'twitter':
+      return <Twitter {...iconProps} />;
+    case 'youtube':
+      return <Youtube {...iconProps} />;
+    default:
+      return null;
+  }
+};
 
 const formatDateTimeLocal = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm");
 
 export function SocialMediaModule({ className }: { className?: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('calendar');
-  const { state, refreshPosts, togglePublish, updatePost, deletePost, createPost } =
+  const { state, refreshPosts, togglePublish, updateStatus, updatePost, deletePost, createPost } =
     useSocialMedia();
   const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -388,6 +416,13 @@ const renderTabButton = (
     }
   };
 
+  const handleStatusChange = async (newStatus: 'draft' | 'approved' | 'published') => {
+    if (!selectedPost) return;
+    await updateStatus(selectedPost.id, newStatus);
+    setSelectedPost((prev) => (prev ? { ...prev, status: newStatus, published: newStatus === 'published' } : prev));
+    setFormState((prev) => ({ ...prev, status: newStatus, published: newStatus === 'published' }));
+  };
+
   const handlePublishToggle = async () => {
     if (!selectedPost) return;
     const nextStatus = !selectedPost.published;
@@ -416,10 +451,11 @@ const renderTabButton = (
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  'inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold capitalize',
+                  'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold capitalize',
                   CONTENT_COLORS[post.content_type]
                 )}
               >
+                {getPlatformIcon(post.content_type)}
                 {post.content_type}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -810,17 +846,34 @@ const renderTabButton = (
 
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="content_type">Content Type</Label>
+                    <Label htmlFor="content_type">Platform</Label>
                     {isFormEditable ? (
-                      <Input
+                      <select
                         id="content_type"
                         value={activeFormData.content_type ?? DEFAULT_CONTENT_TYPE}
                         onChange={(event) => handleChange('content_type', event.target.value)}
-                      />
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="twitter">Twitter/X</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="pinterest">Pinterest</option>
+                        <option value="snapchat">Snapchat</option>
+                        <option value="all">All Platforms</option>
+                      </select>
                     ) : (
-                      <p className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm capitalize text-foreground">
-                        {selectedPost?.content_type || '—'}
-                      </p>
+                      <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 p-3">
+                        <span className={cn(
+                          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize',
+                          CONTENT_COLORS[selectedPost?.content_type ?? 'linkedin']
+                        )}>
+                          {getPlatformIcon(selectedPost?.content_type ?? 'linkedin')}
+                          {selectedPost?.content_type || '—'}
+                        </span>
+                      </div>
                     )}
                   </div>
                   <div className="grid gap-2">
@@ -843,25 +896,24 @@ const renderTabButton = (
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Status</Label>
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant={selectedPost?.published ? 'default' : 'outline'}
-                      className={selectedPost?.published ? 'bg-[#C33527]' : ''}
+                  <Label htmlFor="status">Status</Label>
+                  {!isFormEditable ? (
+                    <select
+                      id="status"
+                      value={selectedPost?.status ?? 'draft'}
+                      onChange={(e) => handleStatusChange(e.target.value as 'draft' | 'approved' | 'published')}
+                      disabled={isMutatingSelected}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {selectedPost?.published ? 'Published' : 'Draft'}
-                    </Badge>
-                    {!isFormEditable && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handlePublishToggle}
-                        disabled={isMutatingSelected}
-                      >
-                        {selectedPost?.published ? 'Unpublish' : 'Publish'}
-                      </Button>
-                    )}
-                  </div>
+                      <option value="draft">Draft</option>
+                      <option value="approved">Approved</option>
+                      <option value="published">Published</option>
+                    </select>
+                  ) : (
+                    <p className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm capitalize text-foreground">
+                      {selectedPost?.status ?? 'draft'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -904,11 +956,6 @@ const renderTabButton = (
                 {selectedPost ? (
                   <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || isCreating}>
                     {isDeleting ? 'Deleting…' : 'Delete'}
-                  </Button>
-                ) : null}
-                {!isFormEditable && selectedPost ? (
-                  <Button onClick={handlePublishToggle} disabled={isMutatingSelected}>
-                    {selectedPost?.published ? 'Unpublish' : 'Publish'}
                   </Button>
                 ) : null}
               </div>

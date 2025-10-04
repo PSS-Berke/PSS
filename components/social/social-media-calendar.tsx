@@ -6,6 +6,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { Linkedin, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
 
 import type { SocialPost } from '@/lib/xano/types';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,11 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
   linkedin: 'bg-[#0077B5] text-white',
   instagram: 'bg-[#E4405F] text-white',
   tiktok: 'bg-black text-white',
+  facebook: 'bg-[#1877F2] text-white',
+  twitter: 'bg-[#1DA1F2] text-white',
+  youtube: 'bg-[#FF0000] text-white',
+  pinterest: 'bg-[#E60023] text-white',
+  snapchat: 'bg-[#FFFC00] text-black',
   all: 'bg-[#C33527] text-white',
 };
 
@@ -36,6 +42,24 @@ interface CalendarEvent {
 }
 
 export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: SocialMediaCalendarProps) {
+  const getPlatformIcon = (contentType: SocialPost['content_type'], size: 'sm' | 'md' = 'sm') => {
+    const iconProps = { className: size === 'sm' ? "h-2.5 w-2.5" : "h-3.5 w-3.5" };
+    switch (contentType) {
+      case 'linkedin':
+        return <Linkedin {...iconProps} />;
+      case 'instagram':
+        return <Instagram {...iconProps} />;
+      case 'facebook':
+        return <Facebook {...iconProps} />;
+      case 'twitter':
+        return <Twitter {...iconProps} />;
+      case 'youtube':
+        return <Youtube {...iconProps} />;
+      default:
+        return null;
+    }
+  };
+
   const events = useMemo<CalendarEvent[]>(() => {
     return posts.map((post) => {
       const scheduledDate = new Date(post.scheduled_date);
@@ -74,6 +98,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
               CONTENT_COLORS[contentType]
             )}
           >
+            {getPlatformIcon(contentType)}
             {contentType}
           </span>
           <span
