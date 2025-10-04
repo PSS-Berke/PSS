@@ -152,7 +152,7 @@ export function BattleCardProvider({ children }: { children: React.ReactNode }) 
     if (user && token) {
       loadBattleCards();
     }
-  }, [user, token]); // Only depend on user and token, not loadBattleCards
+  }, [user, token, loadBattleCards]);
 
   const value: BattleCardContextValue = {
     state,
