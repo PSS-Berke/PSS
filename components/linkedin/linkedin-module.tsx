@@ -79,13 +79,13 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
       </CardHeader>
 
       {isExpanded && (
-        <CardContent>
-          <div className="flex gap-6">
-            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}>
-              <CampaignSidebar isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
+        <CardContent className="h-[60vh] md:h-[70vh] max-h-[80vh] overflow-hidden">
+          <div className="flex gap-6 h-full">
+            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300 h-full`}> 
+              <CampaignSidebar className="h-full" isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
             </div>
-            <div className="flex-1 min-w-0">
-              <ChatInterface sidebarCollapsed={isSidebarCollapsed} />
+            <div className="flex-1 min-w-0 h-full overflow-hidden">
+              <ChatInterface className="h-full" sidebarCollapsed={isSidebarCollapsed} />
             </div>
           </div>
         </CardContent>

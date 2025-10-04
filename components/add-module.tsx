@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2, PlusCircle, X } from "lucide-react";
+import { PlusCircle, X, Zap, BarChart4 } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -89,14 +89,9 @@ export function AddModule({ open, onClose }: AddModuleProps) {
     onClose();
   };
 
-  const handleAdd = async () => {
+  const saveModule = async (moduleId: number) => {
     if (!token) {
       setError("Missing authentication token.");
-      return;
-    }
-
-    if (selectedModuleId === "") {
-      setError("Please choose a module to add.");
       return;
     }
 
@@ -110,7 +105,7 @@ export function AddModule({ open, onClose }: AddModuleProps) {
         {
           method: "POST",
           headers: getAuthHeaders(token),
-          body: JSON.stringify({ module_id: selectedModuleId }),
+          body: JSON.stringify({ module_id: moduleId }),
         }
       );
 
@@ -122,7 +117,7 @@ export function AddModule({ open, onClose }: AddModuleProps) {
       setSuccessMessage("Module added successfully.");
       setTimeout(() => {
         onClose();
-      }, 1200);
+      }, 900);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong while saving."
@@ -169,46 +164,60 @@ export function AddModule({ open, onClose }: AddModuleProps) {
             </p>
           ) : null}
 
-          <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
-            Module
-            <select
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C33527]"
-              value={selectedModuleId}
-              onChange={(event) => {
-                const value = event.target.value;
-                setSelectedModuleId(value === "" ? "" : Number(value));
-              }}
-              disabled={!isReady || isSaving}
-            >
-              {isFetching ? (
-                <option value="">Loading modules…</option>
-              ) : moduleOptions.length === 0 ? (
-                <option value="">No modules available</option>
-              ) : (
-                moduleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
+          {/* Module option cards (reference-style) */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {isFetching ? (
+              <div className="col-span-full text-sm text-muted-foreground">Loading modules…</div>
+            ) : moduleOptions.length === 0 ? (
+              <div className="col-span-full text-sm text-muted-foreground">No modules available</div>
+            ) : (
+              moduleOptions.map((option) => {
+                const label = option.label ?? String(option.value);
+
+
+                const Icon = (() => {
+                  const l = label.toLowerCase();
+                  if (l.includes("automatio")) return <Zap className="h-6 w-6 text-[#C33527]" />; // Automations
+                  if (l.includes("analytic")) return <BarChart4 className="h-6 w-6 text-muted-foreground" />; // Analytics
+                  return <PlusCircle className="h-6 w-6 text-muted-foreground" />; // default
+                })();
+
+                const description = (() => {
+                  const l = label.toLowerCase();
+                  if (l.includes("automatio")) return "Set up automated workflows";
+                  if (l.includes("analytic")) return "View insights and metrics";
+                  return "Add this module to your workspace";
+                })();
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => void saveModule(option.value)}
+                    className="w-full flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+                    disabled={isSaving}
+                    aria-label={`Add ${label}`}
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                      {Icon}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-800 group-hover:text-blue-600">{label}</h3>
+                        <span className="text-sm text-muted-foreground">{isSaving ? "Saving…" : ""}</span>
+                      </div>
+                      <p className="text-sm text-gray-500">{description}</p>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleCancel} disabled={isSaving}>
             Cancel
-          </Button>
-          <Button type="button" onClick={handleAdd} disabled={isSaving || isFetching || moduleOptions.length === 0}>
-            {isSaving ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Saving
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" /> Add
-              </span>
-            )}
           </Button>
         </DialogFooter>
       </DialogContent>

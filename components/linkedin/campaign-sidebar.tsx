@@ -590,7 +590,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-14' : 'w-80'} border-r bg-muted/30 flex flex-col h-full transition-all duration-300 ${className}`}>
+    <div className={`${isCollapsed ? 'w-14' : 'w-80'} border-r bg-muted/30 flex flex-col h-full transition-all duration-300 ${className ?? ''}`}>
       {/* Collapsed Toggle Button */}
       {isCollapsed && (
         <div className="flex items-center justify-center p-4">
