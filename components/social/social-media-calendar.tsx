@@ -15,11 +15,6 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
   linkedin: 'bg-[#0077B5] text-white',
   instagram: 'bg-[#E4405F] text-white',
   tiktok: 'bg-black text-white',
-  facebook: 'bg-[#1877F2] text-white',
-  twitter: 'bg-[#1DA1F2] text-white',
-  youtube: 'bg-[#FF0000] text-white',
-  pinterest: 'bg-[#E60023] text-white',
-  snapchat: 'bg-[#FFFC00] text-black',
   all: 'bg-[#C33527] text-white',
 };
 
