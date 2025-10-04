@@ -26,6 +26,10 @@ import type { CreateCampaignParams, LinkedInSession } from '@/lib/xano/types';
 
 interface CampaignSidebarProps {
   className?: string;
+  // If provided, controls collapsed state externally. If omitted, component is uncontrolled.
+  isCollapsed?: boolean;
+  // Notified when collapsed state changes (either via user toggle or programmatic)
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 type CampaignListItem = {
   linkedin_campaigns_id: number | null;
@@ -79,7 +83,7 @@ const generateSessionId = (): string => {
   return result;
 };
 
-export function CampaignSidebar({ className }: CampaignSidebarProps) {
+export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCollapseChange }: CampaignSidebarProps) {
   const { token } = useAuth();
   const {
     state,
@@ -125,7 +129,7 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
   const [isCampaignDetailsLoading, setIsCampaignDetailsLoading] = useState(false);
   const [campaignDetailError, setCampaignDetailError] = useState<string | null>(null);
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<number>>(new Set());
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [isChatsExpanded, setIsChatsExpanded] = useState(true);
 
   useEffect(() => {
@@ -570,13 +574,28 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
     });
   };
 
+  // determine if component is controlled by parent via prop
+  const isControlled = typeof propIsCollapsed !== 'undefined';
+  const isCollapsed = isControlled ? (propIsCollapsed as boolean) : internalCollapsed;
+
+  const setCollapsed = (value: boolean) => {
+    if (!isControlled) {
+      setInternalCollapsed(value);
+    }
+    try {
+      if (typeof onCollapseChange === 'function') onCollapseChange(value);
+    } catch (err) {
+      // ignore
+    }
+  };
+
   return (
     <div className={`${isCollapsed ? 'w-14' : 'w-80'} border-r bg-muted/30 flex flex-col h-full transition-all duration-300 ${className}`}>
       {/* Collapsed Toggle Button */}
       {isCollapsed && (
         <div className="flex items-center justify-center p-4">
           <Button
-            onClick={() => setIsCollapsed(false)}
+            onClick={() => setCollapsed(false)}
             size="sm"
             className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
           >
@@ -604,7 +623,7 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
                 )}
               </Button>
               <Button
-                onClick={() => setIsCollapsed(true)}
+                onClick={() => setCollapsed(true)}
                 size="sm"
                 variant="ghost"
                 className="h-8 w-8 p-0"

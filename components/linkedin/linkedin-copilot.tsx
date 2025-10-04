@@ -12,6 +12,7 @@ interface LinkedInCopilotProps {
 
 export function LinkedInCopilot({ className }: LinkedInCopilotProps) {
   const { state } = useLinkedIn();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
   if (state.isLoading && state.pages.length === 0) {
     return (
@@ -26,9 +27,9 @@ export function LinkedInCopilot({ className }: LinkedInCopilotProps) {
 
   return (
     <div className={`flex h-full ${className}`}>
-      <CampaignSidebar />
+      <CampaignSidebar isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
       <div className="flex-1 flex flex-col">
-        <ChatInterface />
+        <ChatInterface sidebarCollapsed={isSidebarCollapsed} />
       </div>
     </div>
   );

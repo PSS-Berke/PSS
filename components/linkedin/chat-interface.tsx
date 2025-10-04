@@ -11,9 +11,13 @@ interface ChatInterfaceProps {
   className?: string;
 }
 
+interface ChatInterfacePropsExtended extends ChatInterfaceProps {
+  sidebarCollapsed?: boolean;
+}
+
 const MIN_COMPOSER_HEIGHT = 44;
 
-export function ChatInterface({ className }: ChatInterfaceProps) {
+export function ChatInterface({ className, sidebarCollapsed }: ChatInterfacePropsExtended) {
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -164,8 +168,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
         )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+  {/* Messages */}
+  <div className={`flex-1 overflow-y-auto p-4 space-y-4 transition-padding duration-300 ${sidebarCollapsed ? 'lg:px-8' : ''}`}>
         {sortedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
@@ -203,11 +207,11 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
                 </div>
               )}
 
-              <Card className={`max-w-[80%] p-3 ${
+              <Card className={`p-3 ${
                 isUserMessage
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted'
-              }`}>
+              } ${sidebarCollapsed ? 'max-w-[92%]' : 'max-w-[80%]'} transition-all duration-300`}>
                 <div className="flex items-start gap-2">
                   <div className="whitespace-pre-wrap text-sm flex-1">
                     {msg.content}
@@ -257,7 +261,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
                 <Bot className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <Card className="bg-muted p-3">
+              <Card className="bg-muted p-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm text-muted-foreground">AI is thinking...</span>
