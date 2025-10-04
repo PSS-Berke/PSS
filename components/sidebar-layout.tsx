@@ -148,7 +148,7 @@ export function SidebarContent(props: {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setTheme('light')}
+              onClick={() => setTheme('dark')}
               className="dark:hidden"
               aria-label="Switch to dark"
             >
@@ -158,7 +158,7 @@ export function SidebarContent(props: {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setTheme('dark')}
+              onClick={() => setTheme('light')}
               className="hidden dark:flex"
               aria-label="Switch to light"
             >
