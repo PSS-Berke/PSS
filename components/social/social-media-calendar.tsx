@@ -6,7 +6,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Linkedin, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
+import { Linkedin, Instagram } from 'lucide-react';
 
 import type { SocialPost } from '@/lib/xano/types';
 import { cn } from '@/lib/utils';
@@ -44,12 +44,8 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
         return <Linkedin {...iconProps} />;
       case 'instagram':
         return <Instagram {...iconProps} />;
-      case 'facebook':
-        return <Facebook {...iconProps} />;
-      case 'twitter':
-        return <Twitter {...iconProps} />;
-      case 'youtube':
-        return <Youtube {...iconProps} />;
+      case 'tiktok':
+        return null; // No TikTok icon in lucide-react
       default:
         return null;
     }
