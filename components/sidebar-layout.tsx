@@ -269,29 +269,30 @@ export default function SidebarLayout(props: {
           </div>
 
           <div className="flex items-center gap-2">
-            {user && (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                  className="relative h-9 w-9 rounded-full"
-                >
-                  <Sun className="h-[1.1rem] w-[1.1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-[1.1rem] w-[1.1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-                <Button
-                  onClick={() => logout()}
-                  variant="ghost"
-                  className="gap-2 px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </>
-            )}
+            {/* Theme toggle is useful even when no user is signed in - show it always */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              className="relative h-9 w-9 rounded-full"
+            >
+              <Sun className="h-[1.1rem] w-[1.1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.1rem] w-[1.1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+
+            {/* Show logout only when user is present */}
+            {user ? (
+              <Button
+                onClick={() => logout()}
+                variant="ghost"
+                className="gap-2 px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            ) : null}
           </div>
         </div>
         <div className="flex-grow">{props.children}</div>
