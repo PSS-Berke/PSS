@@ -259,20 +259,20 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
         };
       });
 
-    const assignActiveSessionFromPages = async (pagesData: CampaignPage[]) => {
+    const assignActiveSessionFromPages = async (pagesData: CampaignPage[], currentSessionId: number | null | undefined, hasMessages: boolean) => {
       const activeSession = pagesData.reduce<LinkedInSession | null>((found, page) => {
         if (found) return found;
         const records = Array.isArray(page.records) ? page.records : [];
         return records.find(session => session.is_enabled && !session.is_deleted) || null;
       }, null);
 
-      const hadCurrentSession = state.currentSession?.id != null;
+      const hadCurrentSession = currentSessionId != null;
 
       if (activeSession) {
-        const isSameSession = state.currentSession?.id === activeSession.id;
+        const isSameSession = currentSessionId === activeSession.id;
         dispatch({ type: 'SET_CURRENT_SESSION', payload: activeSession });
 
-        if (!isSameSession || state.messages.length === 0) {
+        if (!isSameSession || !hasMessages) {
           await loadMessages();
         }
       } else if (hadCurrentSession) {
@@ -290,7 +290,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
       const parsedPages = parsePageRecords(pages);
 
       dispatch({ type: 'SET_PAGES', payload: parsedPages });
-      await assignActiveSessionFromPages(parsedPages);
+      await assignActiveSessionFromPages(parsedPages, state.currentSession?.id, state.messages.length > 0);
     } catch (error) {
       console.error('LinkedIn: Error loading pages:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load pages' });
@@ -298,7 +298,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: false });
       isLoadingPagesRef.current = false;
     }
-  }, [token, loadMessages, state.currentSession?.id, state.messages.length]);
+  }, [token, loadMessages]);
 
   // Change chat
   const changeChat = useCallback(async (sessionId: string) => {
@@ -475,7 +475,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: 'SET_SENDING_MESSAGE', payload: false });
     }
-  }, [token, user, state.currentSession, loadMessages, state.isLoading, state.pages.length]);
+  }, [token, user, state.currentSession, loadMessages]);
 
   // Auto-load pages when user is authenticated and context is mounted
   useEffect(() => {
@@ -490,7 +490,8 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
       hasInitializedRef.current = false;
       isLoadingPagesRef.current = false;
     }
-  }, [user, token, loadPages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, token]);
 
   const value: LinkedInContextType = {
     state,

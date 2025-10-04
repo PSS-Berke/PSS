@@ -4,8 +4,9 @@ export const XANO_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_XANO_BASE_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf',
   LINKEDIN_BASE_URL: process.env.NEXT_PUBLIC_LINKEDIN_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR',
   SOCIAL_BASE_URL: process.env.NEXT_PUBLIC_SOCIAL_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ydIfcjKj',
+  BATTLE_CARD_BASE_URL: process.env.NEXT_PUBLIC_BATTLE_CARD_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:qHvoMa2z',
   API_KEY: process.env.NEXT_PUBLIC_XANO_API_KEY || '',
-  
+
   // API Endpoints - configured for your Xano setup
   ENDPOINTS: {
     AUTH: {
@@ -29,6 +30,11 @@ export const XANO_CONFIG = {
     SOCIAL: {
       POSTS: '/post',
     },
+    BATTLE_CARD: {
+      GET_CARDS: '/battle_card_main',
+      GENERATE_CARD: '/generate_battle_card',
+      DELETE_CARD: '/battle_card_main',
+    },
   },
 } as const;
 
@@ -45,6 +51,11 @@ export const getLinkedInApiUrl = (endpoint: string): string => {
 // Helper function to get Social Media API URL
 export const getSocialApiUrl = (endpoint: string): string => {
   return `${XANO_CONFIG.SOCIAL_BASE_URL}${endpoint}`;
+};
+
+// Helper function to get Battle Card API URL
+export const getBattleCardApiUrl = (endpoint: string): string => {
+  return `${XANO_CONFIG.BATTLE_CARD_BASE_URL}${endpoint}`;
 };
 
 // Helper function to get headers with auth token

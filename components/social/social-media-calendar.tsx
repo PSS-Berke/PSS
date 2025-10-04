@@ -81,8 +81,8 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
     const isWeeklyView = arg.view.type === 'timeGridWeek';
 
     return (
-      <div className="flex h-full min-h-[5.5rem] flex-col rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between">
+      <div className="flex h-full max-h-full w-full min-h-[5.5rem] flex-col rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between min-w-0">
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize text-white truncate max-w-[80%]',
@@ -101,7 +101,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
             )}
           />
         </div>
-        <div className="mt-2 text-sm font-semibold text-foreground line-clamp-2 min-h-[2.5rem]">
+        <div className="mt-2 text-sm font-semibold text-foreground line-clamp-2 min-h-[2.5rem] break-words overflow-hidden">
           {title}
         </div>
         {!isWeeklyView ? (

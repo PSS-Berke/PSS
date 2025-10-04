@@ -20,14 +20,13 @@ import {
   Save,
   ChevronDown,
   ChevronRight,
+  MoreHorizontal,
 } from 'lucide-react';
 import type { CreateCampaignParams, LinkedInSession } from '@/lib/xano/types';
 
 interface CampaignSidebarProps {
   className?: string;
 }
-
-// Types for the new get_chats response format
 type CampaignListItem = {
   linkedin_campaigns_id: number | null;
   name: string;
@@ -126,6 +125,8 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
   const [isCampaignDetailsLoading, setIsCampaignDetailsLoading] = useState(false);
   const [campaignDetailError, setCampaignDetailError] = useState<string | null>(null);
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<number>>(new Set());
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isChatsExpanded, setIsChatsExpanded] = useState(true);
 
   useEffect(() => {
     if (!categorizedData || !state.currentSession?.linkedin_campaigns_id) {
@@ -570,23 +571,47 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
   };
 
   return (
-    <div className={`w-80 border-r bg-muted/30 flex flex-col h-full ${className}`}>
+    <div className={`${isCollapsed ? 'w-14' : 'w-80'} border-r bg-muted/30 flex flex-col h-full transition-all duration-300 ${className}`}>
+      {/* Collapsed Toggle Button */}
+      {isCollapsed && (
+        <div className="flex items-center justify-center p-4">
+          <Button
+            onClick={() => setIsCollapsed(false)}
+            size="sm"
+            className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="p-4 border-b flex-shrink-0">
+      {!isCollapsed && (
+        <div className="p-4 border-b flex-shrink-0">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">Chats</h3>
-            <Button
-              onClick={handleStartNewSession}
-              size="sm"
-              disabled={isStartingStandaloneChat || state.isSwitchingSession}
-            >
-              {isStartingStandaloneChat || state.isSwitchingSession ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={handleStartNewSession}
+                size="sm"
+                disabled={isStartingStandaloneChat || state.isSwitchingSession}
+              >
+                {isStartingStandaloneChat || state.isSwitchingSession ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                onClick={() => setIsCollapsed(true)}
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
@@ -611,10 +636,12 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
             </div>
           )}
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Chats and Campaigns List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+      {!isCollapsed && (
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
         {!categorizedData && !state.isLoading ? (
           <div className="text-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -627,9 +654,23 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
               {/* Standalone Chats Section */}
               {categorizedData.chats.records.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-sm text-foreground border-b pb-2">
-                    {categorizedData.chats.heading}
-                  </h3>
+                  <div
+                    className="font-semibold text-sm text-foreground border-b pb-2 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors flex items-center justify-between"
+                    onClick={() => setIsChatsExpanded(!isChatsExpanded)}
+                  >
+                    <div className="flex items-center gap-1">
+                      {isChatsExpanded ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <h3>{categorizedData.chats.heading}</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      ({categorizedData.chats.records.length})
+                    </span>
+                  </div>
+                  {isChatsExpanded && (
                   <div className="space-y-1">
                     {categorizedData.chats.records.map((session) => (
                       <Card
@@ -665,7 +706,7 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-1">
                             {state.currentSession?.id === session.id && (
                               <div className="w-2 h-2 bg-primary rounded-full" />
@@ -704,9 +745,9 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
                       </Card>
                     ))}
                   </div>
+                  )}
                 </div>
               )}
-
               {/* Campaigns Section */}
               {categorizedData.campaigns.records.length > 0 && (
                 <div className="space-y-3">
@@ -857,11 +898,13 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
               )}
             </>
           )
-        )}
-      </div>
+                  )}
+                </div>
+              )}
 
       {/* Create Campaign Dialog */}
-      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+      {!isCollapsed && (
+        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto">
           <DialogHeader className="space-y-1">
             <DialogTitle>Create New Campaign</DialogTitle>
@@ -954,16 +997,18 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
             </div>
           </form>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
 
-      <Dialog
+      {!isCollapsed && (
+        <Dialog
         open={campaignModalOpen}
         onOpenChange={(open) => {
           if (!open) {
             closeCampaignModal();
           }
         }}
-      >
+        >
         <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto">
           <DialogHeader className="space-y-1">
             <DialogTitle>Manage Campaign</DialogTitle>
@@ -1130,16 +1175,18 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
             <p className="text-sm text-muted-foreground">No campaign selected.</p>
           )}
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
 
-      <Dialog
+      {!isCollapsed && (
+        <Dialog
         open={!!sessionPendingDeletion}
         onOpenChange={(open) => {
           if (!open) {
             closeDeleteDialog();
           }
         }}
-      >
+        >
         <DialogContent className="max-w-md space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5">
           <DialogHeader className="space-y-2">
             <DialogTitle>Delete chat?</DialogTitle>
@@ -1176,7 +1223,8 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
     </div>
   );
 }

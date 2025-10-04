@@ -56,39 +56,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  console.log('AuthProvider rendering', { isLoading, hasUser: !!user, hasToken: !!token });
+
   const isAuthenticated = !!user;
 
   // Initialize auth state
   useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = getStoredToken();
-      if (!storedToken) {
-        setToken(null);
-        setIsLoading(false);
-        return;
-      }
-      
-      setToken(storedToken);
+    let mounted = true;
+    console.log('Auth initialization effect running');
 
-      // Check if API key is configured
-      if (!process.env.NEXT_PUBLIC_XANO_API_KEY) {
-        console.warn('Xano API key not configured. Authentication features will be disabled.');
-        setIsLoading(false);
-        return;
-      }
+    async function initAuth() {
+      const forceStopTimeout = setTimeout(() => {
+        if (mounted) {
+          console.log('Force stopping loading state after timeout');
+          setIsLoading(false);
+          clearStoredTokens();
+        }
+      }, 5000);
 
       try {
-        const userData = await authApi.getMe(storedToken);
-        setUser(userData);
+        const storedToken = getStoredToken();
+        console.log('Auth check - stored token exists:', !!storedToken);
+        
+        if (!storedToken) {
+          if (mounted) {
+            console.log('No stored token found, setting unauthenticated state');
+            setToken(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // Check if API key is configured
+        if (!process.env.NEXT_PUBLIC_XANO_API_KEY) {
+          console.warn('Xano API key not configured');
+          if (mounted) {
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        try {
+          const userData = await authApi.getMe(storedToken);
+          console.log('User data fetch result:', !!userData);
+          
+          if (mounted && userData) {
+            setUser(userData);
+            setToken(storedToken);
+          }
+        } catch (error) {
+          console.error('Auth error:', error);
+          clearStoredTokens();
+          if (mounted) {
+            setUser(null);
+            setToken(null);
+          }
+          throw error; // Re-throw to be caught by outer try-catch
+        }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        clearStoredTokens();
+        console.error('Auth initialization failed:', error);
+        if (mounted) {
+          clearStoredTokens();
+          setUser(null);
+          setToken(null);
+          setIsLoading(false);
+        }
       } finally {
-        setIsLoading(false);
+        clearTimeout(forceStopTimeout);
+        if (mounted) {
+          console.log('Setting loading to false');
+          setIsLoading(false);
+        }
       }
     };
 
     initAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
 

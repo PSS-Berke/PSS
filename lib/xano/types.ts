@@ -168,3 +168,25 @@ export type SocialPostUpdatePayload = Partial<SocialPostPayload> & {
   content?: string;
 };
 
+// Battle Card Copilot Types
+export interface BattleCard {
+  id: number;
+  created_at: number | string;
+  competitor_name: string;
+  competitor_service: string;
+  company_overview: string;
+  key_products_services: string;
+  recent_news: string;
+  target_market_icp: string;
+  market_positioning: string;
+  weaknesses_gaps: string;
+  strengths: string;
+  customer_references: string;
+  user_id: number;
+}
+
+export interface CreateBattleCardRequest {
+  competitor_name: string;
+  service_name: string;
+}
+

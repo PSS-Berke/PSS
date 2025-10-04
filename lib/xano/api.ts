@@ -1,8 +1,9 @@
-import { getApiUrl, getLinkedInApiUrl, getSocialApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
-import type { 
-  User, 
-  AuthResponse, 
-  LoginCredentials, 
+import { getApiUrl, getLinkedInApiUrl, getSocialApiUrl, getBattleCardApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
+
+import type {
+  User,
+  AuthResponse,
+  LoginCredentials,
   RegisterCredentials,
   LinkedInSession,
   LinkedInMessage,
@@ -18,28 +19,24 @@ import type {
   EditCampaignPayload,
   SocialPost,
   SocialPostPayload,
-  SocialPostUpdatePayload
+  SocialPostUpdatePayload,
+  BattleCard,
+  CreateBattleCardRequest
 } from './types';
 
-class XanoApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public response?: any
-  ) {
+export class XanoApiError extends Error {
+  constructor(message: string, public status: number, public response?: any) {
     super(message);
     this.name = 'XanoApiError';
   }
 }
 
-// Generic API request handler
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   token?: string,
   skipApiKey: boolean = false
 ): Promise<T> {
-  // Check if API key is configured (skip for public endpoints like login/register)
   if (!skipApiKey && !XANO_CONFIG.API_KEY) {
     throw new XanoApiError(
       'Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.',
@@ -49,46 +46,54 @@ async function apiRequest<T>(
   }
 
   const url = getApiUrl(endpoint);
-  const headers = skipApiKey
-    ? { 'Content-Type': 'application/json' }
-    : getAuthHeaders(token);
+  const headers = skipApiKey ? { 'Content-Type': 'application/json' } : getAuthHeaders(token);
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...headers,
-      ...options.headers,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers,
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
 
-    // Handle specific error cases
-    if (response.status === 404) {
+      // Handle specific error cases
+      if (response.status === 404) {
+        throw new XanoApiError(
+          'API endpoint not found. Please create the required authentication endpoints in your Xano workspace.',
+          response.status,
+          errorData
+        );
+      }
+
+      if (response.status === 403) {
+        throw new XanoApiError(
+          'Invalid credentials or insufficient permissions. Please check your API key and endpoint configuration.',
+          response.status,
+          errorData
+        );
+      }
+
       throw new XanoApiError(
-        'API endpoint not found. Please create the required authentication endpoints in your Xano workspace.',
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
         errorData
       );
     }
 
-    if (response.status === 403) {
-      throw new XanoApiError(
-        'Invalid credentials or insufficient permissions. Please check your API key and endpoint configuration.',
-        response.status,
-        errorData
-      );
+    return response.json();
+  } catch (error) {
+    if (error instanceof XanoApiError) {
+      throw error;
     }
-
     throw new XanoApiError(
-      errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-      response.status,
-      errorData
+      error instanceof Error ? error.message : 'Unknown error',
+      500
     );
   }
-
-  return response.json();
 }
 
 // Authentication API
@@ -128,7 +133,6 @@ export const authApi = {
       undefined,
       true // Skip API key for public register endpoint
     );
-
     // For now, we'll create a minimal user object since the API only returns the token
     return {
       user: {
@@ -559,4 +563,64 @@ export const socialCopilotApi = {
   },
 };
 
-export { XanoApiError };
+// Battle Card Copilot API
+export const battleCardApi = {
+  async getBattleCards(token: string, userId: number): Promise<BattleCard[]> {
+    const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CARDS}?user_id=${userId}`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async generateBattleCard(token: string, data: CreateBattleCardRequest, userId: number): Promise<BattleCard> {
+    const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GENERATE_CARD);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({
+        ...data,
+        user_id: userId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async deleteBattleCard(token: string, cardId: number): Promise<void> {
+    const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.DELETE_CARD}/${cardId}`);
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+  },
+};

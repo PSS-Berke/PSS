@@ -4,19 +4,18 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import { useLinkedIn } from '@/lib/xano/linkedin-context';
-import { ChatInterface } from './chat-interface';
-import { CampaignSidebar } from './campaign-sidebar';
+import { Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { useBattleCard } from '@/lib/xano/battle-card-context';
+import { BattleCardSidebar } from './battle-card-sidebar';
+import { BattleCardContent } from './battle-card-content';
 
-interface LinkedInModuleProps {
+interface BattleCardModuleProps {
   className?: string;
 }
 
-export function LinkedInModule({ className }: LinkedInModuleProps) {
+export function BattleCardModule({ className }: BattleCardModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { state } = useLinkedIn();
-  const pages = Array.isArray(state.pages) ? state.pages : [];
+  const { state } = useBattleCard();
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -26,48 +25,42 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
     if (state.isLoading) {
       return <Badge variant="secondary">Loading...</Badge>;
     }
-    if (state.currentSession) {
-      return <Badge variant="default">Active Session</Badge>;
+    if (state.isGenerating) {
+      return <Badge variant="default">Generating...</Badge>;
     }
-    if (pages.length > 0) {
+    if (state.activeBattleCard) {
+      return <Badge variant="default">Active Card</Badge>;
+    }
+    if (state.battleCards.length > 0) {
       return <Badge variant="outline">Ready</Badge>;
     }
-    return <Badge variant="secondary">No Campaigns</Badge>;
-  };
-
-  const getSessionCount = () => {
-    return pages.reduce((total, page) => {
-      if (Array.isArray(page.records)) {
-        return total + page.records.length;
-      }
-      return total;
-    }, 0);
+    return <Badge variant="secondary">No Cards</Badge>;
   };
 
   return (
     <Card className={`w-full ${className}`}>
-      <CardHeader 
+      <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={toggleExpanded}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
-              <MessageSquare className="h-5 w-5 text-primary" />
+              <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-lg">LinkedIn Copilot</CardTitle>
+              <CardTitle className="text-lg">Battle Card Copilot</CardTitle>
               <p className="text-sm text-muted-foreground">
-                AI-powered LinkedIn content creation
+                AI-powered competitive intelligence
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {getStatusBadge()}
-            {pages.length > 0 && (
+            {state.battleCards.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                {pages.length} campaigns • {getSessionCount()} chats
+                {state.battleCards.length} battle {state.battleCards.length === 1 ? 'card' : 'cards'}
               </div>
             )}
             <Button variant="ghost" size="sm">
@@ -80,11 +73,11 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
       {isExpanded && (
         <CardContent>
           <div className="flex gap-6">
-            <div className="flex-1 min-w-0">
-              <CampaignSidebar />
+            <div className="w-80 flex-shrink-0">
+              <BattleCardSidebar />
             </div>
             <div className="flex-1 min-w-0">
-              <ChatInterface />
+              <BattleCardContent />
             </div>
           </div>
         </CardContent>
