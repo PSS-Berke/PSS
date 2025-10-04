@@ -36,6 +36,7 @@ import { useSocialMedia } from '@/lib/xano/social-media-context';
 import type { SocialPost, SocialPostPayload } from '@/lib/xano/types';
 import { Textarea } from '@/components/ui/textarea';
 import { SocialMediaCalendar } from './social-media-calendar';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 type TabKey = 'calendar' | 'tasks';
 
@@ -289,6 +290,12 @@ const renderTabButton = (
       }
       if (field === 'content' && typeof value === 'string') {
         nextState.rich_content_text = value;
+      }
+      if (field === 'rich_content_html' && typeof value === 'string') {
+        // When HTML changes, also update the text content (strip HTML tags for plain text)
+        const textContent = value.replace(/<[^>]*>/g, '');
+        nextState.rich_content_text = textContent;
+        nextState.content = textContent;
       }
       return nextState;
     });
@@ -786,18 +793,18 @@ const renderTabButton = (
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="rich_content_text">Post Content</Label>
+                  <Label htmlFor="rich_content_html">Post Content</Label>
                   {isFormEditable ? (
-                    <Textarea
-                      id="rich_content_text"
-                      value={activeFormData.rich_content_text ?? ''}
-                      onChange={(event) => handleChange('rich_content_text', event.target.value)}
-                      rows={6}
+                    <RichTextEditor
+                      content={activeFormData.rich_content_html ?? ''}
+                      onChange={(html) => handleChange('rich_content_html', html)}
+                      editable={true}
                     />
                   ) : (
-                    <div className="rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-foreground">
-                      {selectedPost?.rich_content_text || '—'}
-                    </div>
+                    <div
+                      className="rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-foreground prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: selectedPost?.rich_content_html || '—' }}
+                    />
                   )}
                 </div>
 
