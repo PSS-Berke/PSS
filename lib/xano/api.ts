@@ -177,6 +177,17 @@ export const authApi = {
       token
     );
   },
+
+  async switchCompany(token: string, companyId: number): Promise<void> {
+    return apiRequest<void>(
+      '/auth/switch_company',
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ company_id: companyId }),
+      },
+      token
+    );
+  },
 };
 
 // Users API

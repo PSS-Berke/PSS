@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Provider } from "./provider";
 import { AuthProvider } from "@/lib/xano/auth-context";
-import PermanentSidebar from '@/components/permanent-sidebar';
+import { ConditionalSidebar } from '@/components/permanent-sidebar';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,13 +22,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <Provider>
           <AuthProvider>
-            <div className="w-full flex">
-              <PermanentSidebar />
-
-              <div className="flex flex-col flex-grow w-0 ml-[260px]">
-                {children}
-              </div>
-            </div>
+            <ConditionalSidebar>
+              {children}
+            </ConditionalSidebar>
           </AuthProvider>
         </Provider>
       </body>

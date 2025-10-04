@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import type { User } from "@/lib/xano/types";
 import {
   Breadcrumb,
@@ -51,19 +51,28 @@ function NavItem(props: {
   onClick?: () => void;
   basePath: string;
 }) {
-  const segment = useSegment(props.basePath);
-  const selected = segment === props.item.href;
+  const pathname = usePathname();
+  const fullHref = props.basePath + props.item.href;
+  const selected = pathname === fullHref;
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (selected) {
+      e.preventDefault();
+      return;
+    }
+    props.onClick?.();
+  };
 
   return (
     <Link
-      href={props.basePath + props.item.href}
+      href={fullHref}
       className={cn(
         "group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         selected
           ? "bg-muted text-foreground shadow-sm"
           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
       )}
-      onClick={props.onClick}
+      onClick={handleClick}
       prefetch={true}
       aria-current={selected ? "page" : undefined}
     >
@@ -87,15 +96,56 @@ export function SidebarContent(props: {
   basePath: string;
   onAddModule?: () => void;
   user?: User | null;
+  onLogout?: () => void;
+  onSwitchCompany?: (companyId: number) => void;
 }) {
   const segment = useSegment(props.basePath);
   const { resolvedTheme, setTheme } = useTheme();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    }
+
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isProfileMenuOpen]);
 
   return (
     <div className="flex h-full flex-col bg-background">
       <div className="flex items-center border-b border-border px-4 py-4">
         {props.sidebarTop}
       </div>
+      {props.user?.available_companies && props.user.available_companies.length > 1 && (
+        <div className="border-b border-border px-4 py-3">
+          <label htmlFor="company-select" className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 mb-1.5">
+            Company
+          </label>
+          <select
+            id="company-select"
+            value={props.user.company_id || ''}
+            onChange={(e) => {
+              const companyId = Number(e.target.value);
+              if (companyId) {
+                props.onSwitchCompany?.(companyId);
+              }
+            }}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {props.user.available_companies.map((company) => (
+              <option key={company.company_id} value={company.company_id}>
+                {company.company_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="flex flex-grow flex-col gap-2 overflow-y-auto px-3 py-4">
         {props.onAddModule ? (
           <div className="pb-2">
@@ -140,41 +190,16 @@ export function SidebarContent(props: {
         <div className="flex-grow" />
       </div>
 
-      {/* Theme toggle at the bottom of the sidebar */}
-      <div className="border-t border-border px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">Theme</div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme('dark')}
-              className="dark:hidden"
-              aria-label="Switch to dark"
-            >
-              <Moon className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme('light')}
-              className="hidden dark:flex"
-              aria-label="Switch to light"
-            >
-              <Sun className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {props.user ? (
-        <div className="border-t border-border px-4 py-4">
-          <div className="flex items-center gap-3">
+        <div ref={profileMenuRef} className="relative border-t border-border">
+          <button
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/50 transition-colors"
+          >
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
               <UserCircle2 className="h-6 w-6 text-muted-foreground" />
             </span>
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {props.user.company ?? "Company"}
               </span>
@@ -182,7 +207,48 @@ export function SidebarContent(props: {
                 {props.user.email}
               </span>
             </div>
-          </div>
+          </button>
+
+          {isProfileMenuOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                    setIsProfileMenuOpen(false);
+                  }}
+                  className="w-full px-3 py-2 flex items-center gap-2 text-sm hover:bg-muted transition-colors"
+                >
+                  {resolvedTheme === 'dark' ? (
+                    <>
+                      <Sun className="h-4 w-4" />
+                      <span>Light mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-4 w-4" />
+                      <span>Dark mode</span>
+                    </>
+                  )}
+                </button>
+                {props.onLogout && (
+                  <>
+                    <Separator className="my-1" />
+                    <button
+                      onClick={() => {
+                        props.onLogout?.();
+                        setIsProfileMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
     </div>
@@ -225,9 +291,16 @@ export default function SidebarLayout(props: {
   basePath: string;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { resolvedTheme, setTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, switchCompany } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
+
+  const handleSwitchCompany = async (companyId: number) => {
+    try {
+      await switchCompany(companyId);
+    } catch (error) {
+      console.error('Failed to switch company:', error);
+    }
+  };
 
   const defaultSidebarTop = (
     <Link
@@ -264,6 +337,8 @@ export default function SidebarLayout(props: {
           basePath={props.basePath}
           onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
           user={user}
+          onLogout={logout}
+          onSwitchCompany={handleSwitchCompany}
         />
       </div>
       <div className="flex flex-col flex-grow w-0 ml-[260px]">
@@ -288,6 +363,8 @@ export default function SidebarLayout(props: {
                   basePath={props.basePath}
                   onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
                   user={user}
+                  onLogout={logout}
+                  onSwitchCompany={handleSwitchCompany}
                 />
               </SheetContent>
             </Sheet>
@@ -295,33 +372,6 @@ export default function SidebarLayout(props: {
             <div className="ml-4 flex md:hidden">
               <HeaderBreadcrumb baseBreadcrumb={props.baseBreadcrumb} basePath={props.basePath} items={props.items} />
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Theme toggle is useful even when no user is signed in - show it always */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="relative h-9 w-9 rounded-full"
-            >
-              <Sun className="h-[1.1rem] w-[1.1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-[1.1rem] w-[1.1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-
-            {/* Show logout only when user is present */}
-            {user ? (
-              <Button
-                onClick={() => logout()}
-                variant="ghost"
-                className="gap-2 px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            ) : null}
           </div>
         </div>
         <div className="flex-grow">{props.children}</div>

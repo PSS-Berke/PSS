@@ -1,59 +1,26 @@
-import { Metadata } from "next";
-import { LinkedInModule } from "@/components/linkedin/linkedin-module";
-import { LinkedInProvider } from "@/lib/xano/linkedin-context";
-import { SocialMediaModule } from "@/components/social/social-media-module";
-import { SocialMediaProvider } from "@/lib/xano/social-media-context";
-import { CallPrepModule } from "@/components/call-prep/call-prep-module";
-import { CallPrepProvider } from "@/lib/xano/call-prep-context";
-import { BattleCardModule } from "@/components/battle-card/battle-card-module";
-import { BattleCardProvider } from "@/lib/xano/battle-card-context";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Example dashboard app built using the components.",
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/xano/auth-context';
+import LoadingSpinner from '@/components/loading-spinner';
 
-export default function DashboardPage() {
-  return (
-    <div className="space-y-6 pt-6 px-4 md:px-6 lg:px-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome to your multi-tenant dashboard. Manage your campaigns and content.
-        </p>
-      </div>
+export default function RootPage() {
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
 
-      
-      {/* LinkedIn section */}
-      <section>
-        <LinkedInProvider>
-          <LinkedInModule />
-        </LinkedInProvider>
-      </section>
+  useEffect(() => {
+    if (!isLoading) {
+      if (user) {
+        // If authenticated, redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        // If not authenticated, redirect to signin
+        router.push('/auth/signin');
+      }
+    }
+  }, [user, isLoading, router]);
 
-      {/* Social Media Copilot section */}
-      <section>
-        <SocialMediaProvider>
-          <SocialMediaModule />
-        </SocialMediaProvider>
-      </section>
-
-      {/* Call Prep Assistant section */}
-      <section>
-        <CallPrepProvider>
-          <CallPrepModule />
-        </CallPrepProvider>
-      </section>
-
-      {/* Battle Card Copilot section */}
-      <section>
-        <BattleCardProvider>
-          <BattleCardModule />
-        </BattleCardProvider>
-      </section>
-
-      {/* More modules */}
-    </div>
-  );
+  // Show loading while checking auth and redirecting
+  return <LoadingSpinner />;
 }

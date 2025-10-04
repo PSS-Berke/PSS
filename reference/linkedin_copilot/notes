@@ -1,9 +1,0 @@
-Notes
-
-Session Management: The API handles session state automatically. Only one session can be active per user at a time.
-Data Persistence: All messages and sessions are stored in the database. Sessions use soft delete (is_deleted flag).
-Security: All endpoints require authentication and include user ownership checks where applicable.
-Campaign Auto-Creation: The system automatically creates a "Single Posts" campaign if none exists when initiating a session.
-Session ID Generation: If no session_id is provided, the system generates a random 15-character alphanumeric string.
-
-This API provides a solid foundation for building AI-powered LinkedIn content creation tools with proper session management and conversation history.

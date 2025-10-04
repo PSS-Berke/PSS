@@ -479,7 +479,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
 
   // Auto-load pages when user is authenticated and context is mounted
   useEffect(() => {
-    console.log('LinkedIn: useEffect triggered - user:', !!user, 'token:', !!token);
+    console.log('LinkedIn: useEffect triggered - user:', !!user, 'token:', !!token, 'company_id:', user?.company_id);
     if (user && token && !hasInitializedRef.current) {
       hasInitializedRef.current = true;
       console.log('LinkedIn: Auto-loading pages...');
@@ -492,6 +492,18 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, token]);
+
+  // Refetch data when company changes
+  useEffect(() => {
+    if (user?.company_id && token && hasInitializedRef.current) {
+      console.log('LinkedIn: Company changed, clearing session and reloading pages for company:', user.company_id);
+      // Clear current session and messages when switching companies
+      dispatch({ type: 'SET_CURRENT_SESSION', payload: null });
+      dispatch({ type: 'SET_MESSAGES', payload: [] });
+      loadPages();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.company_id]);
 
   const value: LinkedInContextType = {
     state,

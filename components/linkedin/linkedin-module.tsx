@@ -36,6 +36,10 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
     return <Badge variant="secondary">No Campaigns</Badge>;
   };
 
+  const getCampaignCount = () => {
+    return pages.filter(page => page.linkedin_campaigns_id !== null).length;
+  };
+
   const getSessionCount = () => {
     return pages.reduce((total, page) => {
       if (Array.isArray(page.records)) {
@@ -68,7 +72,7 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
             {getStatusBadge()}
             {pages.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                {pages.length} campaigns • {getSessionCount()} chats
+                {getCampaignCount()} campaigns • {getSessionCount()} chats
               </div>
             )}
             <Button variant="ghost" size="sm">

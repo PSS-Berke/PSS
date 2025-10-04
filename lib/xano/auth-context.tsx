@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import { authApi, usersApi, XanoApiError } from './api';
 import type { User, LoginCredentials, RegisterCredentials } from './types';
 
@@ -10,42 +11,59 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  
+
   // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  switchCompany: (companyId: number) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token management
+// Token management with cookies (primary) and localStorage (fallback)
 const TOKEN_KEY = 'xano_token';
 const REFRESH_TOKEN_KEY = 'xano_refresh_token';
 
 const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null;
+  // Try cookies first
+  const cookieToken = Cookies.get(TOKEN_KEY);
+  if (cookieToken) return cookieToken;
+  // Fallback to localStorage
   return localStorage.getItem(TOKEN_KEY);
 };
 
 const setStoredToken = (token: string): void => {
   if (typeof window === 'undefined') return;
+  // Store in both cookies and localStorage for maximum compatibility
+  Cookies.set(TOKEN_KEY, token, { expires: 7, sameSite: 'strict' });
   localStorage.setItem(TOKEN_KEY, token);
 };
 
 const getStoredRefreshToken = (): string | null => {
   if (typeof window === 'undefined') return null;
+  // Try cookies first
+  const cookieToken = Cookies.get(REFRESH_TOKEN_KEY);
+  if (cookieToken) return cookieToken;
+  // Fallback to localStorage
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 };
 
 const setStoredRefreshToken = (token: string): void => {
   if (typeof window === 'undefined') return;
+  // Store in both cookies and localStorage
+  Cookies.set(REFRESH_TOKEN_KEY, token, { expires: 30, sameSite: 'strict' });
   localStorage.setItem(REFRESH_TOKEN_KEY, token);
 };
 
 const clearStoredTokens = (): void => {
   if (typeof window === 'undefined') return;
+  // Clear both cookies and localStorage
+  Cookies.remove(TOKEN_KEY);
+  Cookies.remove(REFRESH_TOKEN_KEY);
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
@@ -153,12 +171,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStoredRefreshToken(response.refresh_token);
       }
       
-      router.push('/dashboard');
+      // Navigation is handled by the signin page to support redirect param
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
     }
-  }, [router]);
+  }, []);
 
   const register = useCallback(async (credentials: RegisterCredentials) => {
     if (!process.env.NEXT_PUBLIC_XANO_API_KEY) {
@@ -202,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback(async (data: Partial<User>) => {
     const token = getStoredToken();
     if (!token) throw new Error('Not authenticated');
-    
+
     try {
       const updatedUser = await usersApi.updateProfile(token, data);
       setUser(updatedUser);
@@ -211,6 +229,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   }, []);
+
+  const refreshUser = useCallback(async () => {
+    const token = getStoredToken();
+    if (!token) throw new Error('Not authenticated');
+
+    try {
+      const userData = await authApi.getMe(token);
+      setUser(userData);
+    } catch (error) {
+      console.error('Refresh user failed:', error);
+      throw error;
+    }
+  }, []);
+
+  const switchCompany = useCallback(async (companyId: number) => {
+    const token = getStoredToken();
+    if (!token) throw new Error('Not authenticated');
+
+    try {
+      await authApi.switchCompany(token, companyId);
+      await refreshUser();
+    } catch (error) {
+      console.error('Switch company failed:', error);
+      throw error;
+    }
+  }, [refreshUser]);
 
   const value: AuthContextType = {
     user,
@@ -221,6 +265,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     updateProfile,
+    switchCompany,
+    refreshUser,
   };
 
   return (

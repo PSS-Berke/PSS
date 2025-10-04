@@ -295,6 +295,15 @@ export function SocialMediaProvider({
     }
   }, [fetchPosts, token, user]);
 
+  // Refetch data when company changes
+  useEffect(() => {
+    if (user?.company_id && token) {
+      console.log('Social Media: Company changed, reloading posts for company:', user.company_id);
+      fetchPosts();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.company_id]);
+
   const value: SocialMediaContextValue = {
     state,
     refreshPosts,

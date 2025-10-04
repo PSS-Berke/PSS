@@ -63,7 +63,10 @@ export default function SignInPage() {
 
     try {
       await login({ email, password });
-      router.push('/dashboard');
+      // Check for redirect parameter in URL
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirect = searchParams.get('redirect') || '/dashboard';
+      router.push(redirect);
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
     } finally {

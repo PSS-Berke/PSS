@@ -1,11 +1,17 @@
-import { Home, Zap, BarChart4 } from 'lucide-react';
+import { LayoutDashboard, Zap, BarChart4, Settings } from 'lucide-react';
 import type { SidebarItem } from '@/components/sidebar-layout';
 
 export const navigationItems: SidebarItem[] = [
   {
-    name: 'Home',
-    href: '/',
-    icon: Home,
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    type: 'item',
+  },
+  {
+    name: 'Analytics',
+    href: '/analytics',
+    icon: BarChart4,
     type: 'item',
   },
   {
@@ -15,9 +21,9 @@ export const navigationItems: SidebarItem[] = [
     type: 'item',
   },
   {
-    name: 'Analytics',
-    href: '/analytics',
-    icon: BarChart4,
+    name: 'Settings',
+    href: '/settings',
+    icon: Settings,
     type: 'item',
   },
 ];

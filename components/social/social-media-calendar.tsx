@@ -51,6 +51,29 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
     }
   };
 
+  // Group posts by day and platform
+  const postsByDay = useMemo(() => {
+    const grouped = new Map<string, Map<SocialPost['content_type'], SocialPost[]>>();
+
+    posts.forEach((post) => {
+      const date = new Date(post.scheduled_date);
+      const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+      if (!grouped.has(dayKey)) {
+        grouped.set(dayKey, new Map());
+      }
+
+      const dayMap = grouped.get(dayKey)!;
+      if (!dayMap.has(post.content_type)) {
+        dayMap.set(post.content_type, []);
+      }
+
+      dayMap.get(post.content_type)!.push(post);
+    });
+
+    return grouped;
+  }, [posts]);
+
   const events = useMemo<CalendarEvent[]>(() => {
     return posts.map((post) => {
       const scheduledDate = new Date(post.scheduled_date);
@@ -74,12 +97,36 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
   }, [posts]);
 
   const renderEventContent = (arg: EventContentArg) => {
-    const { extendedProps, title } = arg.event;
+    const { extendedProps, title, start } = arg.event;
     const contentType = extendedProps.contentType as SocialPost['content_type'];
     const published = Boolean(extendedProps.published);
     const scheduled = new Date(extendedProps.rawDate as string);
     const isWeeklyView = arg.view.type === 'timeGridWeek';
 
+    // Get the day key for grouping
+    const eventDate = start || new Date();
+    const dayKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+    const platformsForDay = postsByDay.get(dayKey);
+
+    // Check if there are multiple posts for this platform on this day
+    const postsForPlatform = platformsForDay?.get(contentType) || [];
+    const multiplePostsForPlatform = postsForPlatform.length > 1;
+
+    // If multiple posts for this platform, show compact icon view
+    if (multiplePostsForPlatform && !isWeeklyView) {
+      return (
+        <div className="flex h-full w-full items-center justify-center rounded-lg border border-border/60 bg-card p-2 shadow-sm">
+          <div className={cn(
+            'flex items-center justify-center rounded-full p-2',
+            CONTENT_COLORS[contentType]
+          )}>
+            {getPlatformIcon(contentType, 'md')}
+          </div>
+        </div>
+      );
+    }
+
+    // Original single post view
     return (
       <div className="flex h-full max-h-full w-full min-h-[5.5rem] flex-col rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between min-w-0">

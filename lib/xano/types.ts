@@ -1,10 +1,19 @@
 // Xano API Types
+export interface Company {
+  company_id: number;
+  company_name: string;
+}
+
 export interface User {
   id: number;
   email: string;
   name?: string;
+  role?: boolean;
   company?: string;
+  company_id?: number;
   company_code?: number;
+  modules?: number[];
+  available_companies?: Company[];
   avatar_url?: string;
   created_at: string;
   updated_at: string;

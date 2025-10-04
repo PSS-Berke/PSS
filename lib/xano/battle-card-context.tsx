@@ -154,6 +154,15 @@ export function BattleCardProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user, token]); // Only depend on user and token, not loadBattleCards
 
+  // Refetch data when company changes
+  useEffect(() => {
+    if (user?.company_id && token) {
+      console.log('BattleCard: Company changed, reloading battle cards for company:', user.company_id);
+      loadBattleCards();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.company_id]);
+
   const value: BattleCardContextValue = {
     state,
     loadBattleCards,
