@@ -89,6 +89,7 @@ export function SidebarContent(props: {
   user?: User | null;
 }) {
   const segment = useSegment(props.basePath);
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -137,6 +138,34 @@ export function SidebarContent(props: {
         })}
 
         <div className="flex-grow" />
+      </div>
+
+      {/* Theme toggle at the bottom of the sidebar */}
+      <div className="border-t border-border px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">Theme</div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme('light')}
+              className="dark:hidden"
+              aria-label="Switch to dark"
+            >
+              <Moon className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme('dark')}
+              className="hidden dark:flex"
+              aria-label="Switch to light"
+            >
+              <Sun className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {props.user ? (
