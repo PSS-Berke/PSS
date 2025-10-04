@@ -9,6 +9,7 @@ import { useBattleCard } from '@/lib/xano/battle-card-context';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -112,6 +113,9 @@ export function BattleCardSidebar() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Battle Card</DialogTitle>
+            <DialogDescription>
+              Generate AI-powered competitive intelligence for a competitor
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
