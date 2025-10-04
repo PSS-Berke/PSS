@@ -228,7 +228,7 @@ export default function SidebarLayout(props: {
 
   return (
     <div className="w-full flex">
-      <div className="hidden w-[260px] flex-col border-r border-border bg-background/95 md:flex md:fixed md:left-0 md:top-0 md:h-screen">
+      <div className="flex w-[260px] flex-col border-r border-border bg-background/95 md:fixed md:left-0 md:top-0 md:h-screen">
         <SidebarContent
           items={props.items}
           sidebarTop={sidebarTop}

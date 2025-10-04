@@ -80,7 +80,7 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
       {isExpanded && (
         <CardContent>
           <div className="flex gap-6">
-            <div className="flex-1 min-w-0">
+            <div className="w-80 flex-shrink-0">
               <CampaignSidebar />
             </div>
             <div className="flex-1 min-w-0">

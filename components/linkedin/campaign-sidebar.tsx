@@ -777,7 +777,17 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
                                 ({campaign.sessions.length})
                               </span>
                             </div>
-                            <div className="flex items-center gap-1 flex-shrink-0">
+                            <div className="flex flex-col gap-1 flex-shrink-0">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground"
+                                onClick={() => openCampaignModal(campaign)}
+                                aria-label={`Manage campaign ${campaign.name}`}
+                              >
+                                <Settings className="h-4 w-4" />
+                              </Button>
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -791,16 +801,6 @@ export function CampaignSidebar({ className }: CampaignSidebarProps) {
                                 ) : (
                                   <Link2 className="h-3 w-3" />
                                 )}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground"
-                                onClick={() => openCampaignModal(campaign)}
-                                aria-label={`Manage campaign ${campaign.name}`}
-                              >
-                                <Settings className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
