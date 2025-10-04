@@ -169,7 +169,7 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
       </div>
 
   {/* Messages */}
-  <div className={`flex-1 overflow-y-auto p-4 space-y-4 transition-padding duration-300 ${sidebarCollapsed ? 'lg:px-8' : ''}`}>
+  <div className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'px-3 py-4' : 'p-4'} space-y-4 transition-all duration-300`}>
         {sortedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
@@ -207,11 +207,14 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
                 </div>
               )}
 
-              <Card className={`p-3 ${
-                isUserMessage
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted'
-              } ${sidebarCollapsed ? 'max-w-[92%]' : 'max-w-[80%]'} transition-all duration-300`}>
+              <Card
+                className={`p-3 ${
+                  isUserMessage
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                } transition-all duration-300`}
+                style={{ maxWidth: sidebarCollapsed ? 'calc(100% - 1rem)' : '80%' }}
+              >
                 <div className="flex items-start gap-2">
                   <div className="whitespace-pre-wrap text-sm flex-1">
                     {msg.content}

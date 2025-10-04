@@ -598,6 +598,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
             onClick={() => setCollapsed(false)}
             size="sm"
             className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
+            aria-label="Open campaigns sidebar"
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
@@ -607,54 +608,57 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
       {/* Header */}
       {!isCollapsed && (
         <div className="p-4 border-b flex-shrink-0">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground">Chats</h3>
-            <div className="flex items-center gap-1">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground">Chats</h3>
+              <div className="flex flex-col items-center gap-2">
+                {/* Collapse toggle above the primary + button */}
+                <Button
+                  onClick={() => setCollapsed(true)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  aria-label="Collapse campaigns sidebar"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  onClick={handleStartNewSession}
+                  size="sm"
+                  disabled={isStartingStandaloneChat || state.isSwitchingSession}
+                >
+                  {isStartingStandaloneChat || state.isSwitchingSession ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground">Campaigns</h3>
               <Button
-                onClick={handleStartNewSession}
+                onClick={() => setShowCreateForm(true)}
                 size="sm"
-                disabled={isStartingStandaloneChat || state.isSwitchingSession}
+                disabled={state.isCreatingCampaign}
               >
-                {isStartingStandaloneChat || state.isSwitchingSession ? (
+                {state.isCreatingCampaign ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
               </Button>
-              <Button
-                onClick={() => setCollapsed(true)}
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground">Campaigns</h3>
-            <Button
-              onClick={() => setShowCreateForm(true)}
-              size="sm"
-              disabled={state.isCreatingCampaign}
-            >
-              {state.isCreatingCampaign ? (
+            {state.isLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
+                Loading campaigns...
+              </div>
+            )}
           </div>
-          
-          {state.isLoading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading campaigns...
-            </div>
-          )}
-        </div>
         </div>
       )}
 
