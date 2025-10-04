@@ -78,7 +78,12 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadLatestAnalysis = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    // Don't show loading state during background polling to prevent UI flashing
+    const isInitialLoad = state.latestAnalysis === null;
+
+    if (isInitialLoad) {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+    }
 
     try {
       const response = await fetch(SHEET_URL);
@@ -98,17 +103,30 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
       const latestRow = rows[rows.length - 1];
       const analysisText = latestRow[0] || 'No analysis available';
 
-      setState(prev => ({
-        ...prev,
-        latestAnalysis: {
-          id: `${rows.length}`,
-          company: '',
-          product: '',
-          analysis: analysisText,
-          timestamp: new Date().toISOString()
-        },
-        isLoading: false
-      }));
+      // Only update state if the data has actually changed
+      setState(prev => {
+        const newAnalysis = analysisText;
+        const currentAnalysis = prev.latestAnalysis?.analysis;
+
+        // Deep comparison: only update if analysis text is different
+        if (currentAnalysis === newAnalysis) {
+          // Data hasn't changed, just clear loading state without triggering re-render
+          return isInitialLoad ? { ...prev, isLoading: false } : prev;
+        }
+
+        // Data has changed, update the state
+        return {
+          ...prev,
+          latestAnalysis: {
+            id: `${rows.length}`,
+            company: '',
+            product: '',
+            analysis: analysisText,
+            timestamp: new Date().toISOString()
+          },
+          isLoading: false
+        };
+      });
 
     } catch (error) {
       setState(prev => ({
@@ -117,7 +135,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
         isLoading: false
       }));
     }
-  }, []);
+  }, [state.latestAnalysis]);
 
   return (
     <CallPrepContext.Provider value={{ state, submitCompanyData, loadLatestAnalysis }}>
