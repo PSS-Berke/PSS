@@ -5,8 +5,10 @@ import { SidebarContent } from './sidebar-layout';
 import navigationItems from '@/lib/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/lib/xano/auth-context';
 
 export default function PermanentSidebar() {
+  const { user } = useAuth();
   const sidebarTop = (
     <Link
       href="/"
@@ -34,7 +36,7 @@ export default function PermanentSidebar() {
   return (
     <div className="flex w-[260px] flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen">
       <div className="flex items-center border-b border-border px-4 py-4">{sidebarTop}</div>
-      <SidebarContent items={navigationItems} basePath="/dashboard" />
+      <SidebarContent items={navigationItems} basePath="/dashboard" user={user} />
     </div>
   );
 }

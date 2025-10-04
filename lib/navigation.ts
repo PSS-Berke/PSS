@@ -4,19 +4,19 @@ import type { SidebarItem } from '@/components/sidebar-layout';
 export const navigationItems: SidebarItem[] = [
   {
     name: 'Home',
-    href: '/dashboard',
+    href: '/',
     icon: Home,
     type: 'item',
   },
   {
     name: 'Automations',
-    href: '/dashboard/automations',
+    href: '/automations',
     icon: Zap,
     type: 'item',
   },
   {
     name: 'Analytics',
-    href: '/dashboard/analytics',
+    href: '/analytics',
     icon: BarChart4,
     type: 'item',
   },
