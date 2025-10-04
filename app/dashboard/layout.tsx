@@ -5,6 +5,7 @@ import SidebarLayout, { SidebarItem } from "@/components/sidebar-layout";
 import { useAuth } from "@/lib/xano/auth-context";
 import { BadgePercent, BarChart4, Columns3, Globe, Locate, Settings2, ShoppingBag, ShoppingCart, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from '@/components/loading-spinner';
 
 
 const navigationItems: SidebarItem[] = [
@@ -44,7 +45,7 @@ export default function Layout(props: { children: React.ReactNode }) {
   }, [user, isLoading, router]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <LoadingSpinner />;
   }
 
   if (!user) {
