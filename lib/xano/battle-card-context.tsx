@@ -106,7 +106,7 @@ export function BattleCardProvider({ children }: { children: React.ReactNode }) 
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [token, user, state.activeBattleCard]);
+  }, [token, user]);
 
   const generateBattleCard = useCallback(async (data: CreateBattleCardRequest) => {
     if (!token || !user) {
