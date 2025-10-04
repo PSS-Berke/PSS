@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Provider } from "./provider";
 import { AuthProvider } from "@/lib/xano/auth-context";
+import GlobalMenuButton from '@/components/global-menu-button';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <Provider>
           <AuthProvider>
             {children}
+            <GlobalMenuButton />
           </AuthProvider>
         </Provider>
       </body>

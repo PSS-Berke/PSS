@@ -80,7 +80,7 @@ function NavItem(props: {
   );
 }
 
-function SidebarContent(props: {
+export function SidebarContent(props: {
   onNavigate?: () => void;
   items: SidebarItem[];
   sidebarTop?: React.ReactNode;
