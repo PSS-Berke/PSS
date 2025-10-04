@@ -4,30 +4,12 @@ import React from 'react';
 import SidebarLayout, { SidebarItem } from "@/components/sidebar-layout";
 import { useAuth } from "@/lib/xano/auth-context";
 import { Home, Zap, BarChart4 } from "lucide-react";
+import navigationItems from '@/lib/navigation';
 import { useRouter } from "next/navigation";
 import LoadingSpinner from '@/components/loading-spinner';
 
 
-const navigationItems: SidebarItem[] = [
-  {
-    name: "Home",
-    href: "/dashboard",
-    icon: Home,
-    type: "item",
-  },
-  {
-    name: "Automations",
-    href: "/dashboard/automations",
-    icon: Zap,
-    type: "item",
-  },
-  {
-    name: "Analytics",
-    href: "/dashboard/analytics",
-    icon: BarChart4,
-    type: "item",
-  },
-];
+// use shared navigationItems from lib/navigation
 
 export default function Layout(props: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();

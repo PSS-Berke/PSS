@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 const navigationItems: SidebarItem[] = [
   {
     name: "Overview",
-    href: "/dashboard",
+    href: "/",
     icon: Globe,
     type: "item",
   },
@@ -19,13 +19,13 @@ const navigationItems: SidebarItem[] = [
   },
   {
     name: "People",
-    href: "/dashboard/people",
+    href: "/people",
     icon: Users,
     type: "item",
   },
   {
     name: "Revenue",
-    href: "/dashboard/revenue",
+    href: "/revenue",
     icon: BarChart4,
     type: "item",
   },
