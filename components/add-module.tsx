@@ -19,7 +19,7 @@ type AddModuleProps = {
 };
 
 export function AddModule({ open, onClose }: AddModuleProps) {
-  const { token } = useAuth();
+  const { token, refreshUser } = useAuth();
   const [moduleOptions, setModuleOptions] = React.useState<ModuleOption[]>([]);
   const [selectedModuleId, setSelectedModuleId] = React.useState<number | "">("");
   const [isFetching, setIsFetching] = React.useState(false);
@@ -115,6 +115,7 @@ export function AddModule({ open, onClose }: AddModuleProps) {
       }
 
       setSuccessMessage("Module added successfully.");
+      await refreshUser();
       setTimeout(() => {
         onClose();
       }, 900);

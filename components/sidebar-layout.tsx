@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/xano/auth-context";
-import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2 } from "lucide-react";
+import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2, Check, ChevronsUpDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +21,19 @@ import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { AddModule } from "./add-module";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 function useSegment(basePath: string) {
   const path = usePathname();
@@ -99,9 +112,9 @@ export function SidebarContent(props: {
   onLogout?: () => void;
   onSwitchCompany?: (companyId: number) => void;
 }) {
-  const segment = useSegment(props.basePath);
   const { resolvedTheme, setTheme } = useTheme();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isCompanySelectOpen, setIsCompanySelectOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -124,26 +137,56 @@ export function SidebarContent(props: {
       </div>
       {props.user?.available_companies && props.user.available_companies.length > 1 && (
         <div className="border-b border-border px-4 py-3">
-          <label htmlFor="company-select" className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 mb-1.5">
             Company
           </label>
-          <select
-            id="company-select"
-            value={props.user.company_id || ''}
-            onChange={(e) => {
-              const companyId = Number(e.target.value);
-              if (companyId) {
-                props.onSwitchCompany?.(companyId);
-              }
-            }}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {props.user.available_companies.map((company) => (
-              <option key={company.company_id} value={company.company_id}>
-                {company.company_name}
-              </option>
-            ))}
-          </select>
+          <Popover open={isCompanySelectOpen} onOpenChange={setIsCompanySelectOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={isCompanySelectOpen}
+                className="w-full justify-between h-9 px-2 py-1.5 text-sm font-normal"
+              >
+                <span className="truncate">
+                  {props.user.available_companies.find(
+                    (company) => company.company_id === props.user?.company_id
+                  )?.company_name || "Select company..."}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[228px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search company..." className="h-9" />
+                <CommandList>
+                  <CommandEmpty>No company found.</CommandEmpty>
+                  <CommandGroup>
+                    {props.user.available_companies.map((company) => (
+                      <CommandItem
+                        key={company.company_id}
+                        value={company.company_name}
+                        onSelect={() => {
+                          props.onSwitchCompany?.(company.company_id);
+                          setIsCompanySelectOpen(false);
+                        }}
+                      >
+                        {company.company_name}
+                        <Check
+                          className={cn(
+                            "ml-auto h-4 w-4",
+                            props.user?.company_id === company.company_id
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
       <div className="flex flex-grow flex-col gap-2 overflow-y-auto px-3 py-4">

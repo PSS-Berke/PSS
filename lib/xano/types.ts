@@ -4,6 +4,12 @@ export interface Company {
   company_name: string;
 }
 
+export interface Module {
+  id: number;
+  name: string;
+  is_disabled?: boolean;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -12,7 +18,7 @@ export interface User {
   company?: string;
   company_id?: number;
   company_code?: number;
-  modules?: number[];
+  modules?: Module[];
   available_companies?: Company[];
   avatar_url?: string;
   created_at: string;
