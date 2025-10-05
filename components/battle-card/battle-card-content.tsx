@@ -16,6 +16,11 @@ function CardSection({ title, content, cardKey }: CardSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const summary = content && content.length > 100 ? content.substring(0, 100) + '...' : content;
 
+  // Reset expanded state when content changes
+  React.useEffect(() => {
+    setIsExpanded(false);
+  }, [content]);
+
   return (
     <Card
       className="cursor-pointer hover:shadow-lg transition-all h-full"
@@ -47,6 +52,17 @@ export function BattleCardContent() {
   const { state } = useBattleCard();
   const activeBattleCard = state.activeBattleCard;
 
+  if (state.isLoadingDetail) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading battle card...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!activeBattleCard) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -60,7 +76,7 @@ export function BattleCardContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div key={activeBattleCard.id} className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-2">
           {activeBattleCard.competitor_name}

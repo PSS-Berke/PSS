@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 
 export function BattleCardSidebar() {
-  const { state, generateBattleCard, deleteBattleCard, setActiveBattleCard } = useBattleCard();
+  const { state, generateBattleCard, deleteBattleCard, loadBattleCardDetail } = useBattleCard();
   const [showNewCardModal, setShowNewCardModal] = useState(false);
   const [competitorName, setCompetitorName] = useState('');
   const [serviceName, setServiceName] = useState('');
@@ -68,39 +68,42 @@ export function BattleCardSidebar() {
         </div>
 
         <div className="space-y-2">
-          {state.battleCards.filter(card => card && card.id).map((card) => (
-            <div
-              key={card.id}
-              onClick={() => setActiveBattleCard(card)}
-              className={`p-3 rounded-lg cursor-pointer transition-all ${
-                state.activeBattleCard?.id === card.id
-                  ? 'bg-primary/10 border-2 border-primary'
-                  : 'bg-muted hover:bg-muted/80 border-2 border-transparent'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm text-gray-900 truncate">
-                    {card.competitor_name}
-                  </h4>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {card.competitor_service}
-                  </p>
+          {state.battleCardsList.filter(card => card && card.id).map((card) => {
+            const preview = card.competitor_overview?.substring(0, 50) || '';
+            return (
+              <div
+                key={card.id}
+                onClick={() => loadBattleCardDetail(card.id)}
+                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                  state.activeBattleCard?.id === card.id
+                    ? 'bg-primary/10 border-2 border-primary'
+                    : 'bg-muted hover:bg-muted/80 border-2 border-transparent'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm text-gray-900 truncate">
+                      {card.competitor_name}
+                    </h4>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {preview}...
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => handleDeleteCard(card.id, e)}
+                    className="h-7 w-7 p-0 ml-2 hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => handleDeleteCard(card.id, e)}
-                  className="h-7 w-7 p-0 ml-2 hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </Button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {state.battleCards.length === 0 && (
+        {state.battleCardsList.length === 0 && (
           <div className="text-center py-8">
             <Target className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No battle cards yet</p>

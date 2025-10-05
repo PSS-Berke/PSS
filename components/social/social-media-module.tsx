@@ -73,7 +73,7 @@ const formatDateTimeLocal = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm");
 export function SocialMediaModule({ className }: { className?: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('calendar');
-  const { state, refreshPosts, togglePublish, updateStatus, updatePost, deletePost, createPost } =
+  const { state, refreshPosts, getPost, togglePublish, updateStatus, updatePost, deletePost, createPost } =
     useSocialMedia();
   const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -224,9 +224,19 @@ const renderTabButton = (
     </button>
   );
 
-  const handleOpenPost = (post: SocialPost) => {
-    setSelectedPost(post);
-    setFormState(post);
+  const handleOpenPost = async (post: SocialPost) => {
+    // Fetch the latest data from the backend
+    const freshPost = await getPost(post.id);
+
+    if (freshPost) {
+      setSelectedPost(freshPost);
+      setFormState(freshPost);
+    } else {
+      // Fallback to the provided post if fetch fails
+      setSelectedPost(post);
+      setFormState(post);
+    }
+
     setIsEditing(false);
     setIsCreating(false);
     setFormError(null);
@@ -322,7 +332,7 @@ const renderTabButton = (
       const updatedContent = formState.content ?? formState.rich_content_text ?? selectedPost.content ?? selectedPost.rich_content_text ?? '';
       await updatePost(selectedPost.id, {
         post_title: formState.post_title ?? selectedPost.post_title,
-        post_description: formState.post_description ?? selectedPost.post_description ?? '',
+        post_description: 'post_description' in formState ? (formState.post_description ?? '') : (selectedPost.post_description ?? ''),
         rich_content_text:
           formState.rich_content_text ?? selectedPost.rich_content_text ?? updatedContent,
         content: updatedContent,
@@ -340,7 +350,7 @@ const renderTabButton = (
       const updatedPost: SocialPost = {
         ...selectedPost,
         post_title: formState.post_title ?? selectedPost.post_title,
-        post_description: formState.post_description ?? selectedPost.post_description,
+        post_description: 'post_description' in formState ? (formState.post_description ?? '') : (selectedPost.post_description ?? ''),
         rich_content_text: formState.rich_content_text ?? selectedPost.rich_content_text ?? resolvedContent,
         content: resolvedContent,
         rich_content_html: formState.rich_content_html ?? selectedPost.rich_content_html,

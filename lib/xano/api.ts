@@ -21,7 +21,8 @@ import type {
   SocialPostPayload,
   SocialPostUpdatePayload,
   BattleCard,
-  CreateBattleCardRequest
+  CreateBattleCardRequest,
+  BattleCardListItem
 } from './types';
 
 export class XanoApiError extends Error {
@@ -556,6 +557,34 @@ export const socialCopilotApi = {
     return result;
   },
 
+  async getPost(token: string, postId: number): Promise<SocialPost> {
+    const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
+
+    console.log('Social API: getPost URL:', url);
+    console.log('Social API: getPost postId:', postId);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    console.log('Social API: getPost response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Social API: getPost error:', errorData);
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    const result = await response.json();
+    console.log('Social API: getPost response:', result);
+    return result;
+  },
+
   async deletePost(token: string, postId: number): Promise<void> {
     const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
     const response = await fetch(url, {
@@ -576,6 +605,85 @@ export const socialCopilotApi = {
 
 // Battle Card Copilot API
 export const battleCardApi = {
+  async getBattleCardsList(token: string): Promise<BattleCardListItem[]> {
+    const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CARDS_LIST);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async getBattleCardDetail(token: string, battleCardId: number): Promise<BattleCard> {
+    const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.CARD_DETAIL}?battle_card_id=${battleCardId}`);
+
+    console.log('BattleCard API: getBattleCardDetail URL:', url);
+    console.log('BattleCard API: getBattleCardDetail battleCardId:', battleCardId);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    console.log('BattleCard API: getBattleCardDetail response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('BattleCard API: getBattleCardDetail error:', errorData);
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    const rawResult = (await response.json()) as any;
+    console.log('BattleCard API: getBattleCardDetail raw response:', rawResult);
+
+    // Normalize possible response shapes from Xano (object | array | { data })
+    let record: any = rawResult;
+    if (Array.isArray(rawResult)) {
+      record = rawResult[0] ?? null;
+    } else if (rawResult && typeof rawResult === 'object' && 'data' in rawResult) {
+      const data = (rawResult as any).data;
+      record = Array.isArray(data) ? data[0] : data;
+    }
+
+    if (!record) {
+      throw new XanoApiError('Battle card not found', 404);
+    }
+
+    // Map alternate backend field names and ensure required fields exist
+    const normalized: BattleCard = {
+      id: Number(record.id ?? record.battle_card_id ?? 0),
+      created_at: record.created_at ?? '',
+      competitor_name: record.competitor_name ?? '',
+      competitor_service: record.competitor_service ?? record.service_name ?? '',
+      company_overview: record.company_overview ?? record.competitor_overview ?? '',
+      key_products_services: record.key_products_services ?? record.key_products ?? '',
+      recent_news: record.recent_news ?? '',
+      target_market_icp: record.target_market_icp ?? '',
+      market_positioning: record.market_positioning ?? '',
+      weaknesses_gaps: record.weaknesses_gaps ?? '',
+      strengths: record.strengths ?? '',
+      customer_references: record.customer_references ?? '',
+      user_id: Number(record.user_id ?? 0),
+    };
+
+    console.log('BattleCard API: getBattleCardDetail normalized:', normalized);
+    return normalized;
+  },
+
   async getBattleCards(token: string, userId: number): Promise<BattleCard[]> {
     const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CARDS}?user_id=${userId}`);
     const response = await fetch(url, {

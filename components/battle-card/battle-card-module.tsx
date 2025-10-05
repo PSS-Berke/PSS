@@ -31,7 +31,7 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
     if (state.activeBattleCard) {
       return <Badge variant="default">Active Card</Badge>;
     }
-    if (state.battleCards.length > 0) {
+    if (state.battleCardsList.length > 0) {
       return <Badge variant="outline">Ready</Badge>;
     }
     return <Badge variant="secondary">No Cards</Badge>;
@@ -58,9 +58,9 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
 
           <div className="flex items-center gap-3">
             {getStatusBadge()}
-            {state.battleCards.length > 0 && (
+            {state.battleCardsList.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                {state.battleCards.length} battle {state.battleCards.length === 1 ? 'card' : 'cards'}
+                {state.battleCardsList.length} battle {state.battleCardsList.length === 1 ? 'card' : 'cards'}
               </div>
             )}
             <Button variant="ghost" size="sm">

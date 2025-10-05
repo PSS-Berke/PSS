@@ -1,15 +1,17 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SidebarContent } from './sidebar-layout';
 import navigationItems from '@/lib/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
 import { usePathname } from 'next/navigation';
+import { AddModule } from './add-module';
 
 export default function PermanentSidebar() {
   const { user, logout, switchCompany } = useAuth();
+  const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
 
   const handleSwitchCompany = async (companyId: number) => {
     try {
@@ -20,10 +22,7 @@ export default function PermanentSidebar() {
   };
 
   const sidebarTop = (
-    <Link
-      href="/dashboard"
-      className="flex w-full items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/70"
-    >
+    <div className="flex w-full items-center gap-3 rounded-md px-2 py-2">
       <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
         <Image
           src="/White%20logo.png"
@@ -40,20 +39,26 @@ export default function PermanentSidebar() {
         </span>
         <span className="text-xs text-muted-foreground">Control Center</span>
       </span>
-    </Link>
+    </div>
   );
 
   return (
-    <div className="flex w-[260px] flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen">
-      <SidebarContent
-        items={navigationItems}
-        basePath=""
-        user={user}
-        onLogout={logout}
-        onSwitchCompany={handleSwitchCompany}
-        sidebarTop={sidebarTop}
-      />
-    </div>
+    <>
+      <div className="flex w-[260px] flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen">
+        <SidebarContent
+          items={navigationItems}
+          basePath=""
+          user={user}
+          onLogout={logout}
+          onSwitchCompany={handleSwitchCompany}
+          onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
+          sidebarTop={sidebarTop}
+        />
+      </div>
+      {user ? (
+        <AddModule open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
+      ) : null}
+    </>
   );
 }
 

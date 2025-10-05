@@ -211,7 +211,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
   );
 
   return (
-    <div className="calendar-wrapper rounded-xl border border-border/60 bg-card p-3">
+    <div className="calendar-wrapper rounded-xl bg-card p-3">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"

@@ -199,3 +199,9 @@ export interface CreateBattleCardRequest {
   service_name: string;
 }
 
+export interface BattleCardListItem {
+  id: number;
+  competitor_name: string;
+  competitor_overview: string;
+}
+

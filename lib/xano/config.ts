@@ -32,6 +32,8 @@ export const XANO_CONFIG = {
     },
     BATTLE_CARD: {
       GET_CARDS: '/battle_card_main',
+      GET_CARDS_LIST: '/get_battle_cards_list',
+      CARD_DETAIL: '/battle_card_main',
       GENERATE_CARD: '/generate_battle_card',
       DELETE_CARD: '/battle_card_main',
     },

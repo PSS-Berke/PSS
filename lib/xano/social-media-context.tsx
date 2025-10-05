@@ -89,6 +89,7 @@ function socialMediaReducer(
 interface SocialMediaContextValue {
   state: SocialMediaState;
   refreshPosts: () => Promise<void>;
+  getPost: (postId: number) => Promise<SocialPost | null>;
   togglePublish: (postId: number, nextStatus: boolean) => Promise<void>;
   updateStatus: (postId: number, status: 'draft' | 'approved' | 'published') => Promise<void>;
   updatePost: (
@@ -163,6 +164,32 @@ export function SocialMediaProvider({
   const refreshPosts = useCallback(async () => {
     await fetchPosts();
   }, [fetchPosts]);
+
+  const getPost = useCallback(
+    async (postId: number) => {
+      if (!token) return null;
+
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      try {
+        const post = await socialCopilotApi.getPost(token, postId);
+        // Update the post in the state if it exists
+        dispatch({ type: 'UPDATE_POST', payload: post });
+        return post;
+      } catch (error) {
+        console.error('Social Media: Failed to fetch post', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload:
+            error instanceof Error
+              ? error.message
+              : 'Failed to fetch post',
+        });
+        return null;
+      }
+    },
+    [token]
+  );
 
   const updateStatus = useCallback(
     async (postId: number, newStatus: 'draft' | 'approved' | 'published') => {
@@ -307,6 +334,7 @@ export function SocialMediaProvider({
   const value: SocialMediaContextValue = {
     state,
     refreshPosts,
+    getPost,
     togglePublish,
     updateStatus,
     updatePost,
