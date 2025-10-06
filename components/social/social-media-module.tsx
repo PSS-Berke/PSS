@@ -50,7 +50,7 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
   linkedin: 'bg-[#0077B5] text-white',
   instagram: 'bg-[#E4405F] text-white',
   tiktok: 'bg-black text-white',
-  all: 'bg-[#C33527] text-white',
+  all: 'bg-[#C33527] text-white border-2 border-white',
 };
 
 const DEFAULT_CONTENT_TYPE: SocialPost['content_type'] = 'linkedin';
@@ -63,7 +63,22 @@ const getPlatformIcon = (contentType: SocialPost['content_type']) => {
     case 'instagram':
       return <Instagram {...iconProps} />;
     case 'tiktok':
-      return null; // No TikTok icon in lucide-react
+      return (
+        <svg {...iconProps} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+        </svg>
+      );
+    case 'all':
+      return (
+        <svg {...iconProps} viewBox="0 0 100 100" fill="none">
+          <rect width="100" height="100" fill="#C33527"/>
+          <rect x="5" y="10" width="12" height="80" fill="white"/>
+          <rect x="22" y="10" width="12" height="80" fill="white"/>
+          <rect x="39" y="10" width="12" height="80" fill="white"/>
+          <rect x="56" y="10" width="12" height="80" fill="white"/>
+          <rect x="73" y="10" width="12" height="80" fill="white"/>
+        </svg>
+      );
     default:
       return null;
   }
@@ -446,13 +461,13 @@ const renderTabButton = (
         key={post.id}
         className={cn(
           'flex flex-col gap-3 rounded-lg border border-border/70 bg-background/80 p-4 transition-colors',
-          'hover:border-[#C33527]'
+          'hover:border-[#C33527] cursor-pointer'
         )}
+        onClick={() => handleOpenPost(post)}
       >
         <div className="flex items-start justify-between gap-4">
           <div
-            className="flex flex-1 flex-col gap-1 cursor-pointer"
-            onClick={() => handleOpenPost(post)}
+            className="flex flex-1 flex-col gap-1"
           >
             <div className="flex items-center gap-2">
               <span
@@ -486,7 +501,10 @@ const renderTabButton = (
                 'h-8 rounded-full border-0 px-3 text-xs font-semibold',
                 post.published ? 'bg-[#C33527] hover:bg-[#DA857C]' : ''
               )}
-              onClick={() => togglePublish(post.id, !post.published)}
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePublish(post.id, !post.published);
+              }}
               disabled={isMutating}
             >
               {isMutating ? (
@@ -573,14 +591,12 @@ const renderTabButton = (
           <div className="flex max-h-[420px] flex-col gap-3 overflow-y-auto pr-2">
             {todaysPosts.length > 0 ? (
               todaysPosts.map((post) => (
-                <button
+                <div
                   key={post.id}
-                  type="button"
                   className="text-left"
-                  onClick={() => handleOpenPost(post)}
                 >
                   {renderPostSummary(post)}
-                </button>
+                </div>
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
@@ -615,14 +631,12 @@ const renderTabButton = (
           <div className="flex max-h-[420px] flex-col gap-3 overflow-y-auto pr-2">
             {state.posts.length > 0 ? (
               state.posts.map((post) => (
-                <button
+                <div
                   key={post.id}
-                  type="button"
                   className="text-left"
-                  onClick={() => handleOpenPost(post)}
                 >
                   {renderPostSummary(post)}
-                </button>
+                </div>
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
