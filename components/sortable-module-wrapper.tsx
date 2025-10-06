@@ -43,16 +43,16 @@ export function SortableModuleWrapper({ id, children }: SortableModuleWrapperPro
       `}
       {...attributes}
     >
-      {/* Drag Handle - Only this element triggers drag */}
+      {children}
+
+      {/* Drag Handle - Positioned where expand button used to be */}
       <div
         ref={setActivatorNodeRef}
-        className="absolute top-[24px] right-[52px] z-10 p-1 rounded-md hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing"
+        className="absolute top-[27px] right-[60px] z-10 px-1 py-3 rounded-md hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing"
         {...listeners}
       >
         <GripVertical className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
       </div>
-
-      {children}
     </div>
   );
 }
