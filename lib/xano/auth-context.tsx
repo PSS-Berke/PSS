@@ -185,20 +185,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const response = await authApi.register(credentials);
-      setUser(response.user);
-      setToken(response.token);
-      setStoredToken(response.token);
-      
-      if (response.refresh_token) {
-        setStoredRefreshToken(response.refresh_token);
-      }
-      
-      router.push('/dashboard');
+      // Don't set user/token or redirect - user needs to verify email first
+      // Navigation is handled by the signup page
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
     }
-  }, [router]);
+  }, []);
 
   const logout = useCallback(async () => {
     try {

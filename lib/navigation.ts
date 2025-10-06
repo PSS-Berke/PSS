@@ -1,4 +1,4 @@
-import { LayoutDashboard, Zap, BarChart4, Settings } from 'lucide-react';
+import { LayoutDashboard, Zap, BarChart4, Settings, Users } from 'lucide-react';
 import type { SidebarItem } from '@/components/sidebar-layout';
 
 export const navigationItems: SidebarItem[] = [
@@ -24,6 +24,22 @@ export const navigationItems: SidebarItem[] = [
     name: 'Settings',
     href: '/settings',
     icon: Settings,
+    type: 'item',
+  },
+];
+
+export const adminNavigationItems: SidebarItem[] = [
+  {
+    type: 'separator',
+  },
+  {
+    name: 'Admin',
+    type: 'label',
+  },
+  {
+    name: 'User Management',
+    href: '/admin/users',
+    icon: Users,
     type: 'item',
   },
 ];

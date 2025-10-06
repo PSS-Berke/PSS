@@ -15,6 +15,7 @@ export interface User {
   email: string;
   name?: string;
   role?: boolean;
+  admin?: boolean;
   company?: string;
   company_id?: number;
   company_code?: number;
