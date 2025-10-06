@@ -648,16 +648,30 @@ const renderTabButton = (
   return (
     <Card
       className={cn(
-        'w-full flex flex-col',
+        'w-full flex flex-col relative',
         isExpanded ? 'min-h-[80vh]' : 'max-h-[80vh]',
         className
       )}
     >
+      {/* Expand Button - Positioned in top-right corner */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-[32px] right-[12px] z-10 px-[17px] py-3"
+        onClick={toggleExpanded}
+      >
+        {isExpanded ? (
+          <ChevronUp className="h-4 w-4" />
+        ) : (
+          <ChevronDown className="h-4 w-4" />
+        )}
+      </Button>
+
       <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={toggleExpanded}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pr-28">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-[#C33527]/15 p-2">
               <Calendar className="h-5 w-5 text-[#C33527]" />
@@ -670,17 +684,19 @@ const renderTabButton = (
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {getStatusBadge()}
+          <div className="flex items-center gap-3 pr-2">
+            <div className="px-1">
+              {getStatusBadge()}
+            </div>
             {state.lastFetchedAt ? (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground px-1">
                 Updated {format(new Date(state.lastFetchedAt), 'MMM d, h:mm a')}
               </span>
             ) : null}
             <Button
               variant="default"
               size="sm"
-              className="gap-1 bg-[#C33527] hover:bg-[#DA857C]"
+              className="gap-1 bg-[#C33527] hover:bg-[#DA857C] px-2"
               onClick={(event) => {
                 event.stopPropagation();
                 handleStartCreate();
@@ -692,7 +708,7 @@ const renderTabButton = (
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-2 px-2"
               onClick={(event) => {
                 event.stopPropagation();
                 refreshPosts();
@@ -706,17 +722,6 @@ const renderTabButton = (
                 )}
               />
               Refresh
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 flex items-center justify-center"
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
             </Button>
           </div>
         </div>

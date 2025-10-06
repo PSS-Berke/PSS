@@ -50,12 +50,22 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
   };
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader 
+    <Card className={`w-full ${className} relative`}>
+      {/* Expand Button - Positioned in top-right corner */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-[32px] right-[12px] z-10 px-[17px] py-3"
+        onClick={toggleExpanded}
+      >
+        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </Button>
+
+      <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={toggleExpanded}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pr-28">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <MessageSquare className="h-5 w-5 text-primary" />
@@ -67,17 +77,16 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            {getStatusBadge()}
+            <div className="flex items-center">
+              {getStatusBadge()}
+            </div>
             {pages.length > 0 && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground flex items-center">
                 {getCampaignCount()} campaigns • {getSessionCount()} chats
               </div>
             )}
-            <Button variant="ghost" size="sm">
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
           </div>
         </div>
       </CardHeader>
