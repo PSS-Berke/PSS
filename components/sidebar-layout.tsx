@@ -20,7 +20,7 @@ import {
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
-import { AddModule } from "./add-module";
+import { ModuleManager } from "./module-manager";
 import {
   Command,
   CommandEmpty,
@@ -420,7 +420,7 @@ export default function SidebarLayout(props: {
         <div className="flex-grow">{props.children}</div>
       </div>
       {user ? (
-        <AddModule open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
+        <ModuleManager open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
       ) : null}
     </div>
   );

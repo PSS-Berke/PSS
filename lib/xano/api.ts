@@ -726,6 +726,29 @@ export const battleCardApi = {
     return response.json();
   },
 
+  async updateBattleCard(token: string, cardId: number, data: Partial<BattleCard>): Promise<BattleCard> {
+    const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.UPDATE_CARD);
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({
+        battle_card_id: cardId,
+        ...data,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
   async deleteBattleCard(token: string, cardId: number): Promise<void> {
     const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.DELETE_CARD}/${cardId}`);
     const response = await fetch(url, {

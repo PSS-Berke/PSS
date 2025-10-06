@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
 import { usePathname } from 'next/navigation';
-import { AddModule } from './add-module';
+import { ModuleManager } from './module-manager';
 
 export default function PermanentSidebar() {
   const { user, logout, switchCompany } = useAuth();
@@ -56,7 +56,7 @@ export default function PermanentSidebar() {
         />
       </div>
       {user ? (
-        <AddModule open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
+        <ModuleManager open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
       ) : null}
     </>
   );
