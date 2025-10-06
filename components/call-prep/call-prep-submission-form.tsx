@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { AutoResizeInput } from '@/components/ui/auto-resize-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
@@ -42,7 +42,7 @@ export function CallPrepSubmissionForm() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
             <Label htmlFor="company">Company Name</Label>
-            <Input
+            <AutoResizeInput
               id="company"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
@@ -53,7 +53,7 @@ export function CallPrepSubmissionForm() {
 
           <div className="grid gap-2">
             <Label htmlFor="product">Product or Service</Label>
-            <Input
+            <AutoResizeInput
               id="product"
               value={product}
               onChange={(e) => setProduct(e.target.value)}
@@ -64,7 +64,7 @@ export function CallPrepSubmissionForm() {
 
           <div className="grid gap-2">
             <Label htmlFor="contact">Contact Person (Optional)</Label>
-            <Input
+            <AutoResizeInput
               id="contact"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
