@@ -85,7 +85,7 @@ export function BattleCardSettingsDialog({
 
           <div className="bg-muted/50 p-3 rounded-md">
             <p className="text-sm text-muted-foreground">
-              Clicking "Refresh Battle Card" will regenerate all sections with updated information based on the competitor and service you specify.
+              Clicking &ldquo;Refresh Battle Card&rdquo; will regenerate all sections with updated information based on the competitor and service you specify.
             </p>
           </div>
         </div>
