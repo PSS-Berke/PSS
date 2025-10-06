@@ -12,7 +12,7 @@ import { useSidebar } from '@/lib/contexts/sidebar-context';
 import { cn } from '@/lib/utils';
 
 export default function PermanentSidebar() {
-  const { user, logout, switchCompany } = useAuth();
+  const { user, logout, switchCompany, token } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
   const { isCollapsed, toggleSidebar } = useSidebar();
 
@@ -71,6 +71,7 @@ export default function PermanentSidebar() {
           onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
           sidebarTop={sidebarTop}
           isCollapsed={isCollapsed}
+          token={token}
         />
       </div>
       {user ? (

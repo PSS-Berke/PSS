@@ -2,12 +2,13 @@
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/xano/auth-context";
-import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2, Check, ChevronsUpDown } from "lucide-react";
+import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2, Check, ChevronsUpDown, Mail } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { User } from "@/lib/xano/types";
 import { useSidebar } from "@/lib/contexts/sidebar-context";
 import {
@@ -116,24 +117,79 @@ export function SidebarContent(props: {
   onLogout?: () => void;
   onSwitchCompany?: (companyId: number) => void;
   isCollapsed?: boolean;
+  token?: string | null;
 }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isCompanySelectOpen, setIsCompanySelectOpen] = useState(false);
+  const [isContactFormOpen, setIsContactFormOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const contactFormRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedInsideProfile = profileMenuRef.current?.contains(target);
+      const clickedInsideContactForm = contactFormRef.current?.contains(target);
+
+      if (!clickedInsideProfile && !clickedInsideContactForm) {
         setIsProfileMenuOpen(false);
+        setIsContactFormOpen(false);
       }
     }
 
-    if (isProfileMenuOpen) {
+    if (isProfileMenuOpen || isContactFormOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isProfileMenuOpen]);
+  }, [isProfileMenuOpen, isContactFormOpen]);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      if (!props.token) {
+        setSubmitError('Authentication required. Please log in again.');
+        return;
+      }
+
+      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${props.token}`,
+        },
+        body: JSON.stringify({
+          name: contactForm.name,
+          email: contactForm.email,
+          message: contactForm.message,
+        }),
+      });
+
+      if (response.ok) {
+        setContactForm({ name: '', email: '', message: '' });
+        setIsContactFormOpen(false);
+        setIsProfileMenuOpen(false);
+        setSubmitError('');
+      } else {
+        setSubmitError('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      setSubmitError('Network error. Please check your connection.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -268,7 +324,7 @@ export function SidebarContent(props: {
             )}
           </button>
 
-          {isProfileMenuOpen && (
+          {isProfileMenuOpen && !isContactFormOpen && (
             <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
               <div className="py-1">
                 <button
@@ -290,6 +346,17 @@ export function SidebarContent(props: {
                     </>
                   )}
                 </button>
+                <Separator className="my-1" />
+                <button
+                  onClick={() => {
+                    setIsContactFormOpen(true);
+                    setIsProfileMenuOpen(false);
+                  }}
+                  className="w-full px-3 py-2 flex items-center gap-2 text-sm hover:bg-muted transition-colors"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>Contact Support</span>
+                </button>
                 {props.onLogout && (
                   <>
                     <Separator className="my-1" />
@@ -308,8 +375,84 @@ export function SidebarContent(props: {
               </div>
             </div>
           )}
+
         </div>
       ) : null}
+
+      {mounted && isContactFormOpen && createPortal(
+        <div ref={contactFormRef} className="fixed bottom-24 left-4 w-[400px] bg-popover border border-border rounded-lg shadow-2xl overflow-hidden z-[10001]">
+          <form onSubmit={handleContactSubmit} className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Contact Support</h3>
+            {submitError && (
+              <div className="mb-4 px-3 py-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                {submitError}
+              </div>
+            )}
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium mb-2">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  required
+                  value={contactForm.name}
+                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium mb-2">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  required
+                  rows={5}
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsContactFormOpen(false);
+                    setContactForm({ name: '', email: '', message: '' });
+                    setSubmitError('');
+                  }}
+                  className="flex-1 px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -350,7 +493,7 @@ export default function SidebarLayout(props: {
   basePath: string;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout, switchCompany } = useAuth();
+  const { user, logout, switchCompany, token } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
   const { isCollapsed, toggleSidebar } = useSidebar();
 
@@ -411,6 +554,7 @@ export default function SidebarLayout(props: {
           onLogout={logout}
           onSwitchCompany={handleSwitchCompany}
           isCollapsed={isCollapsed}
+          token={token}
         />
       </div>
       <div
@@ -440,6 +584,7 @@ export default function SidebarLayout(props: {
                   user={user}
                   onLogout={logout}
                   onSwitchCompany={handleSwitchCompany}
+                  token={token}
                 />
               </SheetContent>
             </Sheet>
