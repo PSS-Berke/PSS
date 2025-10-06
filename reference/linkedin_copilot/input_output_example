@@ -1,0 +1,537 @@
+# LinkedIn Co-Pilot API - Input/Output Examples
+Never make changes to this file
+## Base URL
+```
+https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR
+```
+
+## Authentication
+All requests require Bearer token authentication:
+```
+Authorization: Bearer use the jwt token returned after login
+```
+
+---
+
+## 1. Create New Campaign
+
+### Endpoint
+```
+GET /new_campaign
+```
+
+### Input Examples
+
+**Example 1: Complete Campaign**
+```
+GET /new_campaign?name=Q4%20Product%20Launch&additional_notes=Focus%20on%20key%20features%20and%20benefits&tone=professional&content_length=300&marketing_type=product_announcement
+```
+
+**Example 2: Minimal Campaign**
+```
+GET /new_campaign?name=Social%20Media%20Boost
+```
+
+**Example 3: Marketing Campaign with Tone**
+```
+GET /new_campaign?name=Holiday%20Sales&tone=festive&content_length=250&marketing_type=promotional
+```
+
+### Output Examples
+
+**Success Response (200)**
+```json
+{
+  "id": 12,
+  "created_at": 1758487052082,
+  "name": "Magnus",
+  "role": true,
+  "email": "magnus@gmail.com",
+  "company_id": 13
+}
+```
+
+**What happens behind the scenes:**
+- Creates new campaign record in `linkedin_campaigns` table
+- Generates random 15-character session ID
+- Creates new session linked to the campaign
+- Returns user information
+
+---
+
+## 2. Send Message
+
+### Endpoint
+```
+POST /send_message
+```
+
+### Input Examples
+
+**Example 1: Content Creation Request**
+```json
+{
+  "prompt": "Help me create a LinkedIn post about our new electric toothbrush launch"
+}
+```
+
+**Example 2: Marketing Strategy Question**
+```json
+{
+  "prompt": "What are the best practices for B2B sales outreach on LinkedIn?"
+}
+```
+
+**Example 3: Content Improvement Request**
+```json
+{
+  "prompt": "Can you help me make this post more engaging: 'We launched a new product today. It's really good.'"
+}
+```
+
+### Output Examples
+
+**Success Response (200) - Product Launch Post**
+```json
+"🚀 **Revolutionizing Your Morning Routine with Our New Electric Toothbrush!** 🦷✨\n\nWe're thrilled to announce the launch of our latest innovation – an electric toothbrush that combines cutting-edge technology with superior oral care!\n\n🔋 **What makes it special?**\n• Smart pressure sensor technology\n• 40,000 vibrations per minute for deep cleaning\n• 4-week battery life for ultimate convenience\n• FDA-approved bristle design\n\nAfter 2 years of research and development, we've created a product that doesn't just clean your teeth – it transforms your entire oral care experience.\n\n💡 **The result?** Healthier gums, whiter teeth, and the confidence that comes with a perfect smile.\n\nReady to upgrade your smile? Comment below or DM us to be among the first to experience the future of oral care! 🌟\n\n#OralHealth #Innovation #ElectricToothbrush #HealthTech #SmileConfidence"
+```
+
+**Success Response (200) - Sales Strategy Response**
+```json
+"Here are the top B2B sales outreach best practices for LinkedIn:\n\n🎯 **1. Perfect Your Profile First**\n• Professional headshot\n• Compelling headline that shows value\n• Summary focused on helping prospects\n\n🔍 **2. Research Before Reaching Out**\n• Study their company updates\n• Check recent posts and interactions\n• Look for mutual connections\n\n💬 **3. Personalized Connection Requests**\n• Mention specific details about their business\n• Reference mutual connections or interests\n• Keep it under 200 characters\n\n📧 **4. Value-First Messaging**\n• Lead with insights, not sales pitches\n• Share relevant industry content\n• Ask thoughtful questions\n\n⏰ **5. Timing Matters**\n• Tuesday-Thursday, 8-10 AM or 1-3 PM\n• Avoid Mondays and Fridays\n• Follow up strategically (3-4 touches max)\n\nRemember: Build relationships first, sales will follow! 🤝\n\nWhat's been your most successful LinkedIn outreach strategy?"
+```
+
+**Behind the scenes:**
+- User message stored with role: "user"
+- AI processes the prompt (currently placeholder "mvp:call_agent")
+- AI response stored with role: "ai"
+- Returns only the AI response content
+
+---
+
+## 3. Get Messages
+
+### Endpoint
+```
+GET /get_messages
+```
+
+### Input Examples
+
+**Example 1: Retrieve All Messages**
+```
+GET /get_messages
+```
+
+**No parameters required - retrieves messages for the current active session**
+
+### Output Examples
+
+**Success Response (200) - Conversation History**
+```json
+[
+  {
+    "id": 72,
+    "created_at": 1758487069759,
+    "session_id": "6qUwthFhUdvkDub",
+    "role": "user",
+    "content": "help me create a post",
+    "user_id": 12
+  },
+  {
+    "id": 73,
+    "created_at": 1758487070951,
+    "session_id": "6qUwthFhUdvkDub",
+    "role": "ai",
+    "content": "Could you please provide more details about the topic or theme of the post you'd like to create? Additionally, any specific messages or tone you want to convey would be helpful.",
+    "user_id": 12
+  },
+  {
+    "id": 74,
+    "created_at": 1758487077876,
+    "session_id": "6qUwthFhUdvkDub",
+    "role": "user",
+    "content": "make it about sales",
+    "user_id": 12
+  },
+  {
+    "id": 75,
+    "created_at": 1758487081713,
+    "session_id": "6qUwthFhUdvkDub",
+    "role": "ai",
+    "content": "### LinkedIn Post\n\n🚀 **Unlocking the Secrets to Sales Success!** 🚀\n\nIn the ever-evolving world of sales, staying ahead requires more than just a great product or service. It's about understanding your customer's needs, building genuine relationships, and delivering value at every touchpoint.\n\nHere are three key strategies to elevate your sales game:\n\n1. **Listen Actively**: The best salespeople are great listeners. Understand your client's pain points and tailor your solutions to meet their specific needs.\n\n2. **Build Trust**: Establishing trust is crucial. Be transparent, follow through on promises, and always prioritize your client's best interests.\n\n3. **Embrace Technology**: Leverage CRM tools and data analytics to gain insights and streamline your sales process. Technology can be a game-changer in personalizing the customer experience.\n\nRemember, sales is not just about closing deals—it's about creating lasting partnerships. What strategies have you found most effective in your sales journey? 🤝\n\n#SalesSuccess #CustomerRelationships #SalesStrategies #TrustBuilding #TechInSales\n\n---\n\nFeel free to share your thoughts and experiences in the comments below! 👇",
+    "user_id": 12
+  }
+]
+```
+
+**Success Response (200) - Empty Session**
+```json
+[]
+```
+
+**Notes:**
+- Messages ordered by creation date (oldest first)
+- Only returns messages from the currently active session
+- Empty array if no messages exist
+
+---
+
+## 4. Get Pages
+
+### Endpoint
+```
+GET /get_pages
+```
+
+### Input Examples
+
+**Example 1: Retrieve All Pages**
+```
+GET /get_pages
+```
+
+**No parameters required - retrieves all campaigns and sessions for the user**
+
+### Output Examples
+
+**Success Response (200) - Multiple Campaigns with Sessions**
+```json
+[
+  {
+    "linkedin_campaigns_id": 4,
+    "name": "Campaign Three",
+    "no_campaign": null,
+    "records": "[{\"id\" : 25, \"created_at\" : 1758627291078, \"session_id\" : \"B72sHO7ssXhw3Kn\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}]"
+  },
+  {
+    "linkedin_campaigns_id": 2,
+    "name": "Campaign Two",
+    "no_campaign": null,
+    "records": "[{\"id\" : 24, \"created_at\" : 1758574850327, \"session_id\" : \"lZAxZiwW0U6IhUr\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}, {\"id\" : 23, \"created_at\" : 1758574799083, \"session_id\" : \"wuRkOxXmatzyBL5\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}]"
+  },
+  {
+    "linkedin_campaigns_id": null,
+    "name": null,
+    "no_campaign": "[{\"id\" : 57, \"created_at\" : 1758999347765, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : true, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 56, \"created_at\" : 1758999347414, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 55, \"created_at\" : 1758999327054, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 54, \"created_at\" : 1758999326750, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 53, \"created_at\" : 1758985247912, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 52, \"created_at\" : 1758985247657, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 39, \"created_at\" : 1758664781620, \"session_id\" : \"C79c7VCeYeBlxeA\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 38, \"created_at\" : 1758664709237, \"session_id\" : \"wYVxDeQzGJybxdG\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}, {\"id\" : 36, \"created_at\" : 1758664612799, \"session_id\" : \"wYVxDeQzGJybxdG\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}]",
+    "records": "[{\"id\" : 57, \"created_at\" : 1758999347765, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : true, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 56, \"created_at\" : 1758999347414, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 55, \"created_at\" : 1758999327054, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 54, \"created_at\" : 1758999326750, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 53, \"created_at\" : 1758985247912, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 52, \"created_at\" : 1758985247657, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 39, \"created_at\" : 1758664781620, \"session_id\" : \"C79c7VCeYeBlxeA\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 38, \"created_at\" : 1758664709237, \"session_id\" : \"wYVxDeQzGJybxdG\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}, {\"id\" : 36, \"created_at\" : 1758664612799, \"session_id\" : \"wYVxDeQzGJybxdG\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}]"
+  },
+  {
+    "linkedin_campaigns_id": 8,
+    "name": "Campaign Four",
+    "no_campaign": null,
+    "records": "[{\"id\" : 33, \"created_at\" : 1758654298311, \"session_id\" : \"FneLAJDLXtRHVjS\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}]"
+  },
+  {
+    "linkedin_campaigns_id": 1,
+    "name": "Campaign One",
+    "no_campaign": null,
+    "records": "[{\"id\" : 15, \"created_at\" : 1758487062204, \"session_id\" : \"6qUwthFhUdvkDub\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"session one\", \"is_deleted\" : false}, {\"id\" : 17, \"created_at\" : 1758545086824, \"session_id\" : \"1zKZI3PNRdPmG4p\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"session three\", \"is_deleted\" : false}, {\"id\" : 16, \"created_at\" : 1758487086427, \"session_id\" : \"0vI8yFdfg9ep7x2\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"session two\", \"is_deleted\" : false}]"
+  }
+]
+```
+
+**Success Response (200) - User with No Campaigns**
+```json
+[]
+```
+
+**Notes:**
+- Groups sessions by campaign
+- Only includes non-deleted sessions
+- Aggregates using JSON_AGG in PostgreSQL
+- Useful for building campaign/session navigation UI
+
+---
+
+## 5. Get Chats
+
+### Endpoint
+```
+GET /get_chats
+```
+
+### Input Examples
+
+**Example 1: Retrieve All Chats and Campaigns**
+```
+GET /get_chats
+```
+
+**No parameters required - retrieves all chats and campaigns for the user, separated into two sections**
+
+### Output Examples
+
+**Success Response (200) - Chats and Campaigns Separated**
+```json
+{
+  "result": "{\"chats\" : {\"heading\" : \"Chats\", \"records\" : []}, \"campaigns\" : {\"heading\" : \"Campaigns\", \"records\" : [{\"linkedin_campaigns_id\" : 1, \"name\" : \"Campaign One\", \"sessions\" : [{\"id\" : 15, \"created_at\" : 1758487062204, \"session_id\" : \"6qUwthFhUdvkDub\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"session one\", \"is_deleted\" : false}, {\"id\" : 17, \"created_at\" : 1758545086824, \"session_id\" : \"1zKZI3PNRdPmG4p\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"session three\", \"is_deleted\" : false}, {\"id\" : 16, \"created_at\" : 1758487086427, \"session_id\" : \"0vI8yFdfg9ep7x2\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"session two\", \"is_deleted\" : false}]}, {\"linkedin_campaigns_id\" : 8, \"name\" : \"Campaign Four\", \"sessions\" : [{\"id\" : 33, \"created_at\" : 1758654298311, \"session_id\" : \"FneLAJDLXtRHVjS\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}]}, {\"linkedin_campaigns_id\" : 20, \"name\" : \"Single Posts\", \"sessions\" : [{\"id\" : 62, \"created_at\" : 1759000707527, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}, {\"id\" : 63, \"created_at\" : 1759000707761, \"session_id\" : \"\", \"last_activity\" : null, \"is_enabled\" : true, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}]}, {\"linkedin_campaigns_id\" : 4, \"name\" : \"Campaign Three\", \"sessions\" : [{\"id\" : 25, \"created_at\" : 1758627291078, \"session_id\" : \"B72sHO7ssXhw3Kn\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Post\", \"is_deleted\" : false}]}, {\"linkedin_campaigns_id\" : 2, \"name\" : \"Campaign Two\", \"sessions\" : [{\"id\" : 24, \"created_at\" : 1758574850327, \"session_id\" : \"lZAxZiwW0U6IhUr\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}, {\"id\" : 23, \"created_at\" : 1758574799083, \"session_id\" : \"wuRkOxXmatzyBL5\", \"last_activity\" : null, \"is_enabled\" : false, \"user_id\" : 12, \"session_name\" : \"New Chat\", \"is_deleted\" : false}]}]}}"
+}
+```
+
+**Notes:**
+- `chats` object contains a `heading` ("Chats") and `records` array with sessions where `linkedin_campaigns_id` is null (standalone chats)
+- `campaigns` object contains a `heading` ("Campaigns") and `records` array with campaign objects and their associated sessions
+- Sessions are properly nested under their respective campaigns
+- Only includes non-deleted sessions
+- Each section has its own heading for clear UI organization
+- Useful for building separate UI sections with proper headings for standalone chats vs campaign-organized chats
+
+---
+
+## 6. Change Chat
+
+### Endpoint
+```
+PATCH /change_chat
+```
+
+### Input Examples
+
+**Example 1: Switch to Specific Session**
+```json
+{
+  "session_id": "0vI8yFdfg9ep7x2"
+}
+```
+
+**Example 2: Switch to Different Campaign Session**
+```json
+{
+  "session_id": "wuRkOxXmatzyBL5"
+}
+```
+
+### Output Examples
+
+**Success Response (200) - Session Switched**
+```json
+{
+  "id": 16,
+  "created_at": 1758487086427,
+  "session_id": "0vI8yFdfg9ep7x2",
+  "last_activity": null,
+  "is_enabled": true,
+  "user_id": 12,
+  "session_name": "session two",
+  "is_deleted": false,
+  "linkedin_campaigns_id": 1
+}
+```
+
+**Error Response (403) - User Doesn't Own Session**
+```json
+{
+  "error": "Precondition failed",
+  "message": "Access denied to this session"
+}
+```
+
+**Error Response (404) - Session Not Found**
+```json
+{
+  "error": "Not Found",
+  "message": "Session with ID 'invalidSessionId' not found"
+}
+```
+
+**Behind the scenes:**
+1. Finds and disables current active session
+2. Verifies user owns the target session (precondition check)
+3. Enables the target session
+4. Returns the updated target session
+
+---
+
+## 7. Delete Chat
+
+### Endpoint
+```
+POST /delete_chat
+```
+
+### Input Examples
+
+**Example 1: Delete Specific Session**
+```json
+{
+  "session_id": "1zKZI3PNRdPmG4p"
+}
+```
+
+**Example 2: Delete Old Session**
+```json
+{
+  "session_id": "oldSessionToDelete"
+}
+```
+
+### Output Examples
+
+**Success Response (200) - Session Deleted**
+```json
+{
+  "id": 17,
+  "created_at": 1758545086824,
+  "session_id": "1zKZI3PNRdPmG4p",
+  "last_activity": null,
+  "is_enabled": false,
+  "user_id": 12,
+  "session_name": "session three",
+  "is_deleted": true,
+  "linkedin_campaigns_id": 1
+}
+```
+
+**Error Response (404) - Session Not Found**
+```json
+{
+  "error": "Not Found",
+  "message": "Session with ID 'nonexistentSession' not found"
+}
+```
+
+**Notes:**
+- This is a soft delete (sets `is_deleted: true`)
+- Session and messages remain in database
+- Deleted sessions won't appear in `get_pages` results
+- Session is automatically disabled when deleted
+
+---
+
+## Error Responses
+
+### Common Error Codes
+
+**401 Unauthorized**
+```json
+{
+  "error": "Unauthorized",
+  "message": "Authentication required"
+}
+```
+
+**403 Forbidden**
+```json
+{
+  "error": "Access denied",
+  "message": "Insufficient privileges to access this resource"
+}
+```
+
+**400 Bad Request**
+```json
+{
+  "error": "Input Error",
+  "message": "Invalid request payload"
+}
+```
+
+**429 Rate Limited**
+```json
+{
+  "error": "Rate Limited",
+  "message": "Too many requests. Please try again later."
+}
+```
+
+**500 Internal Server Error**
+```json
+{
+  "error": "Unexpected error",
+  "message": "An internal server error occurred"
+}
+```
+
+---
+
+## Complete cURL Examples
+
+### 1. Create Campaign
+```bash
+curl -X GET "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/new_campaign?name=Holiday%20Campaign&tone=festive&content_length=250" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+
+### 3. Send Message
+```bash
+curl -X POST "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/send_message" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Create a LinkedIn post about AI in healthcare"}'
+```
+
+### 3. Get Messages
+```bash
+curl -X GET "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/get_messages" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### 4. Get Pages
+```bash
+curl -X GET "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/get_pages" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### 5. Get Chats
+```bash
+curl -X GET "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/get_chats" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### 6. Change Chat
+```bash
+curl -X PATCH "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/change_chat" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"session_id": "6qUwthFhUdvkDub"}'
+```
+
+### 7. Delete Chat
+```bash
+curl -X POST "https://xnpm-iauo-ef2d.n7e.xano.io/api:fVcTh-PR/delete_chat" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"session_id": "1zKZI3PNRdPmG4p"}'
+```
+
+---
+
+## Data Flow Examples
+
+### Typical User Journey
+
+1. **User sends first message:**
+```
+POST /send_message {"prompt": "Help with LinkedIn post"}
+→ Stores user message
+→ Processes with AI
+→ Stores AI response
+→ Returns AI response
+```
+
+2. **User continues conversation:**
+```
+POST /send_message {"prompt": "Make it more professional"}
+→ Adds to existing conversation thread
+→ Returns updated AI response
+```
+
+3. **User views conversation history:**
+```
+GET /get_messages
+→ Returns all messages in current session
+```
+
+4. **User switches to different campaign:**
+```
+GET /get_pages
+→ Returns all campaigns and sessions
+→ User selects different session
+
+PATCH /change_chat {"session_id": "different_session"}
+→ Switches active session
+```
+
+This comprehensive example set provides everything needed to understand and implement each API endpoint in your Next.js frontend.
