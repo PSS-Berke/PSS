@@ -45,8 +45,8 @@ const ALL_MODULES: ModuleConfig[] = [
 export default function DashboardPage() {
   const { user, isLoading } = useUser();
 
-  // Get user's module IDs
-  const userModuleIds = user?.modules?.map(m => m.id) || [];
+  // Get user's module IDs - memoized to prevent recreation on every render
+  const userModuleIds = React.useMemo(() => user?.modules?.map(m => m.id) || [], [user?.modules]);
 
   // Filter modules based on user's access and initialize state
   const initialModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
@@ -56,7 +56,7 @@ export default function DashboardPage() {
   React.useEffect(() => {
     const updatedModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
     setModules(updatedModules);
-  }, [userModuleIds.join(',')]); // Re-run when user's module IDs change
+  }, [userModuleIds]); // Re-run when user's module IDs change
 
   // Configure sensors for drag detection
   const sensors = useSensors(

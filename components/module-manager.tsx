@@ -27,9 +27,9 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
-  // Get user's current modules
-  const userModules = user?.modules || [];
-  const userModuleIds = userModules.map(m => m.id);
+  // Get user's current modules - memoized to prevent recreation on every render
+  const userModules = React.useMemo(() => user?.modules || [], [user?.modules]);
+  const userModuleIds = React.useMemo(() => userModules.map(m => m.id), [userModules]);
 
   React.useEffect(() => {
     if (!open) {

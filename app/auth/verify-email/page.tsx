@@ -97,7 +97,7 @@ export default function VerifyEmailPage() {
                 Email Verification
               </h2>
               <p className="text-base leading-7 text-white/80">
-                We're verifying your email address to complete your account setup.
+                We&apos;re verifying your email address to complete your account setup.
                 This will only take a moment.
               </p>
             </div>

@@ -41,46 +41,6 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     isSubmitting: false,
   });
 
-  const submitCompanyData = useCallback(async (company: string, product: string, contact?: string, notes?: string) => {
-    setState(prev => ({ ...prev, isSubmitting: true, error: null }));
-
-    try {
-      const data = {
-        company,
-        product,
-        contact: contact || '',
-        notes: notes || '',
-        timestamp: new Date().toISOString()
-      };
-
-      const response = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit company data');
-      }
-
-      // Auto-refresh after 3 seconds
-      setTimeout(() => {
-        loadLatestAnalysis();
-      }, 3000);
-
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        isSubmitting: false
-      }));
-    } finally {
-      setState(prev => ({ ...prev, isSubmitting: false }));
-    }
-  }, []);
-
   const loadLatestAnalysis = useCallback(async () => {
     // Don't show loading state during background polling to prevent UI flashing
     const isInitialLoad = state.latestAnalysis === null;
@@ -140,6 +100,46 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
       }));
     }
   }, [state.latestAnalysis]);
+
+  const submitCompanyData = useCallback(async (company: string, product: string, contact?: string, notes?: string) => {
+    setState(prev => ({ ...prev, isSubmitting: true, error: null }));
+
+    try {
+      const data = {
+        company,
+        product,
+        contact: contact || '',
+        notes: notes || '',
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit company data');
+      }
+
+      // Auto-refresh after 3 seconds
+      setTimeout(() => {
+        loadLatestAnalysis();
+      }, 3000);
+
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        isSubmitting: false
+      }));
+    } finally {
+      setState(prev => ({ ...prev, isSubmitting: false }));
+    }
+  }, [loadLatestAnalysis]);
 
   return (
     <CallPrepContext.Provider value={{ state, submitCompanyData, loadLatestAnalysis }}>

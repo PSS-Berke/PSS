@@ -24,7 +24,7 @@ export default function PermanentSidebar() {
       return [...navigationItems, ...adminNavigationItems];
     }
     return navigationItems;
-  }, [user?.role, user?.admin, user]);
+  }, [user]);
 
   const handleSwitchCompany = async (companyId: number) => {
     try {

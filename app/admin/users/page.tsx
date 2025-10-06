@@ -61,7 +61,7 @@ export default function AdminUsersPage() {
   }, [user, authLoading, router]);
 
   // Fetch users
-  const fetchUsers = async (search = '') => {
+  const fetchUsers = React.useCallback(async (search = '') => {
     if (!token) return;
 
     setIsLoading(true);
@@ -102,14 +102,14 @@ export default function AdminUsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     const isAdmin = user?.role === true || (user as any)?.admin === true;
     if (isAdmin && token) {
       fetchUsers();
     }
-  }, [user, token]);
+  }, [user, token, fetchUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -298,7 +298,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: false });
       isLoadingPagesRef.current = false;
     }
-  }, [token, loadMessages]);
+  }, [token, loadMessages, state.currentSession?.id, state.messages.length]);
 
   // Change chat
   const changeChat = useCallback(async (sessionId: string) => {
@@ -475,7 +475,7 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: 'SET_SENDING_MESSAGE', payload: false });
     }
-  }, [token, user, state.currentSession, loadMessages]);
+  }, [token, user, state.currentSession, state.isLoading, state.pages.length, loadMessages]);
 
   // Auto-load pages when user is authenticated and context is mounted
   useEffect(() => {
