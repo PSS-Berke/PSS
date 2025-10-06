@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Target } from 'lucide-react';
+import { Plus, Trash2, Target, MoreHorizontal } from 'lucide-react';
 import { useBattleCard } from '@/lib/xano/battle-card-context';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-export function BattleCardSidebar() {
+interface BattleCardSidebarProps {
+  className?: string;
+  isCollapsed?: boolean;
+  onCollapseChange?: (collapsed: boolean) => void;
+}
+
+export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: BattleCardSidebarProps) {
   const { state, generateBattleCard, deleteBattleCard, loadBattleCardDetail } = useBattleCard();
   const [showNewCardModal, setShowNewCardModal] = useState(false);
   const [competitorName, setCompetitorName] = useState('');
@@ -53,41 +60,79 @@ export function BattleCardSidebar() {
     }
   };
 
+  if (isCollapsed) {
+    return (
+      <div className={cn('flex flex-col items-center border-r border-border bg-muted/30 p-4', className)}>
+        <Button
+          onClick={() => onCollapseChange?.(false)}
+          size="sm"
+          className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
+          aria-label="Open battle cards sidebar"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">Battle Cards</h3>
-          <Button
-            onClick={() => setShowNewCardModal(true)}
-            size="sm"
-            className="h-7 w-7 p-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+      <div className={cn('flex flex-col border-r border-border bg-muted/30', className)}>
+        {/* Header */}
+        <div className="p-4 border-b flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-muted-foreground">Battle Cards</h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onCollapseChange?.(true)}
+                className="h-8 w-8 p-0"
+                aria-label="Collapse battle cards sidebar"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => setShowNewCardModal(true)}
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-2">
+        {/* Battle Cards List */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
           {state.battleCardsList.filter(card => card && card.id).map((card) => {
             const preview = card.competitor_overview?.substring(0, 50) || '';
+            const isSelected = state.activeBattleCard?.id === card.id;
+
             return (
               <div
                 key={card.id}
                 onClick={() => loadBattleCardDetail(card.id)}
-                className={`p-3 rounded-lg cursor-pointer transition-all ${
-                  state.activeBattleCard?.id === card.id
-                    ? 'bg-primary/10 border-2 border-primary'
-                    : 'bg-muted hover:bg-muted/80 border-2 border-transparent'
-                }`}
+                className={cn(
+                  'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors cursor-pointer',
+                  isSelected
+                    ? 'bg-accent border-primary font-medium'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm text-gray-900 truncate">
+                    <h4 className={cn(
+                      "text-sm truncate",
+                      isSelected ? "font-medium text-foreground" : "font-medium text-foreground"
+                    )}>
                       {card.competitor_name}
                     </h4>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {preview}...
-                    </p>
+                    {preview && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {preview}
+                      </p>
+                    )}
                   </div>
                   <Button
                     variant="ghost"
@@ -101,15 +146,15 @@ export function BattleCardSidebar() {
               </div>
             );
           })}
-        </div>
 
-        {state.battleCardsList.length === 0 && (
-          <div className="text-center py-8">
-            <Target className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No battle cards yet</p>
-            <p className="text-xs text-muted-foreground/70">Click + to create one</p>
-          </div>
-        )}
+          {state.battleCardsList.length === 0 && (
+            <div className="text-center py-8">
+              <Target className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No battle cards yet</p>
+              <p className="text-xs text-muted-foreground/70">Click + to create one</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Dialog open={showNewCardModal} onOpenChange={setShowNewCardModal}>

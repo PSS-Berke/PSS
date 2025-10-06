@@ -1,55 +1,60 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, Settings } from 'lucide-react';
+import { Target, Settings, Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRight, ClipboardCheck, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBattleCard } from '@/lib/xano/battle-card-context';
 import { BattleCardDetailDialog } from './battle-card-detail-dialog';
 import { BattleCardSettingsDialog } from './battle-card-settings-dialog';
+import { cn } from '@/lib/utils';
 
 interface CardSectionProps {
   title: string;
   content: string;
   cardKey: string;
-  onCardClick: (title: string, content: string) => void;
+  icon: LucideIcon;
+  onCardClick: (title: string, content: string, icon: LucideIcon) => void;
 }
 
-function CardSection({ title, content, cardKey, onCardClick }: CardSectionProps) {
-  const summary = content && content.length > 100 ? content.substring(0, 100) + '...' : content;
+function CardSection({ title, content, cardKey, icon: Icon, onCardClick }: CardSectionProps) {
+  const summary = content && content.length > 150 ? content.substring(0, 150) + '...' : content;
 
   return (
-    <Card
-      className="cursor-pointer hover:shadow-lg transition-all h-full"
-      onClick={() => onCardClick(title, content)}
+    <button
+      onClick={() => onCardClick(title, content, Icon)}
+      className="group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all hover:shadow-lg border-t-transparent border-t-[3px] hover:border-t-[#C33527]"
     >
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-bold">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-xs text-muted-foreground">
-          <p className="font-medium mb-2">Summary:</p>
-          <p className="leading-relaxed">
-            {summary || 'No data available'}
-          </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <Icon className="h-8 w-8 text-[#C33527] flex-shrink-0" />
+          <h3 className="text-lg font-semibold text-gray-800 transition-colors group-hover:text-[#C33527]">
+            {title}
+          </h3>
         </div>
-      </CardContent>
-    </Card>
+        <p className="text-sm text-gray-600 line-clamp-3">
+          {summary || 'No data available'}
+        </p>
+      </div>
+    </button>
   );
 }
 
-export function BattleCardContent() {
+interface BattleCardContentProps {
+  className?: string;
+}
+
+export function BattleCardContent({ className }: BattleCardContentProps) {
   const { state, regenerateBattleCard } = useBattleCard();
   const activeBattleCard = state.activeBattleCard;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string }>({
+  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; icon?: LucideIcon }>({
     title: '',
     content: '',
   });
 
-  const handleCardClick = (title: string, content: string) => {
-    setSelectedCard({ title, content });
+  const handleCardClick = (title: string, content: string, icon: LucideIcon) => {
+    setSelectedCard({ title, content, icon });
     setDialogOpen(true);
   };
 
@@ -87,77 +92,95 @@ export function BattleCardContent() {
 
   return (
     <>
-      <div key={activeBattleCard.id} className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              {activeBattleCard.competitor_name}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {activeBattleCard.competitor_service}
-            </p>
+      <div key={activeBattleCard.id} className={cn('flex flex-col overflow-y-auto', className)}>
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-800">
+                {activeBattleCard.competitor_name}
+              </h1>
+              <span className="rounded-full bg-[#C33527] px-3 py-1 text-sm font-semibold text-white">
+                Battle Card
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSettingsClick}
+              className="h-8 w-8"
+              aria-label="Battle card settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSettingsClick}
-            className="h-8 w-8"
-            aria-label="Battle card settings"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
         </div>
 
-        {/* Battle Card Grid - 4 wide, 2 high */}
-        <div className="grid grid-cols-4 grid-rows-2 gap-4">
+        {/* Cards Grid - 2 columns like analytics dashboard */}
+        <div className="grid gap-6 md:grid-cols-2 mb-6">
           <CardSection
             title="Company Background"
             content={activeBattleCard.company_overview}
             cardKey="companyBackground"
+            icon={Building2}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Key Decision Maker"
             content={activeBattleCard.key_products_services}
             cardKey="keyDecisionMaker"
+            icon={Users}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Recent News"
             content={activeBattleCard.recent_news}
             cardKey="recentNews"
+            icon={Newspaper}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Potential Pain Points"
             content={activeBattleCard.target_market_icp}
             cardKey="potentialPainPoints"
+            icon={AlertCircle}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Talking Points"
             content={activeBattleCard.market_positioning}
             cardKey="talkingPoints"
+            icon={MessageSquare}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Differentiation"
             content={activeBattleCard.weaknesses_gaps}
             cardKey="differentiation"
+            icon={Zap}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Next Steps"
             content={activeBattleCard.strengths}
             cardKey="nextSteps"
+            icon={ArrowRight}
             onCardClick={handleCardClick}
           />
           <CardSection
             title="Preparation Checklist"
             content={activeBattleCard.customer_references}
             cardKey="preparationChecklist"
+            icon={ClipboardCheck}
             onCardClick={handleCardClick}
           />
+        </div>
+
+        {/* Description below cards */}
+        <div className="rounded-lg border-2 border-gray-200 bg-white p-6">
+          <p className="text-lg text-gray-600">
+            {activeBattleCard.competitor_service}
+          </p>
         </div>
       </div>
 
@@ -166,6 +189,7 @@ export function BattleCardContent() {
         onOpenChange={setDialogOpen}
         title={selectedCard.title}
         content={selectedCard.content}
+        icon={selectedCard.icon}
       />
 
       <BattleCardSettingsDialog

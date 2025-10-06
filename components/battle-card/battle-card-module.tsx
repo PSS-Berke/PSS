@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Target, ChevronDown, ChevronUp, Activity, FileText } from 'lucide-react';
 import { useBattleCard } from '@/lib/xano/battle-card-context';
 import { BattleCardSidebar } from './battle-card-sidebar';
 import { BattleCardContent } from './battle-card-content';
@@ -15,6 +15,7 @@ interface BattleCardModuleProps {
 
 export function BattleCardModule({ className }: BattleCardModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { state } = useBattleCard();
 
   const toggleExpanded = () => {
@@ -67,11 +68,13 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
           </div>
 
           <div className="flex items-center gap-3 pr-2">
-            <div className="px-1">
+            <div className="flex items-center gap-1.5 px-1">
+              <Activity className="h-4 w-4 text-muted-foreground" />
               {getStatusBadge()}
             </div>
             {state.battleCardsList.length > 0 && (
-              <div className="text-sm text-muted-foreground px-1">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground px-1">
+                <FileText className="h-4 w-4" />
                 {state.battleCardsList.length} battle {state.battleCardsList.length === 1 ? 'card' : 'cards'}
               </div>
             )}
@@ -82,8 +85,11 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
       {isExpanded && (
         <CardContent>
           <div className="flex gap-6">
-            <div className="w-80 flex-shrink-0">
-              <BattleCardSidebar />
+            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}>
+              <BattleCardSidebar
+                isCollapsed={isSidebarCollapsed}
+                onCollapseChange={setIsSidebarCollapsed}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <BattleCardContent />

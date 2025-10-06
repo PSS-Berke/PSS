@@ -15,6 +15,7 @@ import {
   Timer,
   Linkedin,
   Instagram,
+  CalendarCheck,
 } from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
 
@@ -685,7 +686,8 @@ const renderTabButton = (
           </div>
 
           <div className="flex items-center gap-3 pr-2">
-            <div className="px-1">
+            <div className="flex items-center gap-1.5 px-1">
+              <CalendarCheck className="h-4 w-4 text-muted-foreground" />
               {getStatusBadge()}
             </div>
             {state.lastFetchedAt ? (

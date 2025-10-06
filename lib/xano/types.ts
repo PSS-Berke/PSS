@@ -211,3 +211,66 @@ export interface BattleCardListItem {
   competitor_overview: string;
 }
 
+// Website Analytics Copilot Types
+export type PlatformType = 'wix' | 'wordpress' | 'shopify' | 'google-search-console';
+
+export type AnalyticsCategory =
+  | 'overview'
+  | 'analytics-tracking'
+  | 'seo-content'
+  | 'ecommerce'
+  | 'customer-insights'
+  | 'automation-tools'
+  | 'settings';
+
+export type CardContentType = 'text' | 'table' | 'code';
+
+export interface CardContent {
+  type: CardContentType;
+  data: string | TableData;
+}
+
+export interface TableData {
+  headers: string[];
+  rows: string[][];
+}
+
+export interface AnalyticsCard {
+  id: string;
+  title: string;
+  icon: string; // Icon name from lucide-react
+  summary: string;
+  content: CardContent;
+}
+
+export interface AnalyticsCategoryData {
+  name: string;
+  category: string;
+  description: string;
+  cards: AnalyticsCard[];
+}
+
+export interface WebsiteSite {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  site_name: string;
+  site_url?: string;
+  platform_type: PlatformType;
+  is_connected: boolean;
+  last_sync_at?: string;
+  user_id: number;
+  company_id?: number;
+}
+
+export interface ConnectSitePayload {
+  site_name: string;
+  site_url?: string;
+  platform_type: PlatformType;
+  credentials?: Record<string, unknown>;
+}
+
+export interface AnalyticsMetrics {
+  [key: string]: unknown;
+}
+

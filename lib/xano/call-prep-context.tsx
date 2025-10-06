@@ -6,6 +6,8 @@ export interface CallPrepAnalysis {
   id: string;
   company: string;
   product: string;
+  contact?: string;
+  notes?: string;
   analysis: string;
   timestamp: string;
 }
@@ -19,7 +21,7 @@ interface CallPrepState {
 
 interface CallPrepContextValue {
   state: CallPrepState;
-  submitCompanyData: (company: string, product: string) => Promise<void>;
+  submitCompanyData: (company: string, product: string, contact?: string, notes?: string) => Promise<void>;
   loadLatestAnalysis: () => Promise<void>;
 }
 
@@ -39,13 +41,15 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     isSubmitting: false,
   });
 
-  const submitCompanyData = useCallback(async (company: string, product: string) => {
+  const submitCompanyData = useCallback(async (company: string, product: string, contact?: string, notes?: string) => {
     setState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
       const data = {
         company,
         product,
+        contact: contact || '',
+        notes: notes || '',
         timestamp: new Date().toISOString()
       };
 

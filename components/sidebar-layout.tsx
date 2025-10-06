@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 import type { User } from "@/lib/xano/types";
+import { useSidebar } from "@/lib/contexts/sidebar-context";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -63,6 +64,7 @@ function NavItem(props: {
   item: Item;
   onClick?: () => void;
   basePath: string;
+  isCollapsed?: boolean;
 }) {
   const pathname = usePathname();
   const fullHref = props.basePath + props.item.href;
@@ -80,7 +82,8 @@ function NavItem(props: {
     <Link
       href={fullHref}
       className={cn(
-        "group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "group flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        props.isCollapsed ? "justify-center gap-0" : "gap-3",
         selected
           ? "bg-muted text-foreground shadow-sm"
           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -88,6 +91,7 @@ function NavItem(props: {
       onClick={handleClick}
       prefetch={true}
       aria-current={selected ? "page" : undefined}
+      title={props.isCollapsed ? String(props.item.name) : undefined}
     >
       <props.item.icon
         className={cn(
@@ -97,7 +101,7 @@ function NavItem(props: {
             : "text-muted-foreground group-hover:text-foreground"
         )}
       />
-      {props.item.name}
+      {!props.isCollapsed && <span>{props.item.name}</span>}
     </Link>
   );
 }
@@ -111,6 +115,7 @@ export function SidebarContent(props: {
   user?: User | null;
   onLogout?: () => void;
   onSwitchCompany?: (companyId: number) => void;
+  isCollapsed?: boolean;
 }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -135,7 +140,7 @@ export function SidebarContent(props: {
       <div className="flex items-center border-b border-border px-4 py-4">
         {props.sidebarTop}
       </div>
-      {props.user?.available_companies && props.user.available_companies.length > 1 && (
+      {!props.isCollapsed && props.user?.available_companies && props.user.available_companies.length > 1 && (
         <div className="border-b border-border px-4 py-3">
           <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 mb-1.5">
             Company
@@ -194,13 +199,17 @@ export function SidebarContent(props: {
           <div className="pb-2">
             <button
               type="button"
-              className="group flex w-full items-center justify-between px-2 text-sm font-medium text-[#C33527] transition-colors hover:text-[#DA857C]"
+              className={cn(
+                "group flex w-full items-center px-2 text-sm font-medium text-[#C33527] transition-colors hover:text-[#DA857C]",
+                props.isCollapsed ? "justify-center" : "justify-between"
+              )}
               onClick={() => {
                 props.onAddModule?.();
                 props.onNavigate?.();
               }}
+              title={props.isCollapsed ? "Add Module" : undefined}
             >
-              <span className="text-left">Add Module</span>
+              {!props.isCollapsed && <span className="text-left">Add Module</span>}
               <Plus className="h-4 w-4 text-[#C33527] transition-colors group-hover:text-[#DA857C]" aria-hidden="true" />
             </button>
           </div>
@@ -208,7 +217,7 @@ export function SidebarContent(props: {
 
         {props.items.map((item, index) => {
           if (item.type === "separator") {
-            return <Separator key={index} className="my-3" />;
+            return !props.isCollapsed ? <Separator key={index} className="my-3" /> : null;
           } else if (item.type === "item") {
             return (
               <div key={index} className="flex">
@@ -216,17 +225,18 @@ export function SidebarContent(props: {
                   item={item}
                   onClick={props.onNavigate}
                   basePath={props.basePath}
+                  isCollapsed={props.isCollapsed}
                 />
               </div>
             );
           } else {
-            return (
+            return !props.isCollapsed ? (
               <div key={index} className="px-1 py-2">
                 <div className="px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
                   {item.name}
                 </div>
               </div>
-            );
+            ) : null;
           }
         })}
 
@@ -237,19 +247,25 @@ export function SidebarContent(props: {
         <div ref={profileMenuRef} className="relative border-t border-border">
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/50 transition-colors"
+            className={cn(
+              "w-full px-4 py-4 flex items-center hover:bg-muted/50 transition-colors",
+              props.isCollapsed ? "justify-center gap-0" : "gap-3"
+            )}
+            title={props.isCollapsed ? props.user.email : undefined}
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
               <UserCircle2 className="h-6 w-6 text-muted-foreground" />
             </span>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {props.user.company ?? "Company"}
-              </span>
-              <span className="text-sm font-medium text-foreground">
-                {props.user.email}
-              </span>
-            </div>
+            {!props.isCollapsed && (
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {props.user.company ?? "Company"}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {props.user.email}
+                </span>
+              </div>
+            )}
           </button>
 
           {isProfileMenuOpen && (
@@ -336,6 +352,7 @@ export default function SidebarLayout(props: {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, switchCompany } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   const handleSwitchCompany = async (companyId: number) => {
     try {
@@ -346,9 +363,13 @@ export default function SidebarLayout(props: {
   };
 
   const defaultSidebarTop = (
-    <Link
-      href="/"
-      className="flex w-full items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/70"
+    <button
+      onClick={toggleSidebar}
+      className={cn(
+        "flex w-full items-center rounded-md px-2 py-2 transition-colors hover:bg-muted/70",
+        isCollapsed ? "justify-center gap-0" : "gap-3"
+      )}
+      title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
     >
       <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
         <Image
@@ -360,20 +381,27 @@ export default function SidebarLayout(props: {
           priority
         />
       </span>
-      <span className="flex flex-col">
-        <span className="text-sm font-semibold leading-tight text-foreground">
-          Parallel Strategies
+      {!isCollapsed && (
+        <span className="flex flex-col">
+          <span className="text-sm font-semibold leading-tight text-foreground">
+            Parallel Strategies
+          </span>
+          <span className="text-xs text-muted-foreground">Control Center</span>
         </span>
-        <span className="text-xs text-muted-foreground">Control Center</span>
-      </span>
-    </Link>
+      )}
+    </button>
   );
 
   const sidebarTop = props.sidebarTop ?? defaultSidebarTop;
 
+  const sidebarWidth = isCollapsed ? 80 : 260;
+
   return (
     <div className="w-full flex">
-      <div className="flex w-[260px] flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen">
+      <div
+        className="flex flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen transition-all duration-300 ease-in-out"
+        style={{ width: `${sidebarWidth}px` }}
+      >
         <SidebarContent
           items={props.items}
           sidebarTop={sidebarTop}
@@ -382,9 +410,13 @@ export default function SidebarLayout(props: {
           user={user}
           onLogout={logout}
           onSwitchCompany={handleSwitchCompany}
+          isCollapsed={isCollapsed}
         />
       </div>
-      <div className="flex flex-col flex-grow w-0 ml-[260px]">
+      <div
+        className="flex flex-col flex-grow w-0 transition-all duration-300 ease-in-out"
+        style={{ marginLeft: `${sidebarWidth}px` }}
+      >
         <div className="h-14 border-b flex items-center justify-between sticky top-0 bg-white dark:bg-black z-10 px-4 md:px-6">
           <div className="hidden md:flex">
             <HeaderBreadcrumb baseBreadcrumb={props.baseBreadcrumb} basePath={props.basePath} items={props.items} />

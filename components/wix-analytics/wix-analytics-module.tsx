@@ -5,21 +5,21 @@ import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, ChevronDown, ChevronUp, X, Megaphone, MessagesSquare, Radio } from 'lucide-react';
-import { useLinkedIn } from '@/lib/xano/linkedin-context';
-import { ChatInterface } from './chat-interface';
-import { CampaignSidebar } from './campaign-sidebar';
+import { BarChart3, ChevronDown, ChevronUp, X, Radio, Globe } from 'lucide-react';
+import { PlatformSidebar } from './platform-sidebar';
+import { AnalyticsDashboard } from './analytics-dashboard';
+import { MOCK_ANALYTICS_DATA, PLATFORMS } from './mock-data';
 
-interface LinkedInModuleProps {
+interface WixAnalyticsModuleProps {
   className?: string;
 }
 
-export function LinkedInModule({ className }: LinkedInModuleProps) {
+export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { state } = useLinkedIn();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>('wix');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>('wix-overview');
   const [mounted, setMounted] = useState(false);
-  const pages = Array.isArray(state.pages) ? state.pages : [];
 
   useEffect(() => {
     setMounted(true);
@@ -29,30 +29,9 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
     setIsExpanded(!isExpanded);
   };
 
-  const getStatusBadge = () => {
-    if (state.isLoading) {
-      return <Badge variant="secondary">Loading...</Badge>;
-    }
-    if (state.currentSession) {
-      return <Badge variant="default">Active Session</Badge>;
-    }
-    if (pages.length > 0) {
-      return <Badge variant="outline">Ready</Badge>;
-    }
-    return <Badge variant="secondary">No Campaigns</Badge>;
-  };
-
-  const getCampaignCount = () => {
-    return pages.filter(page => page.linkedin_campaigns_id !== null).length;
-  };
-
-  const getSessionCount = () => {
-    return pages.reduce((total, page) => {
-      if (Array.isArray(page.records)) {
-        return total + page.records.length;
-      }
-      return total;
-    }, 0);
+  const handleSelectCategory = (platformId: string, categoryKey: string) => {
+    setSelectedPlatform(platformId);
+    setSelectedCategory(categoryKey);
   };
 
   useEffect(() => {
@@ -66,6 +45,21 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
       document.body.style.overflow = '';
     };
   }, [isExpanded]);
+
+  const getStatusBadge = () => {
+    // Mock: would check actual connection status
+    const connectedPlatforms = PLATFORMS.length;
+    return (
+      <Badge variant="outline">
+        {connectedPlatforms} platforms available
+      </Badge>
+    );
+  };
+
+  const getCurrentCategoryData = () => {
+    if (!selectedCategory) return null;
+    return MOCK_ANALYTICS_DATA[selectedCategory] || null;
+  };
 
   const modalContent = isExpanded && mounted ? (
     <div
@@ -84,12 +78,12 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
-                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <BarChart3 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">LinkedIn Copilot</CardTitle>
+                  <CardTitle className="text-lg">Website Analytics Copilot</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    AI-powered LinkedIn content creation
+                    Multi-platform website analytics & insights
                   </p>
                 </div>
               </div>
@@ -98,18 +92,10 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
                   <Radio className="h-4 w-4 text-muted-foreground" />
                   {getStatusBadge()}
                 </div>
-                {pages.length > 0 && (
-                  <div className="text-sm text-muted-foreground flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <Megaphone className="h-4 w-4" />
-                      {getCampaignCount()} campaigns
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MessagesSquare className="h-4 w-4" />
-                      {getSessionCount()} chats
-                    </div>
-                  </div>
-                )}
+                <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Globe className="h-4 w-4" />
+                  {PLATFORMS.length} platforms
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -123,11 +109,25 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden p-6">
             <div className="flex gap-6 h-full">
-              <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300 h-full`}>
-                <CampaignSidebar className="h-full" isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
+              <div
+                className={`${
+                  isSidebarCollapsed ? 'w-14' : 'w-80'
+                } flex-shrink-0 transition-all duration-300 h-full`}
+              >
+                <PlatformSidebar
+                  className="h-full"
+                  isCollapsed={isSidebarCollapsed}
+                  onCollapseChange={setIsSidebarCollapsed}
+                  selectedPlatform={selectedPlatform}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={handleSelectCategory}
+                />
               </div>
-              <div className="flex-1 min-w-0 h-full overflow-hidden">
-                <ChatInterface className="h-full" sidebarCollapsed={isSidebarCollapsed} />
+              <div className="flex-1 min-w-0 h-full overflow-auto">
+                <AnalyticsDashboard
+                  categoryData={getCurrentCategoryData()}
+                  className="h-full"
+                />
               </div>
             </div>
           </CardContent>
@@ -156,12 +156,12 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
           <div className="flex items-center justify-between pr-28">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-primary" />
+                <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">LinkedIn Copilot</CardTitle>
+                <CardTitle className="text-lg">Website Analytics Copilot</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  AI-powered LinkedIn content creation
+                  Multi-platform website analytics & insights
                 </p>
               </div>
             </div>
@@ -171,18 +171,10 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
                 <Radio className="h-4 w-4 text-muted-foreground" />
                 {getStatusBadge()}
               </div>
-              {pages.length > 0 && (
-                <div className="text-sm text-muted-foreground flex items-center gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <Megaphone className="h-4 w-4" />
-                    {getCampaignCount()} campaigns
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <MessagesSquare className="h-4 w-4" />
-                    {getSessionCount()} chats
-                  </div>
-                </div>
-              )}
+              <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Globe className="h-4 w-4" />
+                {PLATFORMS.length} platforms
+              </div>
             </div>
           </div>
         </CardHeader>

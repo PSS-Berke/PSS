@@ -8,10 +8,13 @@ import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
 import { usePathname } from 'next/navigation';
 import { ModuleManager } from './module-manager';
+import { useSidebar } from '@/lib/contexts/sidebar-context';
+import { cn } from '@/lib/utils';
 
 export default function PermanentSidebar() {
   const { user, logout, switchCompany } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   const handleSwitchCompany = async (companyId: number) => {
     try {
@@ -22,7 +25,14 @@ export default function PermanentSidebar() {
   };
 
   const sidebarTop = (
-    <div className="flex w-full items-center gap-3 rounded-md px-2 py-2">
+    <button
+      onClick={toggleSidebar}
+      className={cn(
+        "flex w-full items-center rounded-md px-2 py-2 transition-colors hover:bg-muted/70",
+        isCollapsed ? "justify-center gap-0" : "gap-3"
+      )}
+      title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+    >
       <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
         <Image
           src="/White%20logo.png"
@@ -33,18 +43,25 @@ export default function PermanentSidebar() {
           priority
         />
       </span>
-      <span className="flex flex-col">
-        <span className="text-sm font-semibold leading-tight text-foreground">
-          Parallel Strategies
+      {!isCollapsed && (
+        <span className="flex flex-col">
+          <span className="text-sm font-semibold leading-tight text-foreground">
+            Parallel Strategies
+          </span>
+          <span className="text-xs text-muted-foreground">Control Center</span>
         </span>
-        <span className="text-xs text-muted-foreground">Control Center</span>
-      </span>
-    </div>
+      )}
+    </button>
   );
+
+  const sidebarWidth = isCollapsed ? 80 : 260;
 
   return (
     <>
-      <div className="flex w-[260px] flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen">
+      <div
+        className="flex flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen transition-all duration-300 ease-in-out"
+        style={{ width: `${sidebarWidth}px` }}
+      >
         <SidebarContent
           items={navigationItems}
           basePath=""
@@ -53,6 +70,7 @@ export default function PermanentSidebar() {
           onSwitchCompany={handleSwitchCompany}
           onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
           sidebarTop={sidebarTop}
+          isCollapsed={isCollapsed}
         />
       </div>
       {user ? (
@@ -62,14 +80,17 @@ export default function PermanentSidebar() {
   );
 }
 
-export function ConditionalSidebar({ children }: { children: React.ReactNode }) {
+function ConditionalSidebarInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading } = useAuth();
-  
+  const { isCollapsed } = useSidebar();
+
   // Pages that should not show sidebar
   const isAuthPage = pathname?.startsWith('/auth/');
   const isRootPage = pathname === '/';
   const shouldHideSidebar = isAuthPage || isRootPage;
+
+  const sidebarWidth = isCollapsed ? 80 : 260;
 
   // Don't show sidebar on auth pages, root page, or when not authenticated
   if (shouldHideSidebar || (!isLoading && !user)) {
@@ -79,9 +100,16 @@ export function ConditionalSidebar({ children }: { children: React.ReactNode }) 
   return (
     <div className="w-full flex">
       <PermanentSidebar />
-      <div className="flex flex-col flex-grow w-0 ml-[260px]">
+      <div
+        className="flex flex-col flex-grow w-0 transition-all duration-300 ease-in-out"
+        style={{ marginLeft: `${sidebarWidth}px` }}
+      >
         {children}
       </div>
     </div>
   );
+}
+
+export function ConditionalSidebar({ children }: { children: React.ReactNode }) {
+  return <ConditionalSidebarInner>{children}</ConditionalSidebarInner>;
 }
