@@ -52,6 +52,12 @@ export default function DashboardPage() {
   const initialModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
   const [modules, setModules] = useState<ModuleConfig[]>(initialModules);
 
+  // Update modules when user's modules change
+  React.useEffect(() => {
+    const updatedModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
+    setModules(updatedModules);
+  }, [userModuleIds.join(',')]); // Re-run when user's module IDs change
+
   // Configure sensors for drag detection
   const sensors = useSensors(
     useSensor(PointerSensor),
