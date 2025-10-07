@@ -17,19 +17,26 @@ export interface CallPrepAnalysis {
   suggested_value_propositions: string;
   call_action_plan: string;
   preparation_tip: string;
+  prompt?: string;
 }
 
 interface CallPrepState {
   latestAnalysis: CallPrepAnalysis | null;
+  allAnalyses: CallPrepAnalysis[];
+  currentAnalysis: CallPrepAnalysis | null;
   isLoading: boolean;
   error: string | null;
   isSubmitting: boolean;
+  isDeleting: boolean;
 }
 
 interface CallPrepContextValue {
   state: CallPrepState;
   generateCallPrep: (prompt: string) => Promise<void>;
   loadLatestAnalysis: () => Promise<void>;
+  loadAllAnalyses: () => Promise<void>;
+  selectAnalysis: (id: number) => void;
+  deleteAnalysis: (id: number) => Promise<void>;
 }
 
 const CallPrepContext = createContext<CallPrepContextValue | undefined>(undefined);
@@ -41,9 +48,12 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
   const [state, setState] = useState<CallPrepState>({
     latestAnalysis: null,
+    allAnalyses: [],
+    currentAnalysis: null,
     isLoading: false,
     error: null,
     isSubmitting: false,
+    isDeleting: false,
   });
 
   const loadLatestAnalysis = useCallback(async () => {
@@ -82,6 +92,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
         setState(prev => ({
           ...prev,
           latestAnalysis: data[0],
+          currentAnalysis: data[0],
           isLoading: false
         }));
       } else {
@@ -140,6 +151,8 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
         setState(prev => ({
           ...prev,
           latestAnalysis: data[0],
+          currentAnalysis: data[0],
+          allAnalyses: [data[0], ...prev.allAnalyses],
           isSubmitting: false
         }));
       } else {
@@ -156,8 +169,92 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  const loadAllAnalyses = useCallback(async () => {
+    if (!token) {
+      console.log('CallPrep: No token available, skipping load all');
+      return;
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const headers = getAuthHeaders(token);
+      const response = await fetch(FETCH_API_URL, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setState(prev => ({
+          ...prev,
+          allAnalyses: data,
+          isLoading: false
+        }));
+      } else {
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    } catch (error) {
+      console.error('CallPrep: Load all error:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to load analyses',
+        isLoading: false
+      }));
+    }
+  }, [token]);
+
+  const selectAnalysis = useCallback((id: number) => {
+    const analysis = state.allAnalyses.find(a => a.id === id);
+    if (analysis) {
+      setState(prev => ({
+        ...prev,
+        currentAnalysis: analysis,
+        latestAnalysis: analysis
+      }));
+    }
+  }, [state.allAnalyses]);
+
+  const deleteAnalysis = useCallback(async (id: number) => {
+    if (!token) return;
+
+    setState(prev => ({ ...prev, isDeleting: true, error: null }));
+
+    try {
+      const headers = getAuthHeaders(token);
+      const response = await fetch(`${FETCH_API_URL}/${id}`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete analysis: ${response.status}`);
+      }
+
+      setState(prev => ({
+        ...prev,
+        allAnalyses: prev.allAnalyses.filter(a => a.id !== id),
+        currentAnalysis: prev.currentAnalysis?.id === id ? null : prev.currentAnalysis,
+        latestAnalysis: prev.latestAnalysis?.id === id ? null : prev.latestAnalysis,
+        isDeleting: false
+      }));
+    } catch (error) {
+      console.error('CallPrep: Delete error:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to delete analysis',
+        isDeleting: false
+      }));
+    }
+  }, [token]);
+
   return (
-    <CallPrepContext.Provider value={{ state, generateCallPrep, loadLatestAnalysis }}>
+    <CallPrepContext.Provider value={{ state, generateCallPrep, loadLatestAnalysis, loadAllAnalyses, selectAnalysis, deleteAnalysis }}>
       {children}
     </CallPrepContext.Provider>
   );

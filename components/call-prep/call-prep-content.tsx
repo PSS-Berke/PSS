@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRight, ClipboardCheck, LucideIcon } from 'lucide-react';
+import { Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRight, ClipboardCheck, Settings, LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
 import { CallPrepDetailDialog } from './call-prep-detail-dialog';
+import { CallPrepSettingsDialog } from './call-prep-settings-dialog';
 import { cn } from '@/lib/utils';
 
 interface CardSectionProps {
@@ -42,9 +44,10 @@ interface CallPrepContentProps {
 }
 
 export function CallPrepContent({ className }: CallPrepContentProps) {
-  const { state } = useCallPrep();
+  const { state, generateCallPrep } = useCallPrep();
   const analysis = state.latestAnalysis;
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; icon?: LucideIcon }>({
     title: '',
     content: '',
@@ -53,6 +56,14 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
   const handleCardClick = (title: string, content: string, icon: LucideIcon) => {
     setSelectedCard({ title, content, icon });
     setDialogOpen(true);
+  };
+
+  const handleSettingsClick = () => {
+    setSettingsOpen(true);
+  };
+
+  const handleRefreshCallPrep = async (prompt: string) => {
+    await generateCallPrep(prompt);
   };
 
   if (state.error) {
@@ -95,13 +106,24 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
       <div key={analysis.id} className={cn('flex flex-col overflow-y-auto', className)}>
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Call Preparation
-            </h1>
-            <span className="rounded-full bg-[#C33527] px-3 py-1 text-sm font-semibold text-white">
-              Ready
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-800">
+                Call Preparation
+              </h1>
+              <span className="rounded-full bg-[#C33527] px-3 py-1 text-sm font-semibold text-white">
+                Ready
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSettingsClick}
+              className="h-8 w-8"
+              aria-label="Call prep settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
@@ -172,6 +194,13 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
         title={selectedCard.title}
         content={selectedCard.content}
         icon={selectedCard.icon}
+      />
+
+      <CallPrepSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        analysis={analysis}
+        onRefresh={handleRefreshCallPrep}
       />
     </>
   );
