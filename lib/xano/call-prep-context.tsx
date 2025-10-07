@@ -1,15 +1,22 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { useAuth } from './auth-context';
+import { getAuthHeaders } from './config';
 
 export interface CallPrepAnalysis {
-  id: string;
-  company: string;
-  product: string;
-  contact?: string;
-  notes?: string;
-  analysis: string;
-  timestamp: string;
+  id: number;
+  created_at: number;
+  user_id: number;
+  company_id: number;
+  company_background: string;
+  key_decision_makers: string;
+  recent_news_initiatives: string;
+  potential_pain_points: string;
+  strategic_talking_points_for_sales_call: string;
+  suggested_value_propositions: string;
+  call_action_plan: string;
+  preparation_tip: string;
 }
 
 interface CallPrepState {
@@ -21,19 +28,17 @@ interface CallPrepState {
 
 interface CallPrepContextValue {
   state: CallPrepState;
-  submitCompanyData: (company: string, product: string, contact?: string, notes?: string) => Promise<void>;
+  generateCallPrep: (prompt: string) => Promise<void>;
   loadLatestAnalysis: () => Promise<void>;
 }
 
 const CallPrepContext = createContext<CallPrepContextValue | undefined>(undefined);
 
-const SHEET_ID = '18T1SpAgAtNuFvuQbIDYk1kbseUh9SjI-K7KbWp-AFIw';
-const SHEET_NAME = 'AI response';
-const API_KEY = 'AIzaSyByJ6DDQaBY-sPquTQ4ppml2J0ThTlgTbc';
-const WEBHOOK_URL = 'https://eos17tgdrxpcspp.m.pipedream.net';
-const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}?key=${API_KEY}`;
+const GENERATE_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_llm';
+const FETCH_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_prep';
 
 export function CallPrepProvider({ children }: { children: ReactNode }) {
+  const { token } = useAuth();
   const [state, setState] = useState<CallPrepState>({
     latestAnalysis: null,
     isLoading: false,
@@ -42,107 +47,117 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
   });
 
   const loadLatestAnalysis = useCallback(async () => {
-    // Don't show loading state during background polling to prevent UI flashing
-    const isInitialLoad = state.latestAnalysis === null;
-
-    if (isInitialLoad) {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+    if (!token) {
+      console.log('CallPrep: No token available, skipping load');
+      return;
     }
 
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
     try {
-      const response = await fetch(SHEET_URL);
+      console.log('CallPrep: Fetching data from GET endpoint');
+      console.log('CallPrep: Token available:', !!token);
+      console.log('CallPrep: API URL:', FETCH_API_URL);
+
+      const headers = getAuthHeaders(token);
+      console.log('CallPrep: Request headers:', headers);
+
+      const response = await fetch(FETCH_API_URL, {
+        method: 'GET',
+        headers,
+      });
+
+      console.log('CallPrep: Response status:', response.status);
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('CallPrep: Error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const jsonData = await response.json();
-      const rows = jsonData.values;
+      const data = await response.json();
+      console.log('CallPrep: Response data:', data);
 
-      if (!rows || rows.length < 1) {
-        throw new Error('No data found in sheet');
+      if (Array.isArray(data) && data.length > 0) {
+        setState(prev => ({
+          ...prev,
+          latestAnalysis: data[0],
+          isLoading: false
+        }));
+      } else {
+        setState(prev => ({ ...prev, isLoading: false }));
       }
 
-      // Get the latest row (last row) and column A value (index 0)
-      const latestRow = rows[rows.length - 1];
-      const analysisText = latestRow[0] || 'No analysis available';
-
-      // Only update state if the data has actually changed
-      setState(prev => {
-        const newAnalysis = analysisText;
-        const currentAnalysis = prev.latestAnalysis?.analysis;
-
-        // Deep comparison: only update if analysis text is different
-        if (currentAnalysis === newAnalysis) {
-          // Data hasn't changed, just clear loading state without triggering re-render
-          return isInitialLoad ? { ...prev, isLoading: false } : prev;
-        }
-
-        // Data has changed, update the state
-        return {
-          ...prev,
-          latestAnalysis: {
-            id: `${rows.length}`,
-            company: '',
-            product: '',
-            analysis: analysisText,
-            timestamp: new Date().toISOString()
-          },
-          isLoading: false
-        };
-      });
-
     } catch (error) {
+      console.error('CallPrep: Load error:', error);
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Failed to load analysis',
         isLoading: false
       }));
     }
-  }, [state.latestAnalysis]);
+  }, [token]);
 
-  const submitCompanyData = useCallback(async (company: string, product: string, contact?: string, notes?: string) => {
+  const generateCallPrep = useCallback(async (prompt: string) => {
+    if (!token) {
+      console.error('CallPrep: No authentication token available');
+      setState(prev => ({
+        ...prev,
+        error: 'Authentication required',
+        isSubmitting: false
+      }));
+      return;
+    }
+
     setState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
-      const data = {
-        company,
-        product,
-        contact: contact || '',
-        notes: notes || '',
-        timestamp: new Date().toISOString()
-      };
+      console.log('CallPrep: Generating with prompt:', prompt);
+      console.log('CallPrep: Token available:', !!token);
+      console.log('CallPrep: API URL:', GENERATE_API_URL);
 
-      const response = await fetch(WEBHOOK_URL, {
+      const headers = getAuthHeaders(token);
+      console.log('CallPrep: Request headers:', headers);
+
+      const response = await fetch(GENERATE_API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
+        headers,
+        body: JSON.stringify({ prompt })
       });
 
+      console.log('CallPrep: Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to submit company data');
+        const errorText = await response.text();
+        console.error('CallPrep: Error response:', errorText);
+        throw new Error(`Failed to generate call prep: ${response.status}`);
       }
 
-      // Auto-refresh after 3 seconds
-      setTimeout(() => {
-        loadLatestAnalysis();
-      }, 3000);
+      const data = await response.json();
+      console.log('CallPrep: Response data:', data);
+
+      if (Array.isArray(data) && data.length > 0) {
+        setState(prev => ({
+          ...prev,
+          latestAnalysis: data[0],
+          isSubmitting: false
+        }));
+      } else {
+        throw new Error('No data returned from API');
+      }
 
     } catch (error) {
+      console.error('CallPrep: Error:', error);
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         isSubmitting: false
       }));
-    } finally {
-      setState(prev => ({ ...prev, isSubmitting: false }));
     }
-  }, [loadLatestAnalysis]);
+  }, [token]);
 
   return (
-    <CallPrepContext.Provider value={{ state, submitCompanyData, loadLatestAnalysis }}>
+    <CallPrepContext.Provider value={{ state, generateCallPrep, loadLatestAnalysis }}>
       {children}
     </CallPrepContext.Provider>
   );

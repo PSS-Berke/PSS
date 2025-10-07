@@ -1,72 +1,178 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Building2, Copy, Loader2, RefreshCw } from 'lucide-react';
+import { Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRight, ClipboardCheck, LucideIcon } from 'lucide-react';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
+import { CallPrepDetailDialog } from './call-prep-detail-dialog';
+import { cn } from '@/lib/utils';
 
-export function CallPrepContent() {
-  const [copySuccess, setCopySuccess] = useState(false);
-  const { state, loadLatestAnalysis } = useCallPrep();
+interface CardSectionProps {
+  title: string;
+  content: string;
+  cardKey: string;
+  icon: LucideIcon;
+  onCardClick: (title: string, content: string, icon: LucideIcon) => void;
+}
 
-  const handleCopyAnalysis = async () => {
-    if (state.latestAnalysis?.analysis) {
-      try {
-        await navigator.clipboard.writeText(state.latestAnalysis.analysis);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy to clipboard:', error);
-      }
-    }
-  };
+function CardSection({ title, content, cardKey, icon: Icon, onCardClick }: CardSectionProps) {
+  const summary = content && content.length > 150 ? content.substring(0, 150) + '...' : content;
 
   return (
-    <div className="rounded-xl border border-border/80 bg-background/80 p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Latest Analysis</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loadLatestAnalysis()}
-          disabled={state.isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} />
-        </Button>
+    <button
+      onClick={() => onCardClick(title, content, Icon)}
+      className="group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all hover:shadow-lg border-t-transparent border-t-[3px] hover:border-t-[#C33527]"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <Icon className="h-8 w-8 text-[#C33527] flex-shrink-0" />
+          <h3 className="text-lg font-semibold text-gray-800 transition-colors group-hover:text-[#C33527]">
+            {title}
+          </h3>
+        </div>
+        <p className="text-sm text-gray-600 line-clamp-3">
+          {summary || 'No data available'}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+interface CallPrepContentProps {
+  className?: string;
+}
+
+export function CallPrepContent({ className }: CallPrepContentProps) {
+  const { state } = useCallPrep();
+  const analysis = state.latestAnalysis;
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; icon?: LucideIcon }>({
+    title: '',
+    content: '',
+  });
+
+  const handleCardClick = (title: string, content: string, icon: LucideIcon) => {
+    setSelectedCard({ title, content, icon });
+    setDialogOpen(true);
+  };
+
+  if (state.error) {
+    return (
+      <div className="h-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-6 py-4 text-sm text-destructive max-w-md">
+            {state.error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading call prep...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <div className="h-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <Building2 className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2">No Call Prep Available</h3>
+          <p className="text-muted-foreground mb-6">Click &quot;Generate Call Prep&quot; to create a new analysis</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div key={analysis.id} className={cn('flex flex-col overflow-y-auto', className)}>
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Call Preparation
+            </h1>
+            <span className="rounded-full bg-[#C33527] px-3 py-1 text-sm font-semibold text-white">
+              Ready
+            </span>
+          </div>
+        </div>
+
+        {/* Cards Grid - 2 columns like battle card */}
+        <div className="grid gap-6 md:grid-cols-2 mb-6">
+          <CardSection
+            title="Company Background"
+            content={analysis.company_background}
+            cardKey="companyBackground"
+            icon={Building2}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Key Decision Makers"
+            content={analysis.key_decision_makers}
+            cardKey="keyDecisionMakers"
+            icon={Users}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Recent News & Initiatives"
+            content={analysis.recent_news_initiatives}
+            cardKey="recentNews"
+            icon={Newspaper}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Potential Pain Points"
+            content={analysis.potential_pain_points}
+            cardKey="potentialPainPoints"
+            icon={AlertCircle}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Strategic Talking Points"
+            content={analysis.strategic_talking_points_for_sales_call}
+            cardKey="talkingPoints"
+            icon={MessageSquare}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Value Propositions"
+            content={analysis.suggested_value_propositions}
+            cardKey="valueProps"
+            icon={Zap}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Call Action Plan"
+            content={analysis.call_action_plan}
+            cardKey="actionPlan"
+            icon={ArrowRight}
+            onCardClick={handleCardClick}
+          />
+          <CardSection
+            title="Preparation Tips"
+            content={analysis.preparation_tip}
+            cardKey="preparationTips"
+            icon={ClipboardCheck}
+            onCardClick={handleCardClick}
+          />
+        </div>
       </div>
 
-      {state.error ? (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {state.error}
-        </div>
-      ) : state.isLoading ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[#C33527]" />
-          <p className="text-sm text-muted-foreground">Loading latest results...</p>
-        </div>
-      ) : state.latestAnalysis ? (
-        <div className="space-y-4">
-          <div className="rounded-lg bg-muted/40 p-4 text-sm leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
-            {state.latestAnalysis.analysis}
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyAnalysis}
-          >
-            <Copy className="mr-2 h-4 w-4" />
-            {copySuccess ? 'Copied!' : 'Copy Analysis'}
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-3 py-12">
-          <Building2 className="h-10 w-10 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No analysis available yet. Submit a company lookup above.
-          </p>
-        </div>
-      )}
-    </div>
+      <CallPrepDetailDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title={selectedCard.title}
+        content={selectedCard.content}
+        icon={selectedCard.icon}
+      />
+    </>
   );
 }

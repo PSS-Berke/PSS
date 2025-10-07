@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 
 interface AdminUser {
   id?: number;
+  user_id?: number;
   email: string;
   name?: string;
   role?: boolean;
@@ -95,6 +96,8 @@ export default function AdminUsersPage() {
       const data = await response.json();
       // Handle both array response and object with users property
       const usersArray = Array.isArray(data) ? data : (data.users || []);
+      console.log('Fetched users:', usersArray);
+      console.log('First user structure:', usersArray[0]);
       setUsers(usersArray);
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -117,6 +120,8 @@ export default function AdminUsersPage() {
   };
 
   const handleDelete = (user: AdminUser) => {
+    console.log('Deleting user:', user);
+    console.log('User ID:', user.id, 'User_ID:', user.user_id);
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
     setError(null);
@@ -167,8 +172,16 @@ export default function AdminUsersPage() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedUser?.id || !token) {
-      setError('Unable to delete user: missing user ID or authentication');
+    if (!selectedUser || !token) {
+      setError('Unable to delete user: missing user data or authentication');
+      return;
+    }
+
+    // Get user_id (try both possible field names)
+    const userId = selectedUser.user_id || selectedUser.id;
+
+    if (!userId) {
+      setError('Unable to delete user: user_id not found. Please refresh the user list.');
       return;
     }
 
@@ -176,15 +189,14 @@ export default function AdminUsersPage() {
     setError(null);
 
     try {
-      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/admin/remove_user', {
+      console.log('Deleting user with ID:', userId);
+
+      const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/admin/remove_user/${userId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          user_id: selectedUser.id,
-        }),
       });
 
       if (!response.ok) {
@@ -195,7 +207,7 @@ export default function AdminUsersPage() {
       // Close dialog and reset
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
-      
+
       // Refresh users list
       fetchUsers(searchTerm);
     } catch (err) {
@@ -310,7 +322,7 @@ export default function AdminUsersPage() {
               <div className="space-y-4">
                 {users.map((user, index) => (
                   <div
-                    key={user.id || user.email || index}
+                    key={user.user_id || user.id || user.email || index}
                     className="flex items-center justify-between p-4 border border-border/70 bg-background/80 rounded-lg hover:border-[#C33527] transition-colors"
                   >
                     <div className="flex-1">
