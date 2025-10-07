@@ -268,7 +268,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   };
 
   // Function to categorize data from get_chats API
-  const categorizeChatsData = (data: any): CategorizedChats => {
+  const categorizeChatsData = React.useCallback((data: any): CategorizedChats => {
     // Check if data is already structured (Format 2 from API docs)
     if (data.chats && data.campaigns) {
       return {
@@ -339,7 +339,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
         records: campaigns,
       },
     };
-  };
+  }, []);
 
   // Update categorized data when pages change
   React.useEffect(() => {
@@ -349,7 +349,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
     } else {
       setCategorizedData(null);
     }
-  }, [state.pages]);
+  }, [state.pages, categorizeChatsData]);
 
   const handleStartNewSession = async () => {
     if (isStartingStandaloneChat || !token) return;

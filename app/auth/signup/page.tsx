@@ -55,7 +55,8 @@ export default function SignUpPage() {
   const [companyCode, setCompanyCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+  const [success, setSuccess] = useState(false);
+
   const { register } = useAuth();
   const router = useRouter();
 
@@ -65,14 +66,14 @@ export default function SignUpPage() {
     setError('');
 
     try {
-      await register({ 
-        email, 
-        password, 
+      await register({
+        email,
+        password,
         name,
         company,
         company_code: companyCode ? parseInt(companyCode) : undefined
       });
-      router.push('/dashboard');
+      setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
     } finally {
@@ -190,6 +191,12 @@ export default function SignUpPage() {
                       className="border-muted focus-visible:ring-[#C33527] focus-visible:ring-offset-2"
                     />
                   </div>
+
+                  {success && (
+                    <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-600">
+                      Account created! Please check your email to verify your account.
+                    </div>
+                  )}
 
                   {error && (
                     <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">

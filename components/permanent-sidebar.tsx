@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { SidebarContent } from './sidebar-layout';
-import navigationItems from '@/lib/navigation';
+import navigationItems, { adminNavigationItems } from '@/lib/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
@@ -12,9 +12,19 @@ import { useSidebar } from '@/lib/contexts/sidebar-context';
 import { cn } from '@/lib/utils';
 
 export default function PermanentSidebar() {
-  const { user, logout, switchCompany } = useAuth();
+  const { user, logout, switchCompany, token } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
   const { isCollapsed, toggleSidebar } = useSidebar();
+
+  // Combine navigation items with admin items if user is admin
+  const allNavigationItems = useMemo(() => {
+    const isAdmin = user?.role === true || user?.admin === true;
+    console.log('Admin check:', { user, isAdmin, role: user?.role, admin: user?.admin });
+    if (isAdmin) {
+      return [...navigationItems, ...adminNavigationItems];
+    }
+    return navigationItems;
+  }, [user]);
 
   const handleSwitchCompany = async (companyId: number) => {
     try {
@@ -63,7 +73,7 @@ export default function PermanentSidebar() {
         style={{ width: `${sidebarWidth}px` }}
       >
         <SidebarContent
-          items={navigationItems}
+          items={allNavigationItems}
           basePath=""
           user={user}
           onLogout={logout}
@@ -71,6 +81,7 @@ export default function PermanentSidebar() {
           onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
           sidebarTop={sidebarTop}
           isCollapsed={isCollapsed}
+          token={token}
         />
       </div>
       {user ? (
