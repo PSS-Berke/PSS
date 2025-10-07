@@ -14,10 +14,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Search, UserPlus, Pencil, Trash2, Loader2, Mail } from 'lucide-react';
+import { Search, UserPlus, Trash2, Loader2, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AdminUser {
@@ -43,12 +42,13 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserAdmin, setNewUserAdmin] = useState(false);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Check if user is admin
@@ -116,23 +116,10 @@ export default function AdminUsersPage() {
     fetchUsers(searchTerm);
   };
 
-  const handleEdit = (user: AdminUser) => {
-    setSelectedUser(user);
-    setIsEditDialogOpen(true);
-  };
-
   const handleDelete = (user: AdminUser) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
-  };
-
-  const handleSaveEdit = async () => {
-    // TODO: Implement update API call
-    console.log('Update user:', selectedUser);
-    setIsEditDialogOpen(false);
-    setSelectedUser(null);
-    // Refresh users list
-    fetchUsers(searchTerm);
+    setError(null);
   };
 
   const handleSendInvite = async () => {
@@ -145,16 +132,29 @@ export default function AdminUsersPage() {
     setError(null);
 
     try {
-      // TODO: Implement invite API call
-      console.log('Sending invite to:', { name: newUserName, email: newUserEmail });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/invite/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newUserName,
+          email: newUserEmail,
+          admin: newUserAdmin,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
       // Close dialog and reset form
       setIsAddUserDialogOpen(false);
       setNewUserName('');
       setNewUserEmail('');
+      setNewUserAdmin(false);
       
       // Refresh users list
       fetchUsers(searchTerm);
@@ -167,10 +167,43 @@ export default function AdminUsersPage() {
   };
 
   const handleConfirmDelete = async () => {
-    // TODO: Implement delete API call
-    console.log('Delete user:', selectedUser);
-    setIsDeleteDialogOpen(false);
-    setSelectedUser(null);
+    if (!selectedUser?.id || !token) {
+      setError('Unable to delete user: missing user ID or authentication');
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/admin/remove_user', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: selectedUser.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Close dialog and reset
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+      
+      // Refresh users list
+      fetchUsers(searchTerm);
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete user');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Show loading state while checking auth
@@ -197,20 +230,28 @@ export default function AdminUsersPage() {
       <div className="w-full p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">User Management</h1>
-            <p className="mt-2 text-muted-foreground">
-              Manage all users in the system
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-[#C33527]/15 p-2">
+              <UserPlus className="h-5 w-5 text-[#C33527]" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">User Management</h1>
+              <p className="mt-2 text-muted-foreground">
+                Manage all users in the system
+              </p>
+            </div>
           </div>
-          <Button onClick={() => setIsAddUserDialogOpen(true)}>
+          <Button 
+            onClick={() => setIsAddUserDialogOpen(true)}
+            className="bg-[#C33527] hover:bg-[#DA857C] text-white"
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Add User
           </Button>
         </div>
 
         {/* Search */}
-        <Card>
+        <Card className="border-border/70">
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="flex gap-2">
               <div className="relative flex-1">
@@ -222,32 +263,44 @@ export default function AdminUsersPage() {
                   className="pl-10"
                 />
               </div>
-              <Button type="submit">Search</Button>
+              <Button 
+                type="submit"
+                className="bg-[#C33527] hover:bg-[#DA857C] text-white"
+              >
+                Search
+              </Button>
             </form>
           </CardContent>
         </Card>
 
         {/* Error Message */}
         {error && (
-          <Card className="border-destructive">
+          <Card className="border-[#C33527]/40 bg-[#C33527]/10">
             <CardContent className="pt-6">
-              <p className="text-destructive">{error}</p>
+              <p className="text-[#C33527]">{error}</p>
             </CardContent>
           </Card>
         )}
 
         {/* Users List */}
-        <Card>
+        <Card className="border-border/70">
           <CardHeader>
-            <CardTitle>Users ({users.length})</CardTitle>
-            <CardDescription>
-              All registered users in the system
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Users ({users.length})</CardTitle>
+                <CardDescription>
+                  All registered users in the system
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
+                {users.length}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="flex items-center justify-center h-[200px]">
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#C33527]" />
               </div>
             ) : users.length === 0 ? (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground">
@@ -258,7 +311,7 @@ export default function AdminUsersPage() {
                 {users.map((user, index) => (
                   <div
                     key={user.id || user.email || index}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                    className="flex items-center justify-between p-4 border border-border/70 bg-background/80 rounded-lg hover:border-[#C33527] transition-colors"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
@@ -267,10 +320,10 @@ export default function AdminUsersPage() {
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                         {(user.role || user.admin) && (
-                          <Badge variant="default">Admin</Badge>
+                          <Badge className="bg-[#C33527] hover:bg-[#DA857C] text-white">Admin</Badge>
                         )}
                         {user.invite_accepted === false && (
-                          <Badge variant="secondary">Pending Invite</Badge>
+                          <Badge variant="outline" className="border-[#C33527] text-[#C33527]">Pending Invite</Badge>
                         )}
                       </div>
                       <div className="mt-2 text-sm text-muted-foreground">
@@ -286,13 +339,6 @@ export default function AdminUsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(user)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
                         onClick={() => handleDelete(user)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -305,66 +351,6 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
 
-        {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>
-                Update user information
-              </DialogDescription>
-            </DialogHeader>
-            {selectedUser && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email</Label>
-                  <Input
-                    id="edit-email"
-                    type="email"
-                    value={selectedUser.email}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-name">Name</Label>
-                  <Input
-                    id="edit-name"
-                    value={selectedUser.name || ''}
-                    onChange={(e) =>
-                      setSelectedUser({ ...selectedUser, name: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="edit-admin"
-                      checked={selectedUser.admin || selectedUser.role || false}
-                      onChange={(e) =>
-                        setSelectedUser({ ...selectedUser, admin: e.target.checked })
-                      }
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <Label htmlFor="edit-admin" className="cursor-pointer font-normal">
-                      Admin privileges
-                    </Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Admins can manage users and access admin features</p>
-                </div>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveEdit}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         {/* Delete Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
@@ -374,6 +360,11 @@ export default function AdminUsersPage() {
                 Are you sure you want to delete this user? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
+            {error && (
+              <div className="rounded-md border border-[#C33527]/40 bg-[#C33527]/10 px-3 py-2 text-sm text-[#C33527]">
+                {error}
+              </div>
+            )}
             {selectedUser && (
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium">{selectedUser.name || 'No name'}</p>
@@ -381,11 +372,29 @@ export default function AdminUsersPage() {
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setError(null);
+                }}
+                disabled={isDeleting}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleConfirmDelete}>
-                Delete User
+              <Button 
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="bg-[#C33527] hover:bg-[#DA857C] text-white disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete User'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -401,13 +410,21 @@ export default function AdminUsersPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {error && (
+                <div className="rounded-md border border-[#C33527]/40 bg-[#C33527]/10 px-3 py-2 text-sm text-[#C33527]">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="new-user-name">Name</Label>
                 <Input
                   id="new-user-name"
                   placeholder="Enter user's full name"
                   value={newUserName}
-                  onChange={(e) => setNewUserName(e.target.value)}
+                  onChange={(e) => {
+                    setNewUserName(e.target.value);
+                    setError(null);
+                  }}
                 />
               </div>
               <div className="space-y-2">
@@ -417,14 +434,32 @@ export default function AdminUsersPage() {
                   type="email"
                   placeholder="Enter user's email address"
                   value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  onChange={(e) => {
+                    setNewUserEmail(e.target.value);
+                    setError(null);
+                  }}
                 />
               </div>
-              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
-                <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="new-user-admin"
+                    checked={newUserAdmin}
+                    onChange={(e) => setNewUserAdmin(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="new-user-admin" className="cursor-pointer font-normal">
+                    Grant admin privileges
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">Admins can manage users and access admin features</p>
+              </div>
+              <div className="flex items-start gap-2 p-3 bg-muted rounded-lg border border-border">
+                <Mail className="h-5 w-5 text-[#C33527] mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
-                  <p className="font-medium text-blue-900 dark:text-blue-100">Email Invitation</p>
-                  <p className="text-blue-700 dark:text-blue-300 mt-1">
+                  <p className="font-medium">Email Invitation</p>
+                  <p className="text-muted-foreground mt-1">
                     An invitation email will be sent to this address with instructions to set up their account.
                   </p>
                 </div>
@@ -437,6 +472,8 @@ export default function AdminUsersPage() {
                   setIsAddUserDialogOpen(false);
                   setNewUserName('');
                   setNewUserEmail('');
+                  setNewUserAdmin(false);
+                  setError(null);
                 }}
               >
                 Cancel
@@ -444,6 +481,7 @@ export default function AdminUsersPage() {
               <Button 
                 onClick={handleSendInvite}
                 disabled={isSendingInvite || !newUserName || !newUserEmail}
+                className="bg-[#C33527] hover:bg-[#DA857C] text-white disabled:opacity-50"
               >
                 {isSendingInvite ? (
                   <>

@@ -62,6 +62,8 @@ export default function SignInPage() {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('verified') === 'true') {
       setSuccessMessage('Email verified successfully! You can now sign in.');
+    } else if (searchParams.get('accepted') === 'true') {
+      setSuccessMessage('Invitation accepted successfully! You can now sign in with your new password.');
     }
   }, []);
 

@@ -23,14 +23,7 @@ import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { ModuleManager } from "./module-manager";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+// Removed cmdk Command components to avoid React 19 ref incompatibility in this view
 import {
   Popover,
   PopoverContent,
@@ -127,6 +120,7 @@ export function SidebarContent(props: {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>('');
   const [mounted, setMounted] = useState(false);
+  const [companySearch, setCompanySearch] = useState("");
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const contactFormRef = useRef<HTMLDivElement>(null);
 
@@ -203,49 +197,68 @@ export function SidebarContent(props: {
           </label>
           <Popover open={isCompanySelectOpen} onOpenChange={setIsCompanySelectOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 role="combobox"
                 aria-expanded={isCompanySelectOpen}
-                className="w-full justify-between h-9 px-2 py-1.5 text-sm font-normal"
+                className="inline-flex w-full items-center justify-between h-9 px-2 py-1.5 text-sm font-normal rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <span className="truncate">
-                  {props.user.available_companies.find(
+                  {props.user?.available_companies?.find(
                     (company) => company.company_id === props.user?.company_id
                   )?.company_name || "Select company..."}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
+              </button>
             </PopoverTrigger>
             <PopoverContent className="w-[228px] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search company..." className="h-9" />
-                <CommandList>
-                  <CommandEmpty>No company found.</CommandEmpty>
-                  <CommandGroup>
-                    {props.user.available_companies.map((company) => (
-                      <CommandItem
-                        key={company.company_id}
-                        value={company.company_name}
-                        onSelect={() => {
-                          props.onSwitchCompany?.(company.company_id);
-                          setIsCompanySelectOpen(false);
-                        }}
-                      >
-                        {company.company_name}
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            props.user?.company_id === company.company_id
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
+              {mounted && isCompanySelectOpen ? (
+                <div className="w-full">
+                  <div className="flex items-center border-b px-2">
+                    <input
+                      type="text"
+                      value={companySearch}
+                      onChange={(e) => setCompanySearch(e.target.value)}
+                      placeholder="Search company..."
+                      className="h-9 w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+                    />
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {(
+                      props.user?.available_companies?.filter((c) =>
+                        ((c?.company_name ?? '').toLowerCase()).includes((companySearch ?? '').toLowerCase())
+                      ) || []
+                    ).length === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">No company found.</div>
+                    ) : (
+                      <div className="p-1">
+                        {(props.user?.available_companies || [])
+                          .filter((c) => ((c?.company_name ?? '').toLowerCase()).includes((companySearch ?? '').toLowerCase()))
+                          .map((company) => (
+                            <button
+                              key={company.company_id}
+                              type="button"
+                              onClick={() => {
+                                props.onSwitchCompany?.(company.company_id);
+                                setIsCompanySelectOpen(false);
+                                setCompanySearch("");
+                              }}
+                              className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                            >
+                              <span className="truncate">{company.company_name}</span>
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  props.user?.company_id === company.company_id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </PopoverContent>
           </Popover>
         </div>
