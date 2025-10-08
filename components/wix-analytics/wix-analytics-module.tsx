@@ -107,8 +107,25 @@ export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-6">
-            <div className="flex gap-6 h-full">
+          <CardContent className="flex-1 overflow-hidden p-0">
+            {/* Mobile Layout: Stack vertically */}
+            <div className="flex flex-col md:hidden h-full">
+              <PlatformSidebar
+                isCollapsed={isSidebarCollapsed}
+                onCollapseChange={setIsSidebarCollapsed}
+                selectedPlatform={selectedPlatform}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectCategory}
+              />
+              <div className="flex-1 overflow-auto p-6 w-full">
+                <AnalyticsDashboard
+                  categoryData={getCurrentCategoryData()}
+                />
+              </div>
+            </div>
+
+            {/* Desktop Layout: Side by side */}
+            <div className="hidden md:flex gap-6 h-full p-6">
               <div
                 className={`${
                   isSidebarCollapsed ? 'w-14' : 'w-80'

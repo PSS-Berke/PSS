@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ChevronDown, ChevronRight, ChevronUp, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { PLATFORMS } from './mock-data';
 
@@ -26,6 +28,9 @@ export function PlatformSidebar({
   const [expandedPlatforms, setExpandedPlatforms] = useState<Record<string, boolean>>({
     wix: true,
   });
+  const [expandedMobilePlatform, setExpandedMobilePlatform] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const categoriesScrollContainerRef = useRef<HTMLDivElement>(null);
 
   const togglePlatform = (platformId: string) => {
     setExpandedPlatforms((prev) => ({
@@ -36,25 +41,33 @@ export function PlatformSidebar({
 
   if (isCollapsed) {
     return (
-      <div className={cn('flex flex-col items-center border-r border-border bg-muted/30 p-4', className)}>
+      <div className={cn(
+        'flex flex-col items-center bg-muted/30 p-4 transition-all duration-300',
+        'md:border-r h-14 md:h-full border-b md:border-b-0',
+        className
+      )}>
         <Button
           onClick={() => onCollapseChange(false)}
           size="sm"
-          className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
+          className="bg-black hover:bg-black/80 text-white h-10 px-4 md:w-10 md:p-0"
           aria-label="Open platforms sidebar"
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 mr-2 md:hidden" />
+          <MoreHorizontal className="h-4 w-4 hidden md:block" />
+          <span className="md:hidden">Platforms</span>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className={cn('flex flex-col border-r border-border bg-muted/30', className)}>
+    <div className={cn('flex flex-col bg-muted/30 transition-all duration-300', 'md:border-r border-b md:border-b-0 h-auto md:h-full', className)}>
       {/* Header */}
-      <div className="p-4 border-b flex-shrink-0">
+      <div className="px-4 py-3 border-b flex-shrink-0">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-muted-foreground">Platforms</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Platforms ({PLATFORMS.length})
+          </h3>
           <Button
             variant="ghost"
             size="sm"
@@ -62,13 +75,108 @@ export function PlatformSidebar({
             className="h-8 w-8 p-0"
             aria-label="Collapse platforms sidebar"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <ChevronUp className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Platform List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+      {/* Mobile: Horizontal Scrollable Platforms */}
+      <div className="relative md:hidden flex flex-col">
+        {/* First level: Platforms */}
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-3 overflow-x-auto px-4 py-4 scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
+          {PLATFORMS.map((platform) => {
+            const isExpanded = expandedMobilePlatform === platform.id;
+            const hasSelectedCategory = platform.categories.some(cat => cat.key === selectedCategory);
+
+            return (
+              <Card
+                key={platform.id}
+                className={`flex-shrink-0 w-64 p-4 transition-all hover:shadow-md ${
+                  hasSelectedCategory || isExpanded ? 'bg-accent border-primary shadow-sm' : ''
+                }`}
+              >
+                <div
+                  className="cursor-pointer"
+                  onClick={() => setExpandedMobilePlatform(isExpanded ? null : platform.id)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-sm">{platform.label}</h4>
+                    <Badge variant="outline" className="text-xs">
+                      {platform.categories.length}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {platform.categories.length} categories
+                  </p>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Second level: Expanded platform categories */}
+        {expandedMobilePlatform && (
+          <div className="border-t bg-muted/20">
+            <div className="px-4 py-2 flex items-center justify-between">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                {PLATFORMS.find(p => p.id === expandedMobilePlatform)?.label} - Categories
+              </h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={() => setExpandedMobilePlatform(null)}
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+            </div>
+            <div
+              ref={categoriesScrollContainerRef}
+              className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+            >
+              {PLATFORMS.find(p => p.id === expandedMobilePlatform)?.categories.map((category) => {
+                const isSelected = selectedCategory === category.key;
+                return (
+                  <Card
+                    key={category.id}
+                    className={`flex-shrink-0 w-64 p-4 cursor-pointer transition-all hover:shadow-md ${
+                      isSelected ? 'bg-accent border-primary shadow-sm' : ''
+                    }`}
+                    onClick={() => {
+                      onSelectCategory(expandedMobilePlatform, category.key);
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate mb-1">
+                          {category.label}
+                        </p>
+                        {isSelected && (
+                          <Badge variant="default" className="text-xs">Active</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: Vertical Platform List */}
+      <div className="hidden md:block flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {PLATFORMS.map((platform) => {
           const isExpanded = expandedPlatforms[platform.id];
 
