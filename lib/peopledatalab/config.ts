@@ -11,9 +11,12 @@ export const PDL_CONFIG = {
   },
 } as const;
 
+// Debug logging
+console.log('PDL_CONFIG.API_KEY:', PDL_CONFIG.API_KEY ? 'Present (length: ' + PDL_CONFIG.API_KEY.length + ')' : 'Missing');
+
 export function getPDLHeaders(): HeadersInit {
   if (!PDL_CONFIG.API_KEY) {
-    console.warn('People Data Labs API key not configured');
+    console.error('People Data Labs API key not configured! Please restart your dev server after adding NEXT_PUBLIC_PEOPLEDATALABS_API_KEY to .env.local');
   }
 
   return {

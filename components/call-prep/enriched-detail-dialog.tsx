@@ -1,15 +1,70 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  DialogPortal,
 } from '@/components/ui/dialog';
 import { LucideIcon } from 'lucide-react';
 import { pdlPersonApi, pdlCompanyApi, extractPersonNames, extractCompanyName } from '@/lib/peopledatalab/api';
 import type { PDLPersonProfile, PDLCompanyProfile } from '@/lib/peopledatalab/types';
+import { lookupPersonCache, savePersonCache, lookupCompanyCache, saveCompanyCache } from '@/lib/peopledatalab/cache';
+import { getPersonFromLocalStorage, savePersonToLocalStorage, getCompanyFromLocalStorage, saveCompanyToLocalStorage } from '@/lib/peopledatalab/localStorage-cache';
+import { useAuth } from '@/lib/xano/auth-context';
+
+// Position calculator utility - Grid-based layout
+interface CardPosition {
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+  maxWidth: string;
+}
+
+// Simple grid-based layout system
+function calculateGridPositions(
+  moduleCount: number,
+  cardSizes: ('small' | 'medium' | 'large')[],
+  personIndex: number = 0
+): CardPosition[] {
+  const positions: CardPosition[] = [];
+
+  // Define a 3-column grid with proper spacing
+  // Columns: Left (2%), Center (35%), Right (68%)
+  // Rows start at 12% (below title) with 48% spacing between rows
+  const columns = [2, 35, 68]; // Left, Center, Right in %
+  const rowHeight = 48; // Space between rows in %
+  const startTop = 12; // Start below the title
+
+  // Max width for each card size
+  const maxWidths = {
+    small: '280px',
+    medium: '340px',
+    large: '440px',
+  };
+
+  // Calculate positions in a left-to-right, top-to-bottom grid
+  for (let i = 0; i < moduleCount; i++) {
+    const size = cardSizes[i] || 'medium';
+    const columnIndex = i % 3; // 3 columns per row
+    const rowIndex = Math.floor(i / 3); // Which row
+
+    // Offset for multiple people - shift starting position
+    const offset = personIndex * moduleCount;
+    const adjustedIndex = i + offset;
+    const adjustedColumnIndex = adjustedIndex % 3;
+    const adjustedRowIndex = Math.floor(adjustedIndex / 3);
+
+    positions.push({
+      top: `${startTop + (adjustedRowIndex * rowHeight)}%`,
+      left: `${columns[adjustedColumnIndex]}%`,
+      maxWidth: maxWidths[size],
+    });
+  }
+
+  return positions;
+}
 import { PersonContactModule } from './modules/person-contact-module';
 import { PersonCareerModule } from './modules/person-career-module';
 import { PersonSkillsModule } from './modules/person-skills-module';
@@ -24,6 +79,7 @@ interface EnrichedDetailDialogProps {
   content: string;
   icon?: LucideIcon;
   cardKey: string; // 'keyDecisionMakers' or 'companyBackground'
+  companyBackgroundContent?: string; // Pass company info for context when enriching people
 }
 
 export function EnrichedDetailDialog({
@@ -31,30 +87,19 @@ export function EnrichedDetailDialog({
   onOpenChange,
   title,
   content,
-  icon: Icon,
   cardKey,
+  icon: Icon,
+  companyBackgroundContent,
 }: EnrichedDetailDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { token, user } = useAuth();
   const [personProfiles, setPersonProfiles] = useState<PDLPersonProfile[]>([]);
   const [companyProfile, setCompanyProfile] = useState<PDLCompanyProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!open) {
-      // Reset state when dialog closes
-      setPersonProfiles([]);
-      setCompanyProfile(null);
-      setError(null);
-      return;
-    }
+  const companyId = user?.company_id || 0;
 
-    // Fetch enrichment data when dialog opens
-    fetchEnrichmentData();
-  }, [open, content, cardKey]);
-
-  const fetchEnrichmentData = async () => {
+  const fetchEnrichmentData = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
 
     try {
       if (cardKey === 'keyDecisionMakers') {
@@ -63,10 +108,16 @@ export function EnrichedDetailDialog({
         console.log('Extracted person names:', names);
 
         if (names.length === 0) {
-          setError('No decision maker names found in the content');
           setIsLoading(false);
           return;
         }
+
+        // Extract company name from company background for context
+        const companyName = companyBackgroundContent
+          ? extractCompanyName(companyBackgroundContent)
+          : null;
+
+        console.log('Company context for person search:', companyName);
 
         // Fetch data for each person (limit to first 3 to avoid API overuse)
         const personPromises = names.slice(0, 3).map(async (name) => {
@@ -74,17 +125,43 @@ export function EnrichedDetailDialog({
           const lastName = lastNameParts.join(' ');
 
           try {
+            // LAYER 1: Try localStorage first (instant, free)
+            const localCached = getPersonFromLocalStorage(firstName, lastName, companyId, companyName ?? undefined);
+            if (localCached) {
+              return localCached;
+            }
+
+            // LAYER 2: Try Xano cache (fast, free)
+            const xanoCached = await lookupPersonCache(firstName, lastName, companyName ?? undefined, token);
+            if (xanoCached) {
+              // Save to localStorage for next time
+              savePersonToLocalStorage(firstName, lastName, companyId, xanoCached, companyName ?? undefined);
+              return xanoCached;
+            }
+
+            // LAYER 3: Call PDL API (slow, costs money)
             const response = await pdlPersonApi.enrichByName({
               first_name: firstName,
               last_name: lastName,
+              company: companyName || undefined,
+            });
+
+            console.log(`Enrichment response for ${name}:`, {
+              status: response.status,
+              likelihood: response.likelihood,
+              hasData: !!response.data
             });
 
             if (response.data && response.likelihood >= 6) {
+              // Save to BOTH caches
+              savePersonToLocalStorage(firstName, lastName, companyId, response.data, companyName ?? undefined);
+              await savePersonCache(firstName, lastName, name, response.data, response.likelihood, companyName ?? undefined, token);
               return response.data;
             }
             return null;
-          } catch (err) {
-            console.error(`Failed to enrich person: ${name}`, err);
+          } catch (err: any) {
+            console.warn(`Could not find data for ${name}:`, err.message);
+            // Return null instead of throwing - some people may not be in database
             return null;
           }
         });
@@ -93,8 +170,8 @@ export function EnrichedDetailDialog({
         const validProfiles = results.filter((p): p is PDLPersonProfile => p !== null);
         setPersonProfiles(validProfiles);
 
-        if (validProfiles.length === 0) {
-          setError('Could not find enrichment data for the decision makers');
+        if (validProfiles.length < names.length) {
+          console.log(`Found ${validProfiles.length} out of ${names.length} people in database`);
         }
       } else if (cardKey === 'companyBackground') {
         // Extract company name from content
@@ -102,130 +179,167 @@ export function EnrichedDetailDialog({
         console.log('Extracted company name:', companyName);
 
         if (!companyName) {
-          setError('Could not identify company name in the content');
           setIsLoading(false);
           return;
         }
 
         try {
+          // LAYER 1: Try localStorage first (instant, free)
+          const localCached = getCompanyFromLocalStorage(companyName, companyId);
+          if (localCached) {
+            setCompanyProfile(localCached);
+            return;
+          }
+
+          // LAYER 2: Try Xano cache (fast, free)
+          const xanoCached = await lookupCompanyCache(companyName, token ?? undefined);
+          if (xanoCached) {
+            // Save to localStorage for next time
+            saveCompanyToLocalStorage(companyName, companyId, xanoCached);
+            setCompanyProfile(xanoCached);
+            return;
+          }
+
+          // LAYER 3: Call PDL API (slow, costs money)
           const response = await pdlCompanyApi.enrichByName(companyName);
 
           if (response.data && response.likelihood >= 6) {
+            // Save to BOTH caches
+            saveCompanyToLocalStorage(companyName, companyId, response.data);
+            await saveCompanyCache(companyName, response.data, response.likelihood, token ?? undefined);
             setCompanyProfile(response.data);
-          } else {
-            setError('Could not find enrichment data for the company');
           }
         } catch (err) {
           console.error('Failed to enrich company:', err);
-          setError('Failed to fetch company enrichment data');
         }
       }
     } catch (err) {
       console.error('Enrichment error:', err);
-      setError('An error occurred while fetching enrichment data');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [cardKey, companyBackgroundContent, content]);
+
+  useEffect(() => {
+    if (!open) {
+      // Reset state when dialog closes
+      setPersonProfiles([]);
+      setCompanyProfile(null);
+      return;
+    }
+
+    // Fetch enrichment data when dialog opens
+    fetchEnrichmentData();
+  }, [open, fetchEnrichmentData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto rounded-lg">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-3">
-            {Icon && <Icon className="h-6 w-6 text-[#C33527]" />}
-            {title}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="mt-4">
-          {/* Original Content */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Original Analysis</h3>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
-              {content || 'No data available'}
-            </p>
+      <DialogPortal>
+        {/* Backdrop - Click to close */}
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => onOpenChange(false)}
+        />
+        <DialogContent className="max-w-[95vw] max-h-[90vh] h-full w-full flex flex-col rounded-lg bg-transparent border-none shadow-none pointer-events-none">
+          {/* Topic Title in Top-Left */}
+          <div className="absolute top-4 left-4 pointer-events-auto z-10 inline-flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-md">
+            {Icon && <Icon className="h-5 w-5 text-[#C33527]" />}
+            <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
           </div>
+
+          {/* Initial Analysis - Below Title */}
+          {!isLoading && (
+            <div className="absolute top-16 left-4 pointer-events-auto z-10 bg-white rounded-xl shadow-lg p-4 max-w-md">
+              <h3 className="text-sm font-bold text-gray-800 mb-2">Initial Analysis</h3>
+              <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {content || 'No data available'}
+              </p>
+            </div>
+          )}
 
           {/* Loading State */}
           {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="w-8 h-8 border-4 border-[#C33527] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600">Enriching with People Data Labs...</p>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="bg-white rounded-xl shadow-2xl p-8 text-center">
+                <div className="w-12 h-12 border-4 border-[#C33527] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-700 font-medium">Loading enrichment data...</p>
               </div>
             </div>
           )}
 
-          {/* Error State */}
-          {error && !isLoading && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">{error}</p>
-            </div>
-          )}
 
-          {/* Person Profiles - Collage Layout */}
-          {!isLoading && personProfiles.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Enriched Decision Maker Data
-              </h3>
-              <div className="space-y-6">
-                {personProfiles.map((person, idx) => (
-                  <div key={idx} className="space-y-4">
-                    <h4 className="text-md font-semibold text-[#C33527] border-b border-gray-200 pb-2">
-                      {person.full_name}
-                    </h4>
-                    {/* Masonry-style collage layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-auto">
-                      {/* Contact module - larger */}
-                      <div className="md:col-span-1 lg:col-span-2">
-                        <PersonContactModule person={person} />
-                      </div>
+          {/* Person Profiles - Floating Modules */}
+          {!isLoading && personProfiles.length > 0 && personProfiles.map((person, personIdx) => {
+            // Define modules with their sizes
+            const modules = [
+              { component: <PersonContactModule key="contact" person={person} />, size: 'large' as const },
+              { component: <PersonSkillsModule key="skills" person={person} />, size: 'medium' as const },
+              { component: <PersonCareerModule key="career" person={person} />, size: 'large' as const },
+            ];
 
-                      {/* Skills module */}
-                      <div className="md:col-span-1">
-                        <PersonSkillsModule person={person} />
-                      </div>
+            // Calculate grid-based positions
+            const cardSizes = modules.map(m => m.size);
+            const positions = calculateGridPositions(modules.length, cardSizes, personIdx);
 
-                      {/* Career module - full width */}
-                      <div className="md:col-span-2 lg:col-span-3">
-                        <PersonCareerModule person={person} />
-                      </div>
-                    </div>
+            return (
+              <div key={personIdx}>
+                {modules.map((module, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute pointer-events-auto"
+                    style={{
+                      ...positions[idx],
+                      animation: `slideInUp 0.5s ease-out ${idx * 100}ms both`,
+                    }}
+                  >
+                    {module.component}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            );
+          })}
 
-          {/* Company Profile - Collage Layout */}
-          {!isLoading && companyProfile && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Enriched Company Data
-              </h3>
-              {/* Masonry-style collage layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-auto">
-                {/* Company info - larger, spans 2 columns */}
-                <div className="md:col-span-2">
-                  <CompanyInfoModule company={companyProfile} />
-                </div>
+          {/* Company Profile - Floating Modules */}
+          {!isLoading && companyProfile && (() => {
+            const companyModules = [
+              { component: <CompanyInfoModule key="info" company={companyProfile} />, size: 'large' as const },
+              { component: <CompanyFundingModule key="funding" company={companyProfile} />, size: 'medium' as const },
+              { component: <CompanyTechModule key="tech" company={companyProfile} />, size: 'large' as const },
+            ];
 
-                {/* Funding module */}
-                <div className="md:col-span-1">
-                  <CompanyFundingModule company={companyProfile} />
-                </div>
+            const cardSizes = companyModules.map(m => m.size);
+            const positions = calculateGridPositions(companyModules.length, cardSizes, 0);
 
-                {/* Tech module - full width */}
-                <div className="md:col-span-2 lg:col-span-3">
-                  <CompanyTechModule company={companyProfile} />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </DialogContent>
+            return (
+              <>
+                {companyModules.map((module, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute pointer-events-auto"
+                    style={{
+                      ...positions[idx],
+                      animation: `slideInUp 0.5s ease-out ${idx * 100}ms both`,
+                    }}
+                  >
+                    {module.component}
+                  </div>
+                ))}
+              </>
+            );
+          })()}
+
+          {/* Close button */}
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 pointer-events-auto bg-white hover:bg-gray-100 text-gray-700 rounded-full p-2 shadow-lg transition-all hover:scale-110 z-50"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

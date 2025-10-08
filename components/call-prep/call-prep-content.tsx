@@ -14,16 +14,23 @@ interface CardSectionProps {
   content: string;
   cardKey: string;
   icon: LucideIcon;
+  disabled?: boolean;
   onCardClick: (title: string, content: string, cardKey: string, icon: LucideIcon) => void;
 }
 
-function CardSection({ title, content, cardKey, icon: Icon, onCardClick }: CardSectionProps) {
+function CardSection({ title, content, cardKey, icon: Icon, onCardClick, disabled = false }: CardSectionProps) {
   const summary = content && content.length > 150 ? content.substring(0, 150) + '...' : content;
 
   return (
     <button
       onClick={() => onCardClick(title, content, cardKey, Icon)}
-      className="group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all hover:shadow-lg border-t-transparent border-t-[3px] hover:border-t-[#C33527]"
+      disabled={disabled}
+      className={cn(
+        'group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all border-t-transparent border-t-[3px]',
+        disabled
+          ? 'opacity-60 cursor-not-allowed'
+          : 'hover:shadow-lg hover:border-t-[#C33527]'
+      )}
     >
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
@@ -144,6 +151,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="companyBackground"
             icon={Building2}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Key Decision Makers"
@@ -151,6 +159,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="keyDecisionMakers"
             icon={Users}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Recent News & Initiatives"
@@ -158,6 +167,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="recentNews"
             icon={Newspaper}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Potential Pain Points"
@@ -165,6 +175,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="potentialPainPoints"
             icon={AlertCircle}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Strategic Talking Points"
@@ -172,6 +183,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="talkingPoints"
             icon={MessageSquare}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Value Propositions"
@@ -179,6 +191,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="valueProps"
             icon={Zap}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Call Action Plan"
@@ -186,6 +199,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="actionPlan"
             icon={ArrowRight}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
           <CardSection
             title="Preparation Tips"
@@ -193,6 +207,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
             cardKey="preparationTips"
             icon={ClipboardCheck}
             onCardClick={handleCardClick}
+            disabled={dialogOpen || enrichedDialogOpen}
           />
         </div>
       </div>
@@ -212,6 +227,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
         content={selectedCard.content}
         cardKey={selectedCard.cardKey}
         icon={selectedCard.icon}
+        companyBackgroundContent={analysis?.company_background}
       />
 
       <CallPrepSettingsDialog
