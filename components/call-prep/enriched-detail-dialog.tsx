@@ -132,7 +132,7 @@ export function EnrichedDetailDialog({
             }
 
             // LAYER 2: Try Xano cache (fast, free)
-            const xanoCached = await lookupPersonCache(firstName, lastName, companyName ?? undefined, token);
+            const xanoCached = await lookupPersonCache(firstName, lastName, companyName ?? undefined, token ?? undefined);
             if (xanoCached) {
               // Save to localStorage for next time
               savePersonToLocalStorage(firstName, lastName, companyId, xanoCached, companyName ?? undefined);
@@ -218,7 +218,7 @@ export function EnrichedDetailDialog({
     } finally {
       setIsLoading(false);
     }
-  }, [cardKey, companyBackgroundContent, content]);
+  }, [cardKey, companyBackgroundContent, content, companyId, token]);
 
   useEffect(() => {
     if (!open) {
