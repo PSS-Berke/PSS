@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
 import { linkedInApi } from '@/lib/xano/api';
 import { useAuth } from '@/lib/xano/auth-context';
+import { cn } from '@/lib/utils';
 import {
   Plus,
   MessageSquare,
@@ -20,6 +21,7 @@ import {
   Save,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   MoreHorizontal,
 } from 'lucide-react';
 import type { CreateCampaignParams, LinkedInSession } from '@/lib/xano/types';
