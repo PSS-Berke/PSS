@@ -155,7 +155,7 @@ export function EnrichedDetailDialog({
             if (response.data && response.likelihood >= 6) {
               // Save to BOTH caches
               savePersonToLocalStorage(firstName, lastName, companyId, response.data, companyName ?? undefined);
-              await savePersonCache(firstName, lastName, name, response.data, response.likelihood, companyName ?? undefined, token);
+              await savePersonCache(firstName, lastName, name, response.data, response.likelihood, companyName ?? undefined, token ?? undefined);
               return response.data;
             }
             return null;
