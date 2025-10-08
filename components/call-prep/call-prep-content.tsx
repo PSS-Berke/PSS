@@ -5,6 +5,7 @@ import { Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRigh
 import { Button } from '@/components/ui/button';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
 import { CallPrepDetailDialog } from './call-prep-detail-dialog';
+import { EnrichedDetailDialog } from './enriched-detail-dialog';
 import { CallPrepSettingsDialog } from './call-prep-settings-dialog';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +14,7 @@ interface CardSectionProps {
   content: string;
   cardKey: string;
   icon: LucideIcon;
-  onCardClick: (title: string, content: string, icon: LucideIcon) => void;
+  onCardClick: (title: string, content: string, cardKey: string, icon: LucideIcon) => void;
 }
 
 function CardSection({ title, content, cardKey, icon: Icon, onCardClick }: CardSectionProps) {
@@ -21,7 +22,7 @@ function CardSection({ title, content, cardKey, icon: Icon, onCardClick }: CardS
 
   return (
     <button
-      onClick={() => onCardClick(title, content, Icon)}
+      onClick={() => onCardClick(title, content, cardKey, Icon)}
       className="group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all hover:shadow-lg border-t-transparent border-t-[3px] hover:border-t-[#C33527]"
     >
       <div className="flex flex-col gap-4">
@@ -47,15 +48,23 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
   const { state, generateCallPrep } = useCallPrep();
   const analysis = state.latestAnalysis;
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [enrichedDialogOpen, setEnrichedDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; icon?: LucideIcon }>({
+  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; cardKey: string; icon?: LucideIcon }>({
     title: '',
     content: '',
+    cardKey: '',
   });
 
-  const handleCardClick = (title: string, content: string, icon: LucideIcon) => {
-    setSelectedCard({ title, content, icon });
-    setDialogOpen(true);
+  const handleCardClick = (title: string, content: string, cardKey: string, icon: LucideIcon) => {
+    setSelectedCard({ title, content, cardKey, icon });
+
+    // Check if this card should use enriched dialog
+    if (cardKey === 'keyDecisionMakers' || cardKey === 'companyBackground') {
+      setEnrichedDialogOpen(true);
+    } else {
+      setDialogOpen(true);
+    }
   };
 
   const handleSettingsClick = () => {
@@ -193,6 +202,15 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
         onOpenChange={setDialogOpen}
         title={selectedCard.title}
         content={selectedCard.content}
+        icon={selectedCard.icon}
+      />
+
+      <EnrichedDetailDialog
+        open={enrichedDialogOpen}
+        onOpenChange={setEnrichedDialogOpen}
+        title={selectedCard.title}
+        content={selectedCard.content}
+        cardKey={selectedCard.cardKey}
         icon={selectedCard.icon}
       />
 
