@@ -8,12 +8,14 @@ import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
 import { usePathname } from 'next/navigation';
 import { ModuleManager } from './module-manager';
+import { ModuleHubDialog } from './module-hub/module-hub-dialog';
 import { useSidebar } from '@/lib/contexts/sidebar-context';
 import { cn } from '@/lib/utils';
 
 export default function PermanentSidebar() {
   const { user, logout, switchCompany, token } = useAuth();
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
+  const [isModuleHubOpen, setIsModuleHubOpen] = useState(false);
   const { isCollapsed, toggleSidebar } = useSidebar();
 
   // Combine navigation items with admin items if user is admin
@@ -78,14 +80,17 @@ export default function PermanentSidebar() {
           user={user}
           onLogout={logout}
           onSwitchCompany={handleSwitchCompany}
-          onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
+          onAddModule={user ? () => setIsModuleHubOpen(true) : undefined}
           sidebarTop={sidebarTop}
           isCollapsed={isCollapsed}
           token={token}
         />
       </div>
       {user ? (
-        <ModuleManager open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
+        <>
+          <ModuleManager open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
+          <ModuleHubDialog open={isModuleHubOpen} onClose={() => setIsModuleHubOpen(false)} />
+        </>
       ) : null}
     </>
   );

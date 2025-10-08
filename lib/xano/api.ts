@@ -22,7 +22,8 @@ import type {
   SocialPostUpdatePayload,
   BattleCard,
   CreateBattleCardRequest,
-  BattleCardListItem
+  BattleCardListItem,
+  Company
 } from './types';
 
 export class XanoApiError extends Error {
@@ -751,6 +752,65 @@ export const battleCardApi = {
 
   async deleteBattleCard(token: string, cardId: number): Promise<void> {
     const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.DELETE_CARD}/${cardId}`);
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+  },
+};
+
+// Company API
+export const companyApi = {
+  async getCompanies(token: string): Promise<Company[]> {
+    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.GET_COMPANIES);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async createCompany(token: string, companyName: string): Promise<Company> {
+    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.CREATE_COMPANY);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ company_name: companyName }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async deleteCompany(token: string, companyId: number): Promise<void> {
+    const url = getApiUrl(`${XANO_CONFIG.ENDPOINTS.COMPANY.DELETE_COMPANY}/${companyId}`);
     const response = await fetch(url, {
       method: 'DELETE',
       headers: getAuthHeaders(token),

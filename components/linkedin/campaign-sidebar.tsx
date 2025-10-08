@@ -928,7 +928,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
       {/* Create Campaign Dialog */}
       {!isCollapsed && (
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto">
+        <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto z-[10001]">
           <DialogHeader className="space-y-1">
             <DialogTitle>Create New Campaign</DialogTitle>
             <DialogDescription>

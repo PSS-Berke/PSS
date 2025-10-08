@@ -38,6 +38,11 @@ export const XANO_CONFIG = {
       UPDATE_CARD: '/battle_card_main',
       DELETE_CARD: '/battle_card_main',
     },
+    COMPANY: {
+      GET_COMPANIES: '/admin/get_companies',
+      CREATE_COMPANY: '/admin/create_company',
+      DELETE_COMPANY: '/admin/delete_company',
+    },
   },
 } as const;
 
