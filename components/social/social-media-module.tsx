@@ -663,50 +663,39 @@ const renderTabButton = (
   return (
     <Card
       className={cn(
-        'w-full flex flex-col relative',
+        'w-full flex flex-col',
         isExpanded ? 'min-h-[80vh]' : 'max-h-[80vh]',
         className
       )}
     >
-      {/* Expand Button - Positioned in top-right corner */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="absolute top-[32px] right-[12px] z-10 px-[17px] py-3"
-        onClick={toggleExpanded}
-      >
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4" />
-        ) : (
-          <ChevronDown className="h-4 w-4" />
-        )}
-      </Button>
-
       <CardHeader
-        className="cursor-pointer hover:bg-muted/50 transition-colors"
+        className="cursor-pointer hover:bg-muted/50 transition-colors flex-row items-center space-y-0 gap-3 p-4 md:p-6"
         onClick={toggleExpanded}
       >
-        <div className="flex items-center justify-between pr-28">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-[#C33527]/15 p-2">
-              <Calendar className="h-5 w-5 text-[#C33527]" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Social Media Copilot</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Plan and manage social content across platforms.
-              </p>
-            </div>
+        {/* Left Section: Icon + Title */}
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+          <div className="p-2 bg-[#C33527]/10 rounded-lg flex-shrink-0">
+            <Calendar className="h-5 w-5 text-[#C33527]" />
           </div>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base md:text-lg truncate">Social Media Copilot</CardTitle>
+            <p className="text-sm text-muted-foreground hidden md:block">
+              Plan and manage social content across platforms
+            </p>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-3 pr-2">
-            <div className="flex items-center gap-1.5 px-1">
+        {/* Right Section: Badges & Actions (hidden on mobile) + Expand Button */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Status info and actions - hidden on mobile */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-              {getStatusBadge()}
             </div>
+            {getStatusBadge()}
             {state.lastFetchedAt ? (
-              <span className="text-xs text-muted-foreground px-1">
-                Updated {format(new Date(state.lastFetchedAt), 'MMM d, h:mm a')}
+              <span className="hidden lg:block text-xs text-muted-foreground">
+                {format(new Date(state.lastFetchedAt), 'MMM d')}
               </span>
             ) : null}
             <Button
@@ -719,7 +708,7 @@ const renderTabButton = (
               }}
             >
               <Plus className="h-4 w-4" />
-              Add Post
+              <span className="hidden lg:inline">Add Post</span>
             </Button>
             <Button
               variant="ghost"
@@ -737,9 +726,22 @@ const renderTabButton = (
                   state.isRefreshing ? 'animate-spin text-[#C33527]' : ''
                 )}
               />
-              Refresh
+              <span className="hidden lg:inline">Refresh</span>
             </Button>
           </div>
+
+          {/* Expand button - always visible */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-shrink-0 h-9 w-9 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleExpanded();
+            }}
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
         </div>
       </CardHeader>
 

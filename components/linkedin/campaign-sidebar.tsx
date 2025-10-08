@@ -589,59 +589,59 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
     }
   };
 
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+
+  const getActiveCampaign = () => {
+    if (!categorizedData || !state.currentSession) return null;
+    return categorizedData.campaigns.records.find(
+      (campaign) => campaign.linkedin_campaigns_id === state.currentSession?.linkedin_campaigns_id
+    );
+  };
+
   return (
-    <div className={`${isCollapsed ? 'w-14' : 'w-80'} border-r bg-muted/30 flex flex-col h-full transition-all duration-300 ${className ?? ''}`}>
+    <div className={cn(
+      'bg-muted/30 flex flex-col w-full transition-all duration-300',
+      isCollapsed ? 'md:w-14 h-auto md:h-full' : 'md:w-80 h-auto md:h-full',
+      'md:border-r border-b md:border-b-0',
+      className
+    )}>
       {/* Collapsed Toggle Button */}
       {isCollapsed && (
-        <div className="flex items-center justify-center p-4">
+        <div className="flex items-center justify-center p-4 h-14 md:h-auto">
           <Button
             onClick={() => setCollapsed(false)}
             size="sm"
-            className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
+            className="bg-black hover:bg-black/80 text-white h-10 px-4 md:w-10 md:p-0"
             aria-label="Open campaigns sidebar"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 mr-2 md:hidden" />
+            <MoreHorizontal className="h-4 w-4 hidden md:block" />
+            <span className="md:hidden">Campaigns & Chats</span>
           </Button>
         </div>
       )}
 
       {/* Header */}
       {!isCollapsed && (
-        <div className="p-4 border-b flex-shrink-0">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-muted-foreground">Chats</h3>
-              <div className="flex flex-col items-center gap-2">
-                {/* Collapse toggle above the primary + button */}
-                <Button
-                  onClick={() => setCollapsed(true)}
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0"
-                  aria-label="Collapse campaigns sidebar"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  onClick={handleStartNewSession}
-                  size="sm"
-                  disabled={isStartingStandaloneChat || state.isSwitchingSession}
-                >
-                  {isStartingStandaloneChat || state.isSwitchingSession ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-muted-foreground">Campaigns</h3>
+        <div className="px-4 py-3 border-b flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Campaigns & Chats ({categorizedData?.campaigns.records.length || 0} / {categorizedData?.chats.records.length || 0})
+            </h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCollapsed(true)}
+                className="h-8 w-8 p-0"
+                aria-label="Collapse campaigns sidebar"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
               <Button
                 onClick={() => setShowCreateForm(true)}
                 size="sm"
+                className="h-8 w-8 p-0"
                 disabled={state.isCreatingCampaign}
               >
                 {state.isCreatingCampaign ? (
@@ -651,13 +651,6 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                 )}
               </Button>
             </div>
-
-            {state.isLoading && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading campaigns...
-              </div>
-            )}
           </div>
         </div>
       )}

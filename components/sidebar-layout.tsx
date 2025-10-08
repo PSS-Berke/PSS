@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/xano/auth-context";
-import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2, Check, ChevronsUpDown, Mail } from "lucide-react";
+import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2, Check, ChevronsUpDown, Mail, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,6 +23,15 @@ import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { ModuleManager } from "./module-manager";
+import { BottomNav, type BottomNavItem } from "./bottom-nav";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 // Removed cmdk Command components to avoid React 19 ref incompatibility in this view
 import {
   Popover,
@@ -186,7 +195,7 @@ export function SidebarContent(props: {
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="hidden md:flex h-full flex-col bg-background">
       <div className="flex items-center border-b border-border px-4 py-4">
         {props.sidebarTop}
       </div>
@@ -551,10 +560,63 @@ export default function SidebarLayout(props: {
 
   const sidebarWidth = isCollapsed ? 80 : 260;
 
+  const [isContactFormOpen, setIsContactFormOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>('');
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      if (!token) {
+        setSubmitError('Authentication required. Please log in again.');
+        return;
+      }
+
+      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: contactForm.name,
+          email: contactForm.email,
+          message: contactForm.message,
+        }),
+      });
+
+      if (response.ok) {
+        setContactForm({ name: '', email: '', message: '' });
+        setIsContactFormOpen(false);
+        setSubmitError('');
+      } else {
+        setSubmitError('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      setSubmitError('Network error. Please check your connection.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Extract bottom nav items (primary navigation only)
+  const bottomNavItems: BottomNavItem[] = props.items
+    .filter((item): item is Item => item.type === 'item')
+    .map((item) => ({
+      name: String(item.name),
+      href: item.href,
+      icon: item.icon,
+    }));
+
   return (
     <div className="w-full flex">
+      {/* Desktop Sidebar - Hidden on mobile */}
       <div
-        className="flex flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen transition-all duration-300 ease-in-out"
+        className="hidden md:flex flex-col border-r border-border bg-background/95 fixed left-0 top-0 h-screen transition-all duration-300 ease-in-out"
         style={{ width: `${sidebarWidth}px` }}
       >
         <SidebarContent
@@ -569,48 +631,144 @@ export default function SidebarLayout(props: {
           token={token}
         />
       </div>
+
+      {/* Main Content Area */}
       <div
-        className="flex flex-col flex-grow w-0 transition-all duration-300 ease-in-out"
-        style={{ marginLeft: `${sidebarWidth}px` }}
+        className={cn(
+          "flex flex-col flex-grow w-0 transition-all duration-300 ease-in-out",
+          "ml-0", // Mobile: no margin
+          "md:ml-[80px]", // Desktop collapsed: 80px margin
+          !isCollapsed && "md:ml-[260px]" // Desktop expanded: 260px margin
+        )}
       >
-        <div className="h-14 border-b flex items-center justify-between sticky top-0 bg-white dark:bg-black z-10 px-4 md:px-6">
+        {/* Top Header */}
+        <div className="h-14 border-b flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm dark:bg-background/95 z-10 px-4 md:px-6">
+          {/* Desktop: Breadcrumb only */}
           <div className="hidden md:flex">
             <HeaderBreadcrumb baseBreadcrumb={props.baseBreadcrumb} basePath={props.basePath} items={props.items} />
           </div>
 
-          <div className="flex md:hidden items-center">
-            <Sheet
-              onOpenChange={(open) => setSidebarOpen(open)}
-              open={sidebarOpen}
-            >
-              <SheetTrigger>
-                <Menu />
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[260px] border-r border-border bg-background p-0">
-                <SidebarContent
-                  onNavigate={() => setSidebarOpen(false)}
-                  items={props.items}
-                  sidebarTop={sidebarTop}
-                  basePath={props.basePath}
-                  onAddModule={user ? () => setIsAddModuleOpen(true) : undefined}
-                  user={user}
-                  onLogout={logout}
-                  onSwitchCompany={handleSwitchCompany}
-                  token={token}
-                />
-              </SheetContent>
-            </Sheet>
-
-            <div className="ml-4 flex md:hidden">
-              <HeaderBreadcrumb baseBreadcrumb={props.baseBreadcrumb} basePath={props.basePath} items={props.items} />
-            </div>
-          </div>
+          {/* Mobile: Logo centered */}
+          <Link href={props.basePath} className="flex md:hidden items-center gap-2 flex-1 justify-center">
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
+              <Image
+                src="/White%20logo.png"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="h-6 w-6 object-contain"
+                priority
+              />
+            </span>
+            <span className="text-sm font-semibold text-foreground">
+              Parallel Strategies
+            </span>
+          </Link>
         </div>
-        <div className="flex-grow">{props.children}</div>
+
+        {/* Content with bottom padding on mobile for bottom nav */}
+        <div className="flex-grow pb-0 md:pb-0 mb-20 md:mb-0">{props.children}</div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav
+        items={bottomNavItems}
+        basePath={props.basePath}
+        user={user}
+        onLogout={logout}
+        onContactSupport={() => setIsContactFormOpen(true)}
+        onManageModules={user ? () => setIsAddModuleOpen(true) : undefined}
+      />
+
+      {/* Module Manager */}
       {user ? (
         <ModuleManager open={isAddModuleOpen} onClose={() => setIsAddModuleOpen(false)} />
       ) : null}
+
+      {/* Contact Support Dialog */}
+      <Dialog open={isContactFormOpen} onOpenChange={setIsContactFormOpen}>
+        <DialogContent className="max-w-md mx-4">
+          <DialogHeader>
+            <DialogTitle>Contact Support</DialogTitle>
+            <DialogDescription>
+              Send us a message and we&apos;ll get back to you as soon as possible.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleContactSubmit} className="space-y-4">
+            {submitError && (
+              <div className="px-3 py-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                {submitError}
+              </div>
+            )}
+            <div>
+              <label htmlFor="contact-name" className="block text-sm font-medium mb-2">
+                Name
+              </label>
+              <input
+                id="contact-name"
+                type="text"
+                required
+                value={contactForm.name}
+                onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-email" className="block text-sm font-medium mb-2">
+                Email
+              </label>
+              <input
+                id="contact-email"
+                type="email"
+                required
+                value={contactForm.email}
+                onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-message" className="block text-sm font-medium mb-2">
+                Message
+              </label>
+              <textarea
+                id="contact-message"
+                required
+                rows={5}
+                value={contactForm.message}
+                onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsContactFormOpen(false);
+                  setContactForm({ name: '', email: '', message: '' });
+                  setSubmitError('');
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

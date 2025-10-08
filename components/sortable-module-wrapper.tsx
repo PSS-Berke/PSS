@@ -41,17 +41,17 @@ export function SortableModuleWrapper({ id, children }: SortableModuleWrapperPro
         relative transition-all duration-200
         ${isDragging ? 'scale-[1.02] shadow-2xl' : ''}
       `}
-      {...attributes}
     >
       {children}
 
-      {/* Drag Handle - Positioned where expand button used to be */}
+      {/* Drag Handle - Hidden on mobile, positioned on desktop between badges and expand button */}
       <div
         ref={setActivatorNodeRef}
-        className="absolute top-[27px] right-[60px] z-10 px-1 py-3 rounded-md hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing"
+        className="hidden md:flex absolute top-[20px] right-[52px] z-10 px-1 py-2 rounded-md hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing touch-none"
         {...listeners}
+        {...attributes}
       >
-        <GripVertical className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+        <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
       </div>
     </div>
   );
