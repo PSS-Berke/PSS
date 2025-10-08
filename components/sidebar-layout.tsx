@@ -270,16 +270,15 @@ export function SidebarContent(props: {
               type="button"
               className={cn(
                 "group flex w-full items-center px-2 text-sm font-medium text-[#C33527] transition-colors hover:text-[#DA857C]",
-                props.isCollapsed ? "justify-center" : "justify-between"
+                props.isCollapsed ? "justify-center" : "justify-start"
               )}
               onClick={() => {
                 props.onAddModule?.();
                 props.onNavigate?.();
               }}
-              title={props.isCollapsed ? "Add Module" : undefined}
+              title={props.isCollapsed ? "Manage Modules" : undefined}
             >
-              {!props.isCollapsed && <span className="text-left">Add Module</span>}
-              <Plus className="h-4 w-4 text-[#C33527] transition-colors group-hover:text-[#DA857C]" aria-hidden="true" />
+              <span className="text-left">Manage Modules</span>
             </button>
           </div>
         ) : null}
