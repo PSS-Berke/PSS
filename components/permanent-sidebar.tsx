@@ -278,7 +278,7 @@ function ConditionalSidebarInner({ children }: { children: React.ReactNode }) {
       <PermanentSidebar />
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-background/95 backdrop-blur-sm border-b border-border z-30 flex items-center justify-center">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-background/95 backdrop-blur-sm border-b border-border z-30 flex items-center justify-start px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
             <Image

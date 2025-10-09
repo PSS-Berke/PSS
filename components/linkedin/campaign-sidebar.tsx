@@ -709,7 +709,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
       {!isCollapsed && (
         <>
           {/* Mobile: Horizontal Scrollable Items */}
-          <div className="relative md:hidden flex flex-col">
+          <div className="relative md:hidden flex flex-col max-h-[250px] overflow-y-auto">
             {!categorizedData && !state.isLoading ? (
               <div className="text-center text-muted-foreground py-8">
                 <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -722,7 +722,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                   {/* First level: Campaigns and standalone chats */}
                   <div
                     ref={scrollContainerRef}
-                    className="flex gap-3 overflow-x-auto px-4 py-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none"
+                    className="flex gap-3 overflow-x-auto px-4 py-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none flex-shrink-0"
                     style={{
                       scrollbarWidth: 'none',
                       msOverflowStyle: 'none',

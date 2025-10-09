@@ -108,14 +108,15 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
 
       {isExpanded && (
         <CardContent className="p-0">
-          {/* Mobile Layout: Stack vertically with 2-layer menu */}
-          <div className="flex flex-col md:hidden min-h-[60vh] max-h-[75vh]">
-            <CampaignSidebar
-              className="flex-shrink-0"
-              isCollapsed={isSidebarCollapsed}
-              onCollapseChange={setIsSidebarCollapsed}
-            />
-            <div className="flex-1 overflow-hidden w-full">
+          {/* Mobile Layout: Stack vertically with sidebar on top, chat always 500px */}
+          <div className="flex flex-col md:hidden">
+            <div className="flex-shrink-0">
+              <CampaignSidebar
+                isCollapsed={isSidebarCollapsed}
+                onCollapseChange={setIsSidebarCollapsed}
+              />
+            </div>
+            <div className="h-[500px] w-full">
               <ChatInterface sidebarCollapsed={isSidebarCollapsed} />
             </div>
           </div>

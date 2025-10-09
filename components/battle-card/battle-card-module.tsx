@@ -91,7 +91,7 @@ export function BattleCardModule({ className }: BattleCardModuleProps) {
       {isExpanded && (
         <CardContent className="p-0">
           {/* Mobile Layout: Stack vertically */}
-          <div className="flex flex-col md:hidden min-h-[50vh] px-4">
+          <div className="flex flex-col md:hidden h-[500px]">
             <BattleCardSidebar
               isCollapsed={isSidebarCollapsed}
               onCollapseChange={setIsSidebarCollapsed}
