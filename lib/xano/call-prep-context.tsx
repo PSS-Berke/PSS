@@ -4,6 +4,13 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { useAuth } from './auth-context';
 import { getAuthHeaders } from './config';
 
+export interface KeyDecisionMaker {
+  name: string;
+  title: string;
+  linkedin_url: string;
+  email?: string;
+}
+
 export interface CallPrepAnalysis {
   id: number;
   created_at: number;
@@ -18,6 +25,8 @@ export interface CallPrepAnalysis {
   call_action_plan: string;
   preparation_tip: string;
   prompt?: string;
+  key_decision_makers_contact?: KeyDecisionMaker[] | null;
+  people_data?: string | null;
 }
 
 interface CallPrepState {
@@ -32,7 +41,8 @@ interface CallPrepState {
 
 interface CallPrepContextValue {
   state: CallPrepState;
-  generateCallPrep: (prompt: string) => Promise<void>;
+  generateCallPrep: (prompt: string) => Promise<CallPrepAnalysis | null>;
+  enrichPersonData: (prompt: string, callPrepId: number, searchType: 'name' | 'linkedin_profile' | 'email', company: string) => Promise<void>;
   loadLatestAnalysis: () => Promise<void>;
   loadAllAnalyses: () => Promise<void>;
   selectAnalysis: (id: number) => void;
@@ -41,8 +51,9 @@ interface CallPrepContextValue {
 
 const CallPrepContext = createContext<CallPrepContextValue | undefined>(undefined);
 
-const GENERATE_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_llm';
+const GENERATE_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/post_card';
 const FETCH_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_prep';
+const ENRICHMENT_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/people_enrichment_data';
 
 export function CallPrepProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -109,7 +120,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  const generateCallPrep = useCallback(async (prompt: string) => {
+  const generateCallPrep = useCallback(async (prompt: string): Promise<CallPrepAnalysis | null> => {
     if (!token) {
       console.error('CallPrep: No authentication token available');
       setState(prev => ({
@@ -117,7 +128,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
         error: 'Authentication required',
         isSubmitting: false
       }));
-      return;
+      return null;
     }
 
     setState(prev => ({ ...prev, isSubmitting: true, error: null }));
@@ -147,14 +158,16 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       console.log('CallPrep: Response data:', data);
 
-      if (Array.isArray(data) && data.length > 0) {
+      // The API returns a single object, not an array
+      if (data && data.id) {
         setState(prev => ({
           ...prev,
-          latestAnalysis: data[0],
-          currentAnalysis: data[0],
-          allAnalyses: [data[0], ...prev.allAnalyses],
+          latestAnalysis: data,
+          currentAnalysis: data,
+          allAnalyses: [data, ...prev.allAnalyses],
           isSubmitting: false
         }));
+        return data;
       } else {
         throw new Error('No data returned from API');
       }
@@ -166,8 +179,66 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         isSubmitting: false
       }));
+      return null;
     }
   }, [token]);
+
+  const enrichPersonData = useCallback(async (
+    prompt: string,
+    callPrepId: number,
+    searchType: 'name' | 'linkedin_profile' | 'email',
+    company: string
+  ) => {
+    if (!token) {
+      console.error('CallPrep: No authentication token available');
+      setState(prev => ({
+        ...prev,
+        error: 'Authentication required',
+      }));
+      return;
+    }
+
+    setState(prev => ({ ...prev, isSubmitting: true, error: null }));
+
+    try {
+      console.log('CallPrep: Enriching person data:', { prompt, callPrepId, searchType, company });
+
+      const headers = getAuthHeaders(token);
+      const body = {
+        prompt,
+        call_prep_id: callPrepId,
+        search_type: searchType,
+        company,
+      };
+
+      const response = await fetch(ENRICHMENT_API_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      console.log('CallPrep: Enrichment response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('CallPrep: Enrichment error response:', errorText);
+        throw new Error(`Failed to enrich person data: ${response.status}`);
+      }
+
+      // After enrichment, reload the call prep data
+      await loadLatestAnalysis();
+
+      setState(prev => ({ ...prev, isSubmitting: false }));
+
+    } catch (error) {
+      console.error('CallPrep: Enrichment error:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        isSubmitting: false
+      }));
+    }
+  }, [token, loadLatestAnalysis]);
 
   const loadAllAnalyses = useCallback(async () => {
     if (!token) {
@@ -254,7 +325,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   return (
-    <CallPrepContext.Provider value={{ state, generateCallPrep, loadLatestAnalysis, loadAllAnalyses, selectAnalysis, deleteAnalysis }}>
+    <CallPrepContext.Provider value={{ state, generateCallPrep, enrichPersonData, loadLatestAnalysis, loadAllAnalyses, selectAnalysis, deleteAnalysis }}>
       {children}
     </CallPrepContext.Provider>
   );

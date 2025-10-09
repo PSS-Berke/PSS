@@ -17,7 +17,7 @@ interface CallPrepModuleProps {
 export function CallPrepModule({ className }: CallPrepModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
-  const { state, generateCallPrep, loadLatestAnalysis } = useCallPrep();
+  const { state, loadLatestAnalysis } = useCallPrep();
 
   // Load data when module is expanded
   useEffect(() => {
@@ -29,11 +29,6 @@ export function CallPrepModule({ className }: CallPrepModuleProps) {
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
-  };
-
-  const handleGenerateSubmit = async (prompt: string) => {
-    await generateCallPrep(prompt);
-    setPromptDialogOpen(false);
   };
 
   const getStatusBadge = () => {
@@ -125,7 +120,6 @@ export function CallPrepModule({ className }: CallPrepModuleProps) {
       <CallPrepPromptDialog
         open={promptDialogOpen}
         onOpenChange={setPromptDialogOpen}
-        onSubmit={handleGenerateSubmit}
         isSubmitting={state.isSubmitting}
       />
     </>
