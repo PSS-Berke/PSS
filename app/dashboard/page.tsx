@@ -207,9 +207,9 @@ export default function DashboardPage() {
 
   return (
     <main className="w-full h-full">
-      <div className="w-full p-6 space-y-6">
+      <div className="w-full p-0 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 px-2">
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="mt-2 text-muted-foreground">All your modules in one place</p>
         </div>
@@ -224,13 +224,15 @@ export default function DashboardPage() {
             items={modules.map((m) => m.sortId)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-6 w-full">
+            <div className="space-y-6 w-full px-2">
               {modules.map(({ sortId, Component, Provider }) => (
-                <SortableModuleWrapper key={sortId} id={sortId}>
-                  <Provider>
-                    <Component />
-                  </Provider>
-                </SortableModuleWrapper>
+                <div key={sortId} className="w-full mx-auto px-1">
+                  <SortableModuleWrapper id={sortId}>
+                    <Provider>
+                      <Component />
+                    </Provider>
+                  </SortableModuleWrapper>
+                </div>
               ))}
             </div>
           </SortableContext>

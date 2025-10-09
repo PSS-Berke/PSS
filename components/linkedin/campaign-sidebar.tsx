@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
 import { linkedInApi } from '@/lib/xano/api';
 import { useAuth } from '@/lib/xano/auth-context';
+import { cn } from '@/lib/utils';
 import {
   Plus,
   MessageSquare,
@@ -20,7 +22,9 @@ import {
   Save,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   MoreHorizontal,
+  Megaphone,
 } from 'lucide-react';
 import type { CreateCampaignParams, LinkedInSession } from '@/lib/xano/types';
 
@@ -131,6 +135,12 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<number>>(new Set());
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [isChatsExpanded, setIsChatsExpanded] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [expandedMobileCampaign, setExpandedMobileCampaign] = useState<number | null>(null);
+  const chatsScrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!categorizedData || !state.currentSession?.linkedin_campaigns_id) {
@@ -589,59 +599,99 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
     }
   };
 
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+
+  const getActiveCampaign = () => {
+    if (!categorizedData || !state.currentSession) return null;
+    return categorizedData.campaigns.records.find(
+      (campaign) => campaign.linkedin_campaigns_id === state.currentSession?.linkedin_campaigns_id
+    );
+  };
+
+  // Handle mouse drag to scroll (for mobile horizontal scroll)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  // Get all chats and campaigns combined for mobile display
+  const getAllItems = () => {
+    if (!categorizedData) return [];
+    const items: Array<{ type: 'chat' | 'campaign', data: LinkedInSession | CampaignListItem }> = [];
+
+    categorizedData.chats.records.forEach(chat => {
+      items.push({ type: 'chat', data: chat });
+    });
+
+    categorizedData.campaigns.records.forEach(campaign => {
+      items.push({ type: 'campaign', data: campaign });
+    });
+
+    return items;
+  };
+
   return (
-    <div className={`${isCollapsed ? 'w-14' : 'w-80'} border-r bg-muted/30 flex flex-col h-full transition-all duration-300 ${className ?? ''}`}>
+    <div className={cn(
+      'bg-muted/30 flex flex-col w-full transition-all duration-300',
+      isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-80 h-auto md:h-full',
+      'md:border-r border-b md:border-b-0',
+      className
+    )}>
       {/* Collapsed Toggle Button */}
       {isCollapsed && (
-        <div className="flex items-center justify-center p-4">
+        <div className="flex items-center justify-center p-4 h-14 md:h-auto">
           <Button
             onClick={() => setCollapsed(false)}
             size="sm"
-            className="bg-black hover:bg-black/80 text-white h-10 w-10 p-0"
+            className="bg-black hover:bg-black/80 text-white h-10 px-4 md:w-10 md:p-0"
             aria-label="Open campaigns sidebar"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 mr-2 md:hidden" />
+            <MoreHorizontal className="h-4 w-4 hidden md:block" />
+            <span className="md:hidden">Campaigns & Chats</span>
           </Button>
         </div>
       )}
 
       {/* Header */}
       {!isCollapsed && (
-        <div className="p-4 border-b flex-shrink-0">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-muted-foreground">Chats</h3>
-              <div className="flex flex-col items-center gap-2">
-                {/* Collapse toggle above the primary + button */}
-                <Button
-                  onClick={() => setCollapsed(true)}
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0"
-                  aria-label="Collapse campaigns sidebar"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  onClick={handleStartNewSession}
-                  size="sm"
-                  disabled={isStartingStandaloneChat || state.isSwitchingSession}
-                >
-                  {isStartingStandaloneChat || state.isSwitchingSession ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-muted-foreground">Campaigns</h3>
+        <div className="px-4 py-3 border-b flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Campaigns & Chats ({categorizedData?.campaigns.records.length || 0} / {categorizedData?.chats.records.length || 0})
+            </h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCollapsed(true)}
+                className="h-8 w-8 p-0"
+                aria-label="Collapse campaigns sidebar"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
               <Button
                 onClick={() => setShowCreateForm(true)}
                 size="sm"
+                className="h-8 w-8 p-0"
                 disabled={state.isCreatingCampaign}
               >
                 {state.isCreatingCampaign ? (
@@ -651,20 +701,173 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                 )}
               </Button>
             </div>
-
-            {state.isLoading && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading campaigns...
-              </div>
-            )}
           </div>
         </div>
       )}
 
       {/* Chats and Campaigns List */}
       {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+        <>
+          {/* Mobile: Horizontal Scrollable Items */}
+          <div className="relative md:hidden flex flex-col max-h-[250px] overflow-y-auto">
+            {!categorizedData && !state.isLoading ? (
+              <div className="text-center text-muted-foreground py-8">
+                <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No chats or campaigns yet</p>
+                <p className="text-xs">Create your first campaign to get started</p>
+              </div>
+            ) : (
+              categorizedData && (
+                <>
+                  {/* First level: Campaigns and standalone chats */}
+                  <div
+                    ref={scrollContainerRef}
+                    className="flex gap-3 overflow-x-auto px-4 py-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none flex-shrink-0"
+                    style={{
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                    }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {getAllItems().map((item) => {
+                      if (item.type === 'chat') {
+                        const session = item.data as LinkedInSession;
+                        const isSelected = state.currentSession?.id === session.id;
+                        return (
+                          <Card
+                            key={`chat-${session.id}`}
+                            className={`flex-shrink-0 w-64 p-4 cursor-pointer transition-all hover:shadow-md ${
+                              isSelected ? 'bg-accent border-primary shadow-sm' : ''
+                            }`}
+                            onClick={() => handleSessionClick(session.session_id)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm truncate mb-1">
+                                  {session.session_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  Chat • {formatDate(session.created_at)}
+                                </p>
+                                {isSelected && (
+                                  <Badge variant="default" className="text-xs">Active</Badge>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      } else {
+                        const campaign = item.data as CampaignListItem;
+                        const isAnyChatActive = campaign.sessions.some(s => s.id === state.currentSession?.id);
+                        const isExpanded = expandedMobileCampaign === campaign.linkedin_campaigns_id;
+                        return (
+                          <Card
+                            key={`campaign-${campaign.linkedin_campaigns_id}`}
+                            className={`flex-shrink-0 w-64 p-4 transition-all hover:shadow-md ${
+                              isAnyChatActive || isExpanded ? 'bg-accent border-primary shadow-sm' : ''
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Megaphone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                              <div
+                                className="flex-1 min-w-0 cursor-pointer"
+                                onClick={() => setExpandedMobileCampaign(isExpanded ? null : (campaign.linkedin_campaigns_id || null))}
+                              >
+                                <p className="font-semibold text-sm truncate mb-1">
+                                  {campaign.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  Campaign • {campaign.sessions.length} chats
+                                </p>
+                                {isAnyChatActive && (
+                                  <Badge variant="default" className="text-xs">Active</Badge>
+                                )}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 flex-shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCampaignModal(campaign);
+                                }}
+                              >
+                                <Settings className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          </Card>
+                        );
+                      }
+                    })}
+                  </div>
+
+                  {/* Second level: Expanded campaign chats */}
+                  {expandedMobileCampaign && (
+                    <div className="border-t bg-muted/20">
+                      <div className="px-4 py-2 flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-muted-foreground">
+                          {categorizedData.campaigns.records.find(c => c.linkedin_campaigns_id === expandedMobileCampaign)?.name} - Chats
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => setExpandedMobileCampaign(null)}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div
+                        ref={chatsScrollContainerRef}
+                        className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide"
+                        style={{
+                          scrollbarWidth: 'none',
+                          msOverflowStyle: 'none',
+                        }}
+                      >
+                        {categorizedData.campaigns.records
+                          .find(c => c.linkedin_campaigns_id === expandedMobileCampaign)
+                          ?.sessions.map((session) => {
+                            const isSelected = state.currentSession?.id === session.id;
+                            return (
+                              <Card
+                                key={`campaign-chat-${session.id}`}
+                                className={`flex-shrink-0 w-64 p-4 cursor-pointer transition-all hover:shadow-md ${
+                                  isSelected ? 'bg-accent border-primary shadow-sm' : ''
+                                }`}
+                                onClick={() => handleSessionClick(session.session_id)}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-sm truncate mb-1">
+                                      {session.session_name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mb-2">
+                                      {formatDate(session.created_at)}
+                                    </p>
+                                    {isSelected && (
+                                      <Badge variant="default" className="text-xs">Active</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )
+            )}
+          </div>
+
+          {/* Desktop: Vertical Scrollable List */}
+          <div className="hidden md:block flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
         {!categorizedData && !state.isLoading ? (
           <div className="text-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -921,9 +1124,10 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
               )}
             </>
           )
-                  )}
-                </div>
-              )}
+        )}
+        </div>
+        </>
+      )}
 
       {/* Create Campaign Dialog */}
       {!isCollapsed && (

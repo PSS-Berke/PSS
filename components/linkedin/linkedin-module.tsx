@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, ChevronDown, ChevronUp, X, Megaphone, MessagesSquare, Radio } from 'lucide-react';
+import { MessageSquare, ChevronDown, ChevronUp, Megaphone, MessagesSquare, Radio } from 'lucide-react';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
 import { ChatInterface } from './chat-interface';
 import { CampaignSidebar } from './campaign-sidebar';
@@ -18,12 +17,7 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { state } = useLinkedIn();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pages = Array.isArray(state.pages) ? state.pages : [];
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -55,141 +49,89 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
     }, 0);
   };
 
-  useEffect(() => {
-    // Prevent body scroll when modal is open
-    if (isExpanded) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isExpanded]);
-
-  const modalContent = isExpanded && mounted ? (
-    <div
-      className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm"
-      onClick={toggleExpanded}
-    >
-      <div
-        className="fixed inset-4 md:inset-8 z-[10000] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Card className="h-full flex flex-col">
-          <CardHeader
-            className="flex-shrink-0 border-b cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={toggleExpanded}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">LinkedIn Copilot</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    AI-powered LinkedIn content creation
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Radio className="h-4 w-4 text-muted-foreground" />
-                  {getStatusBadge()}
-                </div>
-                {pages.length > 0 && (
-                  <div className="text-sm text-muted-foreground flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <Megaphone className="h-4 w-4" />
-                      {getCampaignCount()} campaigns
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MessagesSquare className="h-4 w-4" />
-                      {getSessionCount()} chats
-                    </div>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleExpanded}
-                  className="ml-2"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-6">
-            <div className="flex gap-6 h-full">
-              <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300 h-full`}>
-                <CampaignSidebar className="h-full" isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
-              </div>
-              <div className="flex-1 min-w-0 h-full overflow-hidden">
-                <ChatInterface className="h-full" sidebarCollapsed={isSidebarCollapsed} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  ) : null;
 
   return (
-    <>
-      <Card className={`w-full ${className} relative`}>
-        {/* Expand Button - Positioned in top-right corner */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-[32px] right-[12px] z-10 px-[17px] py-3"
-          onClick={toggleExpanded}
-        >
-          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
+    <Card className={`w-full ${className}`}>
+      <CardHeader
+        className="cursor-pointer hover:bg-muted/50 transition-colors flex-row items-center space-y-0 gap-3 p-4 md:p-6"
+        onClick={toggleExpanded}
+      >
+        {/* Left Section: Icon + Title */}
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+          <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+            <MessageSquare className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base md:text-lg truncate">LinkedIn Copilot</CardTitle>
+            <p className="text-sm text-muted-foreground hidden md:block">
+              AI-powered LinkedIn content creation
+            </p>
+          </div>
+        </div>
 
-        <CardHeader
-          className="cursor-pointer hover:bg-muted/50 transition-colors"
-          onClick={toggleExpanded}
-        >
-          <div className="flex items-center justify-between pr-28">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">LinkedIn Copilot</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  AI-powered LinkedIn content creation
-                </p>
-              </div>
+        {/* Right Section: Badges (hidden on mobile) + Expand Button */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Status info - hidden on mobile */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <Radio className="h-4 w-4 text-muted-foreground" />
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <Radio className="h-4 w-4 text-muted-foreground" />
-                {getStatusBadge()}
-              </div>
-              {pages.length > 0 && (
-                <div className="text-sm text-muted-foreground flex items-center gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <Megaphone className="h-4 w-4" />
-                    {getCampaignCount()} campaigns
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <MessagesSquare className="h-4 w-4" />
-                    {getSessionCount()} chats
-                  </div>
+            {getStatusBadge()}
+            {pages.length > 0 && (
+              <div className="flex text-sm text-muted-foreground items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Megaphone className="h-4 w-4" />
+                  {getCampaignCount()}
                 </div>
-              )}
+                <div className="flex items-center gap-1.5">
+                  <MessagesSquare className="h-4 w-4" />
+                  {getSessionCount()}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Expand button - always visible */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-shrink-0 h-9 w-9 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleExpanded();
+            }}
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+      </CardHeader>
+
+      {isExpanded && (
+        <CardContent className="p-0">
+          {/* Mobile Layout: Stack vertically with sidebar on top, chat always 500px */}
+          <div className="flex flex-col md:hidden">
+            <div className="flex-shrink-0">
+              <CampaignSidebar
+                isCollapsed={isSidebarCollapsed}
+                onCollapseChange={setIsSidebarCollapsed}
+              />
+            </div>
+            <div className="h-[500px] w-full">
+              <ChatInterface sidebarCollapsed={isSidebarCollapsed} />
             </div>
           </div>
-        </CardHeader>
-      </Card>
 
-      {/* Modal rendered via Portal to document.body */}
-      {mounted && modalContent && createPortal(modalContent, document.body)}
-    </>
+          {/* Desktop Layout: Side by side */}
+          <div className="hidden md:flex h-[600px]">
+            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}>
+              <CampaignSidebar className="h-full" isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
+            </div>
+            <div className="flex-1 min-w-0 overflow-hidden p-6">
+              <ChatInterface className="h-full" sidebarCollapsed={isSidebarCollapsed} />
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }

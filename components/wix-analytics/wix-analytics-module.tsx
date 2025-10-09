@@ -107,8 +107,25 @@ export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-6">
-            <div className="flex gap-6 h-full">
+          <CardContent className="flex-1 overflow-hidden p-0">
+            {/* Mobile Layout: Stack vertically */}
+            <div className="flex flex-col md:hidden h-full">
+              <PlatformSidebar
+                isCollapsed={isSidebarCollapsed}
+                onCollapseChange={setIsSidebarCollapsed}
+                selectedPlatform={selectedPlatform}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectCategory}
+              />
+              <div className="flex-1 overflow-auto p-6 w-full">
+                <AnalyticsDashboard
+                  categoryData={getCurrentCategoryData()}
+                />
+              </div>
+            </div>
+
+            {/* Desktop Layout: Side by side */}
+            <div className="hidden md:flex gap-6 h-full p-6">
               <div
                 className={`${
                   isSidebarCollapsed ? 'w-14' : 'w-80'
@@ -138,44 +155,50 @@ export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
 
   return (
     <>
-      <Card className={`w-full ${className} relative`}>
-        {/* Expand Button - Positioned in top-right corner */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-[32px] right-[12px] z-10 px-[17px] py-3"
-          onClick={toggleExpanded}
-        >
-          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-
+      <Card className={`w-full ${className}`}>
         <CardHeader
-          className="cursor-pointer hover:bg-muted/50 transition-colors"
+          className="cursor-pointer hover:bg-muted/50 transition-colors flex-row items-center space-y-0 gap-3 p-4 md:p-6"
           onClick={toggleExpanded}
         >
-          <div className="flex items-center justify-between pr-28">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <BarChart3 className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Website Analytics Copilot</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Multi-platform website analytics & insights
-                </p>
-              </div>
+          {/* Left Section: Icon + Title */}
+          <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+            <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+              <BarChart3 className="h-5 w-5 text-primary" />
             </div>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base md:text-lg truncate">Website Analytics Copilot</CardTitle>
+              <p className="text-sm text-muted-foreground hidden md:block">
+                Multi-platform website analytics & insights
+              </p>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-3">
+          {/* Right Section: Badges (hidden on mobile) + Expand Button */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Status info - hidden on mobile */}
+            <div className="hidden md:flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <Radio className="h-4 w-4 text-muted-foreground" />
-                {getStatusBadge()}
               </div>
-              <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+              {getStatusBadge()}
+              <div className="flex text-sm text-muted-foreground items-center gap-1.5">
                 <Globe className="h-4 w-4" />
-                {PLATFORMS.length} platforms
+                {PLATFORMS.length}
               </div>
             </div>
+
+            {/* Expand button - always visible */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-shrink-0 h-9 w-9 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpanded();
+              }}
+            >
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
           </div>
         </CardHeader>
       </Card>
