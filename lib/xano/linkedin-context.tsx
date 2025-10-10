@@ -505,6 +505,53 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.company_id]);
 
+  const fetchCampaignDetails = useCallback(async (campaignId: number) => {
+    if (!token) return null;
+
+    try {
+      const details = await linkedInApi.getCampaignDetails(token, campaignId);
+
+      dispatch({ type: 'SET_CAMPAIGN_DETAILS', payload: details });
+
+      return details;
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to load campaign details',
+      });
+      return null;
+    }
+  }, [token]);
+
+  const submitCampaignUpdate = useCallback(async (payload: EditCampaignPayload) => {
+    if (!token) return null;
+
+    try {
+      dispatch({ type: 'SET_ERROR', payload: null });
+      const updatedCampaign = await linkedInApi.editCampaign(token, payload);
+
+      const mappedCampaign: CampaignPage = {
+        linkedin_campaigns_id: updatedCampaign.id,
+        name: updatedCampaign.name,
+        additional_notes: updatedCampaign.additional_notes,
+        marketing_type: updatedCampaign.marketing_type,
+        post_length: updatedCampaign.post_length,
+        tone: updatedCampaign.tone,
+        records: [],
+      };
+
+      dispatch({ type: 'UPDATE_CAMPAIGN', payload: mappedCampaign });
+      await loadPages();
+      return mappedCampaign;
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to update campaign',
+      });
+      return null;
+    }
+  }, [token, loadPages]);
+
   const value: LinkedInContextType = {
     state,
     changeChat,
@@ -513,51 +560,8 @@ export function LinkedInProvider({ children }: { children: React.ReactNode }) {
     initiateSession,
     createCampaign,
     loadPages,
-    submitCampaignUpdate: async (payload) => {
-      if (!token) return null;
-
-      try {
-        dispatch({ type: 'SET_ERROR', payload: null });
-        const updatedCampaign = await linkedInApi.editCampaign(token, payload);
-
-        const mappedCampaign: CampaignPage = {
-          linkedin_campaigns_id: updatedCampaign.id,
-          name: updatedCampaign.name,
-          additional_notes: updatedCampaign.additional_notes,
-          marketing_type: updatedCampaign.marketing_type,
-          post_length: updatedCampaign.post_length,
-          tone: updatedCampaign.tone,
-          records: [],
-        };
-
-        dispatch({ type: 'UPDATE_CAMPAIGN', payload: mappedCampaign });
-        await loadPages();
-        return mappedCampaign;
-      } catch (error) {
-        dispatch({
-          type: 'SET_ERROR',
-          payload: error instanceof Error ? error.message : 'Failed to update campaign',
-        });
-        return null;
-      }
-    },
-    fetchCampaignDetails: async (campaignId) => {
-      if (!token) return null;
-
-      try {
-        const details = await linkedInApi.getCampaignDetails(token, campaignId);
-
-        dispatch({ type: 'SET_CAMPAIGN_DETAILS', payload: details });
-
-        return details;
-      } catch (error) {
-        dispatch({
-          type: 'SET_ERROR',
-          payload: error instanceof Error ? error.message : 'Failed to load campaign details',
-        });
-        return null;
-      }
-    },
+    submitCampaignUpdate,
+    fetchCampaignDetails,
     sendMessage,
     loadMessages,
     clearError,

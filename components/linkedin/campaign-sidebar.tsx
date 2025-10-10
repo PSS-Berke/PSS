@@ -142,24 +142,6 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   const [expandedMobileCampaign, setExpandedMobileCampaign] = useState<number | null>(null);
   const chatsScrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!categorizedData || !state.currentSession?.linkedin_campaigns_id) {
-      return;
-    }
-
-    const campaignEntry = categorizedData.campaigns.records.find(
-      (item) => item.linkedin_campaigns_id === state.currentSession?.linkedin_campaigns_id
-    );
-
-    if (!campaignEntry || campaignEntry.linkedin_campaigns_id === null) {
-      return;
-    }
-
-    fetchCampaignDetails(campaignEntry.linkedin_campaigns_id).catch((error) => {
-      console.error('Failed to refresh campaign details', error);
-    });
-  }, [categorizedData, state.currentSession?.linkedin_campaigns_id, fetchCampaignDetails]);
-
   const resetCampaignFormState = () => {
     setCampaignFormState({
       name: '',

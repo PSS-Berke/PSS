@@ -771,7 +771,8 @@ export const battleCardApi = {
 // Company API
 export const companyApi = {
   async getCompanies(token: string): Promise<Company[]> {
-    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.GET_COMPANIES);
+    // Use the new company_details endpoint
+    const url = XANO_CONFIG.ENDPOINTS.COMPANY.GET_COMPANY_DETAILS;
     const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(token),
@@ -786,7 +787,34 @@ export const companyApi = {
       );
     }
 
-    return response.json();
+    const data = await response.json();
+
+    // Handle different response formats - Xano might return object or array
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    // If it's an object, it might be wrapped in a property
+    if (data && typeof data === 'object') {
+      // Check common wrapper properties
+      if (Array.isArray(data.companies)) {
+        return data.companies;
+      }
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data.items)) {
+        return data.items;
+      }
+      // If it's a single object, wrap it in an array
+      if (data.company_id || data.id) {
+        return [data];
+      }
+    }
+
+    // Default to empty array if we can't parse the response
+    console.warn('Unexpected API response format:', data);
+    return [];
   },
 
   async createCompany(token: string, companyName: string): Promise<Company> {
@@ -795,6 +823,29 @@ export const companyApi = {
       method: 'POST',
       headers: getAuthHeaders(token),
       body: JSON.stringify({ company_name: companyName }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async updateCompany(token: string, companyId: number, companyName: string): Promise<Company> {
+    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.UPDATE_COMPANY);
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({
+        company_id: companyId,
+        company_name: companyName
+      }),
     });
 
     if (!response.ok) {

@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Building2, Plus, Trash2, Loader2, Pencil } from 'lucide-react';
 
 export default function CompanyManagementPage() {
   const { user, token, isLoading: authLoading } = useAuth();
@@ -26,10 +26,13 @@ export default function CompanyManagementPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddCompanyDialogOpen, setIsAddCompanyDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [newCompanyName, setNewCompanyName] = useState('');
+  const [editCompanyName, setEditCompanyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,6 +105,38 @@ export default function CompanyManagementPage() {
       setError(err.message || 'Failed to create company');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleEditCompany = (company: Company) => {
+    setSelectedCompany(company);
+    setEditCompanyName(company.company_name);
+    setIsEditDialogOpen(true);
+    setError(null);
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!editCompanyName.trim()) {
+      setError('Please enter a company name');
+      return;
+    }
+
+    if (!selectedCompany || !token) return;
+
+    setIsEditing(true);
+    setError(null);
+
+    try {
+      await companyApi.updateCompany(token, selectedCompany.company_id, editCompanyName.trim());
+      setIsEditDialogOpen(false);
+      setSelectedCompany(null);
+      setEditCompanyName('');
+      fetchCompanies();
+    } catch (err: any) {
+      console.error('Failed to update company:', err);
+      setError(err.message || 'Failed to update company');
+    } finally {
+      setIsEditing(false);
     }
   };
 
@@ -219,18 +254,24 @@ export default function CompanyManagementPage() {
                       </div>
                       <div>
                         <p className="font-medium">{company.company_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          ID: {company.company_id}
-                        </p>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteCompany(company)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditCompany(company)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteCompany(company)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -304,6 +345,70 @@ export default function CompanyManagementPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Edit Company Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Company</DialogTitle>
+              <DialogDescription>
+                Update the company name
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {error && (
+                <div className="rounded-md border border-[#C33527]/40 bg-[#C33527]/10 px-3 py-2 text-sm text-[#C33527]">
+                  {error}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="edit-company-name">Company Name</Label>
+                <Input
+                  id="edit-company-name"
+                  placeholder="Enter company name"
+                  value={editCompanyName}
+                  onChange={(e) => {
+                    setEditCompanyName(e.target.value);
+                    setError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isEditing) {
+                      handleConfirmEdit();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedCompany(null);
+                  setEditCompanyName('');
+                  setError(null);
+                }}
+                disabled={isEditing}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmEdit}
+                disabled={isEditing || !editCompanyName.trim()}
+                className="bg-[#C33527] hover:bg-[#DA857C] text-white disabled:opacity-50"
+              >
+                {isEditing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Delete Company Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
@@ -321,9 +426,6 @@ export default function CompanyManagementPage() {
             {selectedCompany && (
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium">{selectedCompany.company_name}</p>
-                <p className="text-sm text-muted-foreground">
-                  ID: {selectedCompany.company_id}
-                </p>
               </div>
             )}
             <DialogFooter>

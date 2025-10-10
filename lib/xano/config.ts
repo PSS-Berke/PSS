@@ -40,7 +40,9 @@ export const XANO_CONFIG = {
     },
     COMPANY: {
       GET_COMPANIES: '/admin/get_companies',
+      GET_COMPANY_DETAILS: 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ZKUwjF5k/company_details',
       CREATE_COMPANY: '/admin/create_company',
+      UPDATE_COMPANY: '/admin/update_company',
       DELETE_COMPANY: '/admin/delete_company',
     },
   },
