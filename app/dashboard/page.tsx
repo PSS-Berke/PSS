@@ -34,7 +34,10 @@ import { getAuthHeaders } from '@/lib/xano/config';
 interface ModuleConfig {
   id: number;
   sortId: string;
-  Component: React.ComponentType<{ className?: string }>;
+  Component: React.ComponentType<{
+    className?: string;
+    onExpandedChange?: (isExpanded: boolean) => void;
+  }>;
   Provider: React.ComponentType<{ children: React.ReactNode }>;
 }
 
