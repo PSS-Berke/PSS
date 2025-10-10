@@ -12,8 +12,8 @@ export function KeyDecisionMakerCard({ decisionMaker }: KeyDecisionMakerCardProp
   const enrichmentData = hasEnrichment && decisionMaker.enrichment ? decisionMaker.enrichment[0] : null;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+    <Card className={`overflow-hidden ${!hasEnrichment ? "h-[200px] w-full" : ""}`}>
+      <CardHeader className={hasEnrichment ? "bg-gradient-to-r from-blue-50 to-indigo-50" : ""}>
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-gray-900">
@@ -51,6 +51,14 @@ export function KeyDecisionMakerCard({ decisionMaker }: KeyDecisionMakerCardProp
           )}
         </div>
       </CardHeader>
+
+      {!hasEnrichment && (
+        <CardContent className="pt-4">
+          <p className="text-sm text-gray-500 italic">
+            Click "Enrich People" to get detailed information about this person.
+          </p>
+        </CardContent>
+      )}
 
       {hasEnrichment && enrichmentData && (
         <CardContent className="pt-4 space-y-4">

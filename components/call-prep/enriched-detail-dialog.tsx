@@ -311,14 +311,49 @@ export function EnrichedDetailDialog({
             </div>
           )}
 
-          {/* Key Decision Makers with Enrichment - Grid Layout */}
-          {!isLoading && cardKey === 'keyDecisionMakers' && analysis?.keyDecisionMakersWithEnrichment && (
-            <div className="absolute top-16 left-4 right-4 pointer-events-auto z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(90vh-120px)] overflow-y-auto pb-20">
-              {analysis.keyDecisionMakersWithEnrichment.map((kdm, idx) => (
-                <KeyDecisionMakerCard key={idx} decisionMaker={kdm} />
-              ))}
-            </div>
-          )}
+          {/* Key Decision Makers with Enrichment - Split into Enriched and Non-Enriched Sections */}
+          {!isLoading && cardKey === 'keyDecisionMakers' && analysis?.keyDecisionMakersWithEnrichment && (() => {
+            const enrichedCards = analysis.keyDecisionMakersWithEnrichment.filter(
+              kdm => kdm.enrichment && kdm.enrichment.length > 0
+            );
+            const nonEnrichedCards = analysis.keyDecisionMakersWithEnrichment.filter(
+              kdm => !kdm.enrichment || kdm.enrichment.length === 0
+            );
+
+            return (
+              <div className="absolute top-16 left-4 right-4 pointer-events-auto z-10 max-h-[calc(90vh-120px)] overflow-y-auto pb-20">
+                <div className="flex gap-4">
+                  {/* Enriched Section - 25% width */}
+                  {enrichedCards.length > 0 && (
+                    <div style={{ width: '25%' }}>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3 bg-white px-3 py-2 rounded-lg inline-block">
+                        Enriched Profiles
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4 items-start">
+                        {enrichedCards.map((kdm, idx) => (
+                          <KeyDecisionMakerCard key={idx} decisionMaker={kdm} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Non-Enriched Section - 75% width */}
+                  {nonEnrichedCards.length > 0 && (
+                    <div style={{ width: enrichedCards.length > 0 ? '75%' : '100%' }}>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3 bg-white px-3 py-2 rounded-lg inline-block">
+                        Not Enriched
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+                        {nonEnrichedCards.map((kdm, idx) => (
+                          <KeyDecisionMakerCard key={idx} decisionMaker={kdm} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Loading State */}
           {isLoading && (
