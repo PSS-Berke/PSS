@@ -59,6 +59,7 @@ const CallPrepContext = createContext<CallPrepContextValue | undefined>(undefine
 
 const GENERATE_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/post_card';
 const FETCH_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_prep';
+const DELETE_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_prep';
 const ENRICHMENT_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/people_enrichment_data';
 
 /**
@@ -327,13 +328,19 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, isDeleting: true, error: null }));
 
     try {
+      console.log('CallPrep: Deleting analysis with id:', id);
       const headers = getAuthHeaders(token);
-      const response = await fetch(`${FETCH_API_URL}/${id}`, {
+      const response = await fetch(DELETE_API_URL, {
         method: 'DELETE',
         headers,
+        body: JSON.stringify({ call_prep_id: id })
       });
 
+      console.log('CallPrep: Delete response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('CallPrep: Delete error response:', errorText);
         throw new Error(`Failed to delete analysis: ${response.status}`);
       }
 
