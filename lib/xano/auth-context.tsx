@@ -39,7 +39,13 @@ const getStoredToken = (): string | null => {
 const setStoredToken = (token: string): void => {
   if (typeof window === 'undefined') return;
   // Store in both cookies and localStorage for maximum compatibility
-  Cookies.set(TOKEN_KEY, token, { expires: 7, sameSite: 'strict' });
+  const isSecure = window.location.protocol === 'https:';
+  Cookies.set(TOKEN_KEY, token, {
+    expires: 7,
+    sameSite: 'lax', // Changed from 'strict' to 'lax' for mobile compatibility
+    secure: isSecure, // Only use secure flag on HTTPS
+    path: '/' // Explicit path to ensure cookie works across all routes
+  });
   localStorage.setItem(TOKEN_KEY, token);
 };
 
@@ -55,7 +61,13 @@ const getStoredRefreshToken = (): string | null => {
 const setStoredRefreshToken = (token: string): void => {
   if (typeof window === 'undefined') return;
   // Store in both cookies and localStorage
-  Cookies.set(REFRESH_TOKEN_KEY, token, { expires: 30, sameSite: 'strict' });
+  const isSecure = window.location.protocol === 'https:';
+  Cookies.set(REFRESH_TOKEN_KEY, token, {
+    expires: 30,
+    sameSite: 'lax', // Changed from 'strict' to 'lax' for mobile compatibility
+    secure: isSecure, // Only use secure flag on HTTPS
+    path: '/' // Explicit path to ensure cookie works across all routes
+  });
   localStorage.setItem(REFRESH_TOKEN_KEY, token);
 };
 
