@@ -8,13 +8,14 @@ import { GripVertical } from 'lucide-react';
 interface SortableModuleWrapperProps {
   id: string;
   children: React.ReactNode;
+  isExpanded?: boolean;
 }
 
 /**
  * Wrapper component that makes any module draggable and sortable
  * Uses @dnd-kit/sortable for smooth drag-and-drop interactions
  */
-export function SortableModuleWrapper({ id, children }: SortableModuleWrapperProps) {
+export function SortableModuleWrapper({ id, children, isExpanded = false }: SortableModuleWrapperProps) {
   const {
     attributes,
     listeners,
@@ -44,15 +45,17 @@ export function SortableModuleWrapper({ id, children }: SortableModuleWrapperPro
     >
       {children}
 
-      {/* Drag Handle - Hidden on mobile, positioned on desktop between badges and expand button */}
-      <div
-        ref={setActivatorNodeRef}
-        className="hidden md:flex absolute top-[20px] right-[52px] z-10 px-1 py-2 rounded-md hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing touch-none"
-        {...listeners}
-        {...attributes}
-      >
-        <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-      </div>
+      {/* Drag Handle - Hidden on mobile and when module is expanded, positioned on desktop between badges and expand button */}
+      {!isExpanded && (
+        <div
+          ref={setActivatorNodeRef}
+          className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-12 z-10 items-center justify-center h-9 w-9 p-0 rounded-md hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing touch-none mr-2"
+          {...listeners}
+          {...attributes}
+        >
+          <GripVertical className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+        </div>
+      )}
     </div>
   );
 }

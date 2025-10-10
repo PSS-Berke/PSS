@@ -6,12 +6,15 @@ import {
   DialogContent,
   DialogPortal,
 } from '@/components/ui/dialog';
-import { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LucideIcon, UserPlus } from 'lucide-react';
 import { pdlPersonApi, pdlCompanyApi, extractPersonNames, extractCompanyName } from '@/lib/peopledatalab/api';
 import type { PDLPersonProfile, PDLCompanyProfile } from '@/lib/peopledatalab/types';
 import { lookupPersonCache, savePersonCache, lookupCompanyCache, saveCompanyCache } from '@/lib/peopledatalab/cache';
 import { getPersonFromLocalStorage, savePersonToLocalStorage, getCompanyFromLocalStorage, saveCompanyToLocalStorage } from '@/lib/peopledatalab/localStorage-cache';
 import { useAuth } from '@/lib/xano/auth-context';
+import { useCallPrep, type KeyDecisionMaker } from '@/lib/xano/call-prep-context';
+import { KeyDecisionMakersModal } from './key-decision-makers-modal';
 
 // Position calculator utility - Grid-based layout
 interface CardPosition {
@@ -71,6 +74,7 @@ import { PersonSkillsModule } from './modules/person-skills-module';
 import { CompanyInfoModule } from './modules/company-info-module';
 import { CompanyFundingModule } from './modules/company-funding-module';
 import { CompanyTechModule } from './modules/company-tech-module';
+import { KeyDecisionMakerCard } from './key-decision-maker-card';
 
 interface EnrichedDetailDialogProps {
   open: boolean;
@@ -92,11 +96,61 @@ export function EnrichedDetailDialog({
   companyBackgroundContent,
 }: EnrichedDetailDialogProps) {
   const { token, user } = useAuth();
+  const { state, enrichPersonData } = useCallPrep();
   const [personProfiles, setPersonProfiles] = useState<PDLPersonProfile[]>([]);
   const [companyProfile, setCompanyProfile] = useState<PDLCompanyProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [enrichModalOpen, setEnrichModalOpen] = useState(false);
 
   const companyId = user?.company_id || 0;
+  const analysis = state.latestAnalysis;
+
+  // Extract decision makers from content for the modal
+  const decisionMakers: KeyDecisionMaker[] = React.useMemo(() => {
+    if (cardKey !== 'keyDecisionMakers') return [];
+
+    // Use the enriched data if available
+    if (analysis?.keyDecisionMakersWithEnrichment) {
+      return analysis.keyDecisionMakersWithEnrichment.map(kdm => ({
+        name: kdm.name,
+        title: kdm.title,
+        linkedin_url: kdm.linkedin_url || '',
+        email: kdm.email || '',
+        kdm_id: kdm.kdm_id,
+      }));
+    }
+
+    // Fallback: try to parse from JSON string
+    if (analysis?.key_decision_makers_contact) {
+      try {
+        const parsed = JSON.parse(analysis.key_decision_makers_contact);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to parse key_decision_makers_contact:', e);
+      }
+    }
+
+    // Final fallback: parse from text content
+    const names = extractPersonNames(content);
+    return names.map(name => ({
+      name,
+      title: '',
+      linkedin_url: '',
+      email: '',
+    }));
+  }, [cardKey, content, analysis]);
+
+  const handleEnrichPerson = async (person: KeyDecisionMaker) => {
+    if (!analysis) return { status: 400 };
+
+    const companyName = companyBackgroundContent
+      ? extractCompanyName(companyBackgroundContent) || ''
+      : '';
+
+    return await enrichPersonData(person, companyName);
+  };
 
   const fetchEnrichmentData = useCallback(async () => {
     setIsLoading(true);
@@ -248,12 +302,21 @@ export function EnrichedDetailDialog({
           </div>
 
           {/* Initial Analysis - Below Title */}
-          {!isLoading && (
+          {!isLoading && cardKey !== 'keyDecisionMakers' && (
             <div className="absolute top-16 left-4 pointer-events-auto z-10 bg-white rounded-xl shadow-lg p-4 max-w-md">
               <h3 className="text-sm font-bold text-gray-800 mb-2">Initial Analysis</h3>
               <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
                 {content || 'No data available'}
               </p>
+            </div>
+          )}
+
+          {/* Key Decision Makers with Enrichment - Grid Layout */}
+          {!isLoading && cardKey === 'keyDecisionMakers' && analysis?.keyDecisionMakersWithEnrichment && (
+            <div className="absolute top-16 left-4 right-4 pointer-events-auto z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(90vh-120px)] overflow-y-auto pb-20">
+              {analysis.keyDecisionMakersWithEnrichment.map((kdm, idx) => (
+                <KeyDecisionMakerCard key={idx} decisionMaker={kdm} />
+              ))}
             </div>
           )}
 
@@ -328,6 +391,18 @@ export function EnrichedDetailDialog({
             );
           })()}
 
+          {/* Enrich People button - Only show for Key Decision Makers */}
+          {cardKey === 'keyDecisionMakers' && decisionMakers.length > 0 && (
+            <Button
+              onClick={() => setEnrichModalOpen(true)}
+              className="absolute top-4 right-16 pointer-events-auto bg-[#C33527] hover:bg-[#DA857C] text-white shadow-lg transition-all hover:scale-105 z-50"
+              size="sm"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Enrich People
+            </Button>
+          )}
+
           {/* Close button */}
           <button
             onClick={() => onOpenChange(false)}
@@ -340,6 +415,18 @@ export function EnrichedDetailDialog({
 
         </DialogContent>
       </DialogPortal>
+
+      {/* Key Decision Makers Enrichment Modal */}
+      {cardKey === 'keyDecisionMakers' && (
+        <KeyDecisionMakersModal
+          open={enrichModalOpen}
+          onOpenChange={setEnrichModalOpen}
+          decisionMakers={decisionMakers}
+          companyName={companyBackgroundContent ? extractCompanyName(companyBackgroundContent) || 'the company' : 'the company'}
+          onEnrich={handleEnrichPerson}
+          isSubmitting={state.isSubmitting}
+        />
+      )}
     </Dialog>
   );
 }

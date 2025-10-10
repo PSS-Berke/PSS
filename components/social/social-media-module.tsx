@@ -86,7 +86,7 @@ const getPlatformIcon = (contentType: SocialPost['content_type']) => {
 
 const formatDateTimeLocal = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm");
 
-export function SocialMediaModule({ className }: { className?: string }) {
+export function SocialMediaModule({ className, onExpandedChange }: { className?: string; onExpandedChange?: (isExpanded: boolean) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('calendar');
   const { state, refreshPosts, getPost, togglePublish, updateStatus, updatePost, deletePost, createPost } =
@@ -122,7 +122,13 @@ export function SocialMediaModule({ className }: { className?: string }) {
     return formState;
   }, [formState, isCreating, selectedPost]);
 
-  const toggleExpanded = () => setIsExpanded((prev) => !prev);
+  const toggleExpanded = () => {
+    setIsExpanded((prev) => {
+      const newExpandedState = !prev;
+      onExpandedChange?.(newExpandedState);
+      return newExpandedState;
+    });
+  };
 
   const handleReschedulePost = useCallback(
     async (postId: number, nextDate: string) => {
@@ -688,7 +694,7 @@ const renderTabButton = (
         {/* Right Section: Badges & Actions (hidden on mobile) + Expand Button */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Status info and actions - hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 pr-6">
             <div className="flex items-center gap-1.5">
               <CalendarCheck className="h-4 w-4 text-muted-foreground" />
             </div>

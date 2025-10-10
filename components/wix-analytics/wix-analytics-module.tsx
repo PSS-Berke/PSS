@@ -12,9 +12,10 @@ import { MOCK_ANALYTICS_DATA, PLATFORMS } from './mock-data';
 
 interface WixAnalyticsModuleProps {
   className?: string;
+  onExpandedChange?: (isExpanded: boolean) => void;
 }
 
-export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
+export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalyticsModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('wix');
@@ -26,7 +27,9 @@ export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
   }, []);
 
   const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
+    const newExpandedState = !isExpanded;
+    setIsExpanded(newExpandedState);
+    onExpandedChange?.(newExpandedState);
   };
 
   const handleSelectCategory = (platformId: string, categoryKey: string) => {
@@ -176,7 +179,7 @@ export function WixAnalyticsModule({ className }: WixAnalyticsModuleProps) {
           {/* Right Section: Badges (hidden on mobile) + Expand Button */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Status info - hidden on mobile */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2 pr-6">
               <div className="flex items-center gap-1.5">
                 <Radio className="h-4 w-4 text-muted-foreground" />
               </div>

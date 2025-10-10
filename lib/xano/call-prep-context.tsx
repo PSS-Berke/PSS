@@ -3,12 +3,14 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useAuth } from './auth-context';
 import { getAuthHeaders } from './config';
+import { mergeKeyDecisionMakersWithEnrichment, type KeyDecisionMakerWithEnrichment } from '@/lib/utils/call-prep-data';
 
 export interface KeyDecisionMaker {
   name: string;
   title: string;
   linkedin_url: string;
   email?: string;
+  kdm_id?: number;
 }
 
 export interface CallPrepAnalysis {
@@ -18,6 +20,7 @@ export interface CallPrepAnalysis {
   company_id: number;
   company_background: string;
   key_decision_makers: string;
+  key_decision_makers_details?: string;
   recent_news_initiatives: string;
   potential_pain_points: string;
   strategic_talking_points_for_sales_call: string;
@@ -25,8 +28,9 @@ export interface CallPrepAnalysis {
   call_action_plan: string;
   preparation_tip: string;
   prompt?: string;
-  key_decision_makers_contact?: KeyDecisionMaker[] | null;
-  people_data?: string | null;
+  key_decision_makers_contact?: string;
+  people_data?: string;
+  keyDecisionMakersWithEnrichment?: KeyDecisionMakerWithEnrichment[];
 }
 
 interface CallPrepState {
@@ -37,16 +41,18 @@ interface CallPrepState {
   error: string | null;
   isSubmitting: boolean;
   isDeleting: boolean;
+  justCompleted: CallPrepAnalysis | null;
 }
 
 interface CallPrepContextValue {
   state: CallPrepState;
   generateCallPrep: (prompt: string) => Promise<CallPrepAnalysis | null>;
-  enrichPersonData: (prompt: string, callPrepId: number, searchType: 'name' | 'linkedin_profile' | 'email', company: string) => Promise<void>;
+  enrichPersonData: (person: KeyDecisionMaker, company: string) => Promise<{ status: number; data?: any }>;
   loadLatestAnalysis: () => Promise<void>;
   loadAllAnalyses: () => Promise<void>;
   selectAnalysis: (id: number) => void;
   deleteAnalysis: (id: number) => Promise<void>;
+  clearJustCompleted: () => void;
 }
 
 const CallPrepContext = createContext<CallPrepContextValue | undefined>(undefined);
@@ -54,6 +60,19 @@ const CallPrepContext = createContext<CallPrepContextValue | undefined>(undefine
 const GENERATE_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/post_card';
 const FETCH_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/call_prep';
 const ENRICHMENT_API_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:S52ihqAl/people_enrichment_data';
+
+/**
+ * Process raw API data and merge enrichment data with key decision makers
+ */
+function processCallPrepData(rawData: any): CallPrepAnalysis {
+  return {
+    ...rawData,
+    keyDecisionMakersWithEnrichment: mergeKeyDecisionMakersWithEnrichment(
+      rawData.key_decision_makers_contact || '[]',
+      rawData.people_data || '[]'
+    ),
+  };
+}
 
 export function CallPrepProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -65,6 +84,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     error: null,
     isSubmitting: false,
     isDeleting: false,
+    justCompleted: null,
   });
 
   const loadLatestAnalysis = useCallback(async () => {
@@ -100,10 +120,11 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
       console.log('CallPrep: Response data:', data);
 
       if (Array.isArray(data) && data.length > 0) {
+        const processedData = processCallPrepData(data[0]);
         setState(prev => ({
           ...prev,
-          latestAnalysis: data[0],
-          currentAnalysis: data[0],
+          latestAnalysis: processedData,
+          currentAnalysis: processedData,
           isLoading: false
         }));
       } else {
@@ -160,14 +181,16 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
 
       // The API returns a single object, not an array
       if (data && data.id) {
+        const processedData = processCallPrepData(data);
         setState(prev => ({
           ...prev,
-          latestAnalysis: data,
-          currentAnalysis: data,
-          allAnalyses: [data, ...prev.allAnalyses],
-          isSubmitting: false
+          latestAnalysis: processedData,
+          currentAnalysis: processedData,
+          allAnalyses: [processedData, ...prev.allAnalyses.filter(a => a.id !== processedData.id)],
+          isSubmitting: false,
+          justCompleted: processedData
         }));
-        return data;
+        return processedData;
       } else {
         throw new Error('No data returned from API');
       }
@@ -184,31 +207,33 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const enrichPersonData = useCallback(async (
-    prompt: string,
-    callPrepId: number,
-    searchType: 'name' | 'linkedin_profile' | 'email',
+    person: KeyDecisionMaker,
     company: string
-  ) => {
+  ): Promise<{ status: number; data?: any }> => {
     if (!token) {
       console.error('CallPrep: No authentication token available');
       setState(prev => ({
         ...prev,
         error: 'Authentication required',
       }));
-      return;
+      return { status: 401 };
+    }
+
+    // Check if person has kdm_id
+    if (!person.kdm_id) {
+      console.error('CallPrep: No kdm_id provided for enrichment');
+      return { status: 400 };
     }
 
     setState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
-      console.log('CallPrep: Enriching person data:', { prompt, callPrepId, searchType, company });
+      console.log('CallPrep: Enriching person data:', { person, company });
 
       const headers = getAuthHeaders(token);
       const body = {
-        prompt,
-        call_prep_id: callPrepId,
-        search_type: searchType,
-        company,
+        company: company,
+        kdm_id: person.kdm_id,
       };
 
       const response = await fetch(ENRICHMENT_API_URL, {
@@ -219,16 +244,19 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
 
       console.log('CallPrep: Enrichment response status:', response.status);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('CallPrep: Enrichment error response:', errorText);
-        throw new Error(`Failed to enrich person data: ${response.status}`);
-      }
-
-      // After enrichment, reload the call prep data
-      await loadLatestAnalysis();
+      const data = await response.json();
+      console.log('CallPrep: Enrichment response data:', data);
 
       setState(prev => ({ ...prev, isSubmitting: false }));
+
+      // Reload the latest analysis to get the updated enrichment data
+      await loadLatestAnalysis();
+
+      // Return the status and data
+      return {
+        status: data.status || response.status,
+        data: data.data
+      };
 
     } catch (error) {
       console.error('CallPrep: Enrichment error:', error);
@@ -237,6 +265,7 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         isSubmitting: false
       }));
+      return { status: 500 };
     }
   }, [token, loadLatestAnalysis]);
 
@@ -262,9 +291,10 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (Array.isArray(data)) {
+        const processedAnalyses = data.map(processCallPrepData);
         setState(prev => ({
           ...prev,
-          allAnalyses: data,
+          allAnalyses: processedAnalyses,
           isLoading: false
         }));
       } else {
@@ -324,8 +354,15 @@ export function CallPrepProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  const clearJustCompleted = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      justCompleted: null
+    }));
+  }, []);
+
   return (
-    <CallPrepContext.Provider value={{ state, generateCallPrep, enrichPersonData, loadLatestAnalysis, loadAllAnalyses, selectAnalysis, deleteAnalysis }}>
+    <CallPrepContext.Provider value={{ state, generateCallPrep, enrichPersonData, loadLatestAnalysis, loadAllAnalyses, selectAnalysis, deleteAnalysis, clearJustCompleted }}>
       {children}
     </CallPrepContext.Provider>
   );

@@ -11,16 +11,19 @@ import { CampaignSidebar } from './campaign-sidebar';
 
 interface LinkedInModuleProps {
   className?: string;
+  onExpandedChange?: (isExpanded: boolean) => void;
 }
 
-export function LinkedInModule({ className }: LinkedInModuleProps) {
+export function LinkedInModule({ className, onExpandedChange }: LinkedInModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { state } = useLinkedIn();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pages = Array.isArray(state.pages) ? state.pages : [];
 
   const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
+    const newExpandedState = !isExpanded;
+    setIsExpanded(newExpandedState);
+    onExpandedChange?.(newExpandedState);
   };
 
   const getStatusBadge = () => {
@@ -72,7 +75,7 @@ export function LinkedInModule({ className }: LinkedInModuleProps) {
         {/* Right Section: Badges (hidden on mobile) + Expand Button */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Status info - hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 pr-6">
             <div className="flex items-center gap-1.5">
               <Radio className="h-4 w-4 text-muted-foreground" />
             </div>

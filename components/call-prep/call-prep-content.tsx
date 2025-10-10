@@ -120,29 +120,6 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
   return (
     <>
       <div key={analysis.id} className={cn('flex flex-col overflow-y-auto', className)}>
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-800">
-                Call Preparation
-              </h1>
-              <span className="rounded-full bg-[#C33527] px-3 py-1 text-sm font-semibold text-white">
-                Ready
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSettingsClick}
-              className="h-8 w-8"
-              aria-label="Call prep settings"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
         {/* Cards Grid - 2 columns like battle card */}
         <div className="grid gap-6 md:grid-cols-2 mb-6">
           <CardSection
@@ -155,7 +132,7 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
           />
           <CardSection
             title="Key Decision Makers"
-            content={analysis.key_decision_makers}
+            content={analysis.key_decision_makers_details || analysis.key_decision_makers}
             cardKey="keyDecisionMakers"
             icon={Users}
             onCardClick={handleCardClick}

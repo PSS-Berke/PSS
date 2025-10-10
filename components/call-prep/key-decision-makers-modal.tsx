@@ -10,16 +10,17 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, User, Linkedin, Mail } from 'lucide-react';
+import { Loader2, User, Linkedin, Mail, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import type { KeyDecisionMaker } from '@/lib/xano/call-prep-context';
+import type { KeyDecisionMakerWithEnrichment } from '@/lib/utils/call-prep-data';
 
 interface KeyDecisionMakersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  decisionMakers: KeyDecisionMaker[];
-  onEnrich: (prompt: string, searchType: 'name' | 'linkedin_profile' | 'email', company: string) => Promise<void>;
+  decisionMakers: KeyDecisionMaker[] | KeyDecisionMakerWithEnrichment[];
+  companyName: string;
+  onEnrich: (person: KeyDecisionMaker) => Promise<{ status: number; data?: any }>;
   isSubmitting: boolean;
 }
 
@@ -27,211 +28,219 @@ export function KeyDecisionMakersModal({
   open,
   onOpenChange,
   decisionMakers,
+  companyName,
   onEnrich,
   isSubmitting,
 }: KeyDecisionMakersModalProps) {
-  const [selectedPerson, setSelectedPerson] = useState<KeyDecisionMaker | null>(null);
-  const [searchType, setSearchType] = useState<'name' | 'linkedin_profile' | 'email' | null>(null);
-  const [companyName, setCompanyName] = useState('');
-  const [showCompanyInput, setShowCompanyInput] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<KeyDecisionMaker | KeyDecisionMakerWithEnrichment | null>(null);
+  const [enrichmentResult, setEnrichmentResult] = useState<{ status: number; data?: any } | null>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
-  const handlePersonSelect = (person: KeyDecisionMaker) => {
-    setSelectedPerson(person);
-    setSearchType(null);
-    setShowCompanyInput(false);
-    setCompanyName('');
+  // Helper to check if a person has enrichment data
+  const hasEnrichment = (person: KeyDecisionMaker | KeyDecisionMakerWithEnrichment): boolean => {
+    return 'enrichment' in person && person.enrichment !== undefined && person.enrichment.length > 0;
   };
 
-  const handleSearchTypeSelect = (type: 'name' | 'linkedin_profile' | 'email') => {
-    setSearchType(type);
-    // Always show company input for all search types
-    setShowCompanyInput(true);
+  // Filter out malformed decision makers (must have at least name and title)
+  const validDecisionMakers = React.useMemo(() => {
+    return decisionMakers.filter(person =>
+      person &&
+      typeof person === 'object' &&
+      typeof person.name === 'string' &&
+      person.name.trim().length > 0 &&
+      typeof person.title === 'string'
+    );
+  }, [decisionMakers]);
+
+  const handlePersonSelect = (person: KeyDecisionMaker | KeyDecisionMakerWithEnrichment) => {
+    setSelectedPerson(person);
+    setEnrichmentResult(null);
+
+    // Scroll to bottom after a brief delay to ensure content is rendered
+    setTimeout(() => {
+      if (contentRef.current) {
+        contentRef.current.scrollTo({
+          top: contentRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   const handleEnrich = async () => {
-    if (!selectedPerson || !searchType || !companyName.trim()) return;
+    if (!selectedPerson) return;
 
-    let prompt = '';
-    if (searchType === 'name') {
-      prompt = selectedPerson.name;
-    } else if (searchType === 'linkedin_profile') {
-      prompt = selectedPerson.linkedin_url;
-    } else if (searchType === 'email') {
-      prompt = selectedPerson.email || '';
-    }
+    // Extract base KeyDecisionMaker fields
+    const person: KeyDecisionMaker = {
+      name: selectedPerson.name,
+      title: selectedPerson.title,
+      linkedin_url: selectedPerson.linkedin_url || '',
+      email: selectedPerson.email,
+      kdm_id: selectedPerson.kdm_id,
+    };
 
-    await onEnrich(prompt, searchType, companyName);
+    const result = await onEnrich(person);
+    setEnrichmentResult(result);
 
-    // Reset state
-    setSelectedPerson(null);
-    setSearchType(null);
-    setShowCompanyInput(false);
-    setCompanyName('');
+    // Scroll to bottom after result is set
+    setTimeout(() => {
+      if (contentRef.current) {
+        contentRef.current.scrollTo({
+          top: contentRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
-  const handleSkip = () => {
+  const handleClose = () => {
     onOpenChange(false);
     setSelectedPerson(null);
-    setSearchType(null);
-    setShowCompanyInput(false);
-    setCompanyName('');
+    setEnrichmentResult(null);
   };
 
-  const canSubmit = selectedPerson && searchType && companyName.trim();
+  const canSubmit = selectedPerson && !enrichmentResult;
+
+  const renderEnrichmentResult = () => {
+    if (!enrichmentResult) return null;
+
+    if (enrichmentResult.status === 400 || enrichmentResult.status === 404) {
+      return (
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-sm text-yellow-900">No Additional Data Found</p>
+            <p className="text-xs text-yellow-700 mt-1">
+              Unable to find enrichment data for this person.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (enrichmentResult.status === 200 && enrichmentResult.data) {
+      return (
+        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start gap-3 mb-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-sm text-green-900">Enrichment Complete</p>
+              <p className="text-xs text-green-700 mt-1">
+                Successfully retrieved additional data
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 space-y-2">
+            <pre className="text-xs bg-white p-3 rounded border overflow-auto max-h-60">
+              {JSON.stringify(enrichmentResult.data, null, 2)}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Enrich Decision Maker Data</DialogTitle>
           <DialogDescription>
-            Select a decision maker to search for additional information.
+            Select a decision maker to enrich with additional information from {companyName}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div ref={contentRef} className="space-y-6 py-4 overflow-y-auto flex-1">
           {/* Decision Makers List */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Select a person</Label>
-            <div className="grid gap-2">
-              {decisionMakers.map((person, index) => (
-                <button
-                  key={index}
-                  onClick={() => handlePersonSelect(person)}
-                  disabled={isSubmitting}
-                  className={`p-4 border rounded-lg text-left transition-all hover:border-primary ${
-                    selectedPerson === person
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200'
-                  } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{person.name}</p>
-                      <p className="text-xs text-muted-foreground">{person.title}</p>
-                      {person.linkedin_url && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <Linkedin className="h-3 w-3 text-blue-600" />
-                          <p className="text-xs text-blue-600 truncate">{person.linkedin_url}</p>
+            <Label className="text-sm font-medium">Select a person ({validDecisionMakers.length})</Label>
+            {validDecisionMakers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No valid decision makers found</p>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {validDecisionMakers.map((person, index) => {
+                  const isEnriched = hasEnrichment(person);
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handlePersonSelect(person)}
+                      disabled={isSubmitting}
+                      className={`p-4 border rounded-lg text-left transition-all hover:border-primary relative ${
+                        selectedPerson === person
+                          ? 'border-primary bg-primary/5'
+                          : isEnriched
+                          ? 'border-green-200 bg-green-50/30'
+                          : 'border-gray-200'
+                      } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {isEnriched && (
+                        <div className="absolute top-2 right-2">
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                            <Sparkles className="h-3 w-3" />
+                            <span className="text-xs font-medium">Enriched</span>
+                          </div>
                         </div>
                       )}
-                      {person.email && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <Mail className="h-3 w-3 text-green-600" />
-                          <p className="text-xs text-green-600 truncate">{person.email}</p>
+                      <div className="flex items-start gap-3">
+                        <User className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isEnriched ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <div className="flex-1 min-w-0 pr-20">
+                          <p className="font-medium text-sm">{person.name}</p>
+                          <p className="text-xs text-muted-foreground">{person.title}</p>
+                          {person.linkedin_url && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Linkedin className="h-3 w-3 text-blue-600" />
+                              <p className="text-xs text-blue-600 truncate">{person.linkedin_url}</p>
+                            </div>
+                          )}
+                          {person.email && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Mail className="h-3 w-3 text-green-600" />
+                              <p className="text-xs text-green-600 truncate">{person.email}</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Search Type Selection */}
-          {selectedPerson && (
-            <div className="space-y-3 border-t pt-4">
-              <Label className="text-sm font-medium">How would you like to search?</Label>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                <button
-                  onClick={() => handleSearchTypeSelect('name')}
-                  disabled={isSubmitting}
-                  className={`p-4 border rounded-lg text-left transition-all hover:border-primary ${
-                    searchType === 'name'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200'
-                  } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium text-sm">Search by Name</p>
-                      <p className="text-xs text-muted-foreground">Name: {selectedPerson.name}</p>
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleSearchTypeSelect('linkedin_profile')}
-                  disabled={isSubmitting}
-                  className={`p-4 border rounded-lg text-left transition-all hover:border-primary ${
-                    searchType === 'linkedin_profile'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200'
-                  } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Linkedin className="h-4 w-4 text-blue-600" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">Search by LinkedIn</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {selectedPerson.linkedin_url || 'No URL available'}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-                {selectedPerson.email && (
-                  <button
-                    onClick={() => handleSearchTypeSelect('email')}
-                    disabled={isSubmitting}
-                    className={`p-4 border rounded-lg text-left transition-all hover:border-primary ${
-                      searchType === 'email'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200'
-                    } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-green-600" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">Search by Email</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {selectedPerson.email}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Company Input - Always shown when search type is selected */}
-          {showCompanyInput && (
-            <div className="space-y-2 border-t pt-4">
-              <Label htmlFor="company">Company Name (required)</Label>
-              <Input
-                id="company"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="e.g., Microsoft"
-                disabled={isSubmitting}
-              />
-            </div>
-          )}
+          {/* Enrichment Result */}
+          {renderEnrichmentResult()}
         </div>
 
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={handleSkip}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
-            Skip
+            {enrichmentResult ? 'Close' : 'Skip'}
           </Button>
-          <Button
-            onClick={handleEnrich}
-            disabled={!canSubmit || isSubmitting}
-            className="bg-[#C33527] hover:bg-[#DA857C]"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enriching...
-              </>
-            ) : (
-              'Enrich Data'
-            )}
-          </Button>
+          {!enrichmentResult && (
+            <Button
+              onClick={handleEnrich}
+              disabled={!canSubmit || isSubmitting}
+              className="bg-[#C33527] hover:bg-[#DA857C]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enriching...
+                </>
+              ) : selectedPerson ? (
+                `Enrich ${selectedPerson.name}`
+              ) : (
+                'Select a person'
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,15 +11,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
 import { KeyDecisionMakersModal } from './key-decision-makers-modal';
-import type { CallPrepAnalysis } from '@/lib/xano/call-prep-context';
 
 interface CallPrepPromptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isSubmitting: boolean;
+  onOpenEnrichment?: () => void;
 }
 
 export function CallPrepPromptDialog({
@@ -27,48 +27,53 @@ export function CallPrepPromptDialog({
   onOpenChange,
   isSubmitting,
 }: CallPrepPromptDialogProps) {
-  const { generateCallPrep, enrichPersonData, state } = useCallPrep();
+  const { generateCallPrep, enrichPersonData, state, clearJustCompleted } = useCallPrep();
   const [prompt, setPrompt] = useState('');
   const [showDecisionMakersModal, setShowDecisionMakersModal] = useState(false);
   const [currentCallPrepId, setCurrentCallPrepId] = useState<number | null>(null);
   const [decisionMakers, setDecisionMakers] = useState<any[]>([]);
 
+  // Watch for generation completion
+  useEffect(() => {
+    if (state.justCompleted && !isSubmitting) {
+      // Check if there are decision makers to enrich
+      if (state.justCompleted.keyDecisionMakersWithEnrichment && state.justCompleted.keyDecisionMakersWithEnrichment.length > 0) {
+        setCurrentCallPrepId(state.justCompleted.id);
+        // Convert to KeyDecisionMaker format for the modal
+        const kdms = state.justCompleted.keyDecisionMakersWithEnrichment.map(kdm => ({
+          name: kdm.name,
+          title: kdm.title,
+          linkedin_url: kdm.linkedin_url || '',
+          email: kdm.email || '',
+          kdm_id: kdm.kdm_id,
+        }));
+        setDecisionMakers(kdms);
+      }
+
+      // Clear the justCompleted state
+      clearJustCompleted();
+    }
+  }, [state.justCompleted, isSubmitting, clearJustCompleted]);
+
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
 
-    // Call the generate API
-    const result = await generateCallPrep(prompt);
-
-    if (result) {
-      // Check if key_decision_makers_contact exists
-      if (result.key_decision_makers_contact && result.key_decision_makers_contact.length > 0) {
-        // Show modal for decision makers enrichment
-        setCurrentCallPrepId(result.id);
-        setDecisionMakers(result.key_decision_makers_contact);
-        setShowDecisionMakersModal(true);
-      } else {
-        // No decision makers, close the prompt dialog
-        onOpenChange(false);
-      }
-    }
-
+    // Close the modal immediately
+    onOpenChange(false);
     setPrompt('');
+
+    // Call the generate API in the background
+    await generateCallPrep(prompt);
   };
 
-  const handleEnrich = async (
-    enrichPrompt: string,
-    searchType: 'name' | 'linkedin_profile' | 'email',
-    company: string
-  ) => {
-    if (!currentCallPrepId) return;
 
-    await enrichPersonData(enrichPrompt, currentCallPrepId, searchType, company);
+  const handleEnrich = async (person: any) => {
+    if (!state.justCompleted) return { status: 500 };
 
-    // Close both modals
-    setShowDecisionMakersModal(false);
-    onOpenChange(false);
-    setCurrentCallPrepId(null);
-    setDecisionMakers([]);
+    // Extract company name from the prompt or use a default
+    const company = state.justCompleted.prompt || '';
+
+    return await enrichPersonData(person, company);
   };
 
   const handleDecisionMakersModalClose = (open: boolean) => {
@@ -128,11 +133,12 @@ export function CallPrepPromptDialog({
       </Dialog>
 
       {/* Decision Makers Modal */}
-      {showDecisionMakersModal && decisionMakers.length > 0 && (
+      {showDecisionMakersModal && decisionMakers.length > 0 && state.justCompleted && (
         <KeyDecisionMakersModal
           open={showDecisionMakersModal}
           onOpenChange={handleDecisionMakersModalClose}
           decisionMakers={decisionMakers}
+          companyName={state.justCompleted.prompt || ''}
           onEnrich={handleEnrich}
           isSubmitting={state.isSubmitting}
         />

@@ -57,6 +57,9 @@ export default function DashboardPage() {
   const [modules, setModules] = useState<ModuleConfig[]>(initialModules);
   const [isLoadingLayout, setIsLoadingLayout] = useState(true);
 
+  // Track expanded state for each module
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
+
   // Fetch saved layout order and update modules when user's modules change
   React.useEffect(() => {
     const fetchLayoutAndUpdateModules = async () => {
@@ -227,9 +230,13 @@ export default function DashboardPage() {
             <div className="space-y-6 w-full px-2">
               {modules.map(({ sortId, Component, Provider }) => (
                 <div key={sortId} className="w-full mx-auto px-1">
-                  <SortableModuleWrapper id={sortId}>
+                  <SortableModuleWrapper id={sortId} isExpanded={expandedModules[sortId] || false}>
                     <Provider>
-                      <Component />
+                      <Component
+                        onExpandedChange={(isExpanded) => {
+                          setExpandedModules(prev => ({ ...prev, [sortId]: isExpanded }));
+                        }}
+                      />
                     </Provider>
                   </SortableModuleWrapper>
                 </div>

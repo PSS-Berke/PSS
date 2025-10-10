@@ -45,6 +45,7 @@ export function CallPrepSidebar({
   const [analysisPendingDeletion, setAnalysisPendingDeletion] = useState<CallPrepAnalysis | null>(null);
   const [isDeletingAnalysis, setIsDeletingAnalysis] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasLoadedRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -64,10 +65,13 @@ export function CallPrepSidebar({
     }
   };
 
-  // Load all analyses on mount
+  // Load all analyses on mount - only once across all sidebar instances
   useEffect(() => {
-    loadAllAnalyses();
-  }, [loadAllAnalyses]);
+    if (!hasLoadedRef.current && !state.isLoading && state.allAnalyses.length === 0) {
+      hasLoadedRef.current = true;
+      loadAllAnalyses();
+    }
+  }, [loadAllAnalyses, state.isLoading, state.allAnalyses.length]);
 
   const handleAnalysisClick = (id: number) => {
     if (state.currentAnalysis?.id === id) return;
