@@ -16,6 +16,7 @@ import {
   Linkedin,
   Instagram,
   CalendarCheck,
+  Twitter,
 } from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
 
@@ -34,6 +35,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSocialMedia } from '@/lib/xano/social-media-context';
+import { useAuth } from '@/lib/xano/auth-context';
 import type { SocialPost, SocialPostPayload } from '@/lib/xano/types';
 import { Textarea } from '@/components/ui/textarea';
 import { SocialMediaCalendar } from './social-media-calendar';
@@ -91,6 +93,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
   const [activeTab, setActiveTab] = useState<TabKey>('calendar');
   const { state, refreshPosts, getPost, togglePublish, updateStatus, updatePost, deletePost, createPost } =
     useSocialMedia();
+  const { token, user, refreshUser } = useAuth();
   const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -99,6 +102,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isConnectingX, setIsConnectingX] = useState(false);
   const activeFormData = React.useMemo<Partial<SocialPost>>(() => {
     if (isCreating) {
       return {
@@ -193,6 +197,20 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
   }, [state.posts]);
 
   const isMutatingSelected = selectedPost ? state.mutatingPostIds.includes(selectedPost.id) : false;
+
+  // Check if user just returned from OAuth (e.g., URL has success param)
+  React.useEffect(() => {
+    const checkOAuthReturn = async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('x_connected') === 'true') {
+        // Refresh user data to get updated x_access status
+        await refreshUser();
+        // Clean up the URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+    checkOAuthReturn();
+  }, [refreshUser]);
 
   React.useEffect(() => {
     if (!isModalOpen) {
@@ -456,6 +474,62 @@ const renderTabButton = (
     await togglePublish(selectedPost.id, nextStatus);
     setSelectedPost((prev) => (prev ? { ...prev, published: nextStatus } : prev));
     setFormState((prev) => ({ ...prev, published: nextStatus }));
+  };
+
+  const handleConnectXAccount = async () => {
+    if (!token) {
+      console.error('No authentication token available');
+      return;
+    }
+
+    setIsConnectingX(true);
+
+    try {
+      // Step 1: Call auth/start to get OAuth parameters as JSON
+      const authStartResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/auth/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!authStartResponse.ok) {
+        console.error('auth/start failed:', authStartResponse.status, authStartResponse.statusText);
+        setIsConnectingX(false);
+        return;
+      }
+
+      // Step 2: Parse the JSON response
+      const authData = await authStartResponse.json();
+
+      if (!authData.state) {
+        console.error('No state in response:', authData);
+        setIsConnectingX(false);
+        return;
+      }
+
+      if (!authData.authorization_url) {
+        console.error('No authorization_url in response:', authData);
+        setIsConnectingX(false);
+        return;
+      }
+
+      // Step 3: Call assign_user to associate the OAuth state with current user
+      await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/assign_user', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ state: authData.state }),
+      });
+
+      // Step 4: Redirect to Twitter OAuth URL - cookies will follow automatically
+      window.location.href = authData.authorization_url;
+    } catch (error) {
+      console.error('Error connecting X account:', error);
+      setIsConnectingX(false);
+    }
   };
 
   const renderPostSummary = (post: SocialPost) => {
@@ -734,6 +808,29 @@ const renderTabButton = (
               />
               <span className="hidden lg:inline">Refresh</span>
             </Button>
+            {user?.x_access?.access && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 px-3"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (!user?.x_access?.connected) {
+                    handleConnectXAccount();
+                  }
+                }}
+                disabled={isConnectingX || user?.x_access?.connected}
+              >
+                {isConnectingX ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Twitter className="h-4 w-4" />
+                )}
+                <span className="hidden lg:inline">
+                  {user?.x_access?.connected ? 'X Connected' : isConnectingX ? 'Connecting...' : 'Connect X Account'}
+                </span>
+              </Button>
+            )}
           </div>
 
           {/* Expand button - always visible */}

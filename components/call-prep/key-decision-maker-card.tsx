@@ -52,14 +52,6 @@ export function KeyDecisionMakerCard({ decisionMaker }: KeyDecisionMakerCardProp
         </div>
       </CardHeader>
 
-      {!hasEnrichment && (
-        <CardContent className="pt-4">
-          <p className="text-sm text-gray-500 italic">
-            Click "Enrich People" to get detailed information about this person.
-          </p>
-        </CardContent>
-      )}
-
       {hasEnrichment && enrichmentData && (
         <CardContent className="pt-4 space-y-4">
           {/* Location */}

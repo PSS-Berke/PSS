@@ -10,6 +10,12 @@ export interface Module {
   is_disabled?: boolean;
 }
 
+export interface XAccess {
+  access: boolean;
+  access_token?: string;
+  connected: boolean;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -22,6 +28,7 @@ export interface User {
   modules?: Module[];
   available_companies?: Company[];
   avatar_url?: string;
+  x_access?: XAccess;
   created_at: string;
   updated_at: string;
 }
