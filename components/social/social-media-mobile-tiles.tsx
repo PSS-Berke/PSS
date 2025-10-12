@@ -233,11 +233,11 @@ export function SocialMediaMobileTiles({ posts, onSelectPost }: SocialMediaMobil
       </div>
 
       {/* Calendar Grid - Always 3 days */}
-      <div className="grid grid-cols-3 gap-3 p-3 overflow-x-auto">
+      <div className="grid grid-cols-3 gap-2 px-3 py-3">
         {dayColumns.map((column) => (
           <div
             key={format(column.date, 'yyyy-MM-dd')}
-            className="flex flex-col min-w-[115px]"
+            className="flex flex-col min-w-0"
           >
             {/* Day Header */}
             <div className={cn(

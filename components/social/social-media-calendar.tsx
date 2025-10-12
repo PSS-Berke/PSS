@@ -296,7 +296,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
       </div>
 
       {/* Mobile View: Next 3 Days Tiles (<768px) */}
-      <div className="block md:hidden rounded-xl bg-card overflow-hidden">
+      <div className="block md:hidden bg-card overflow-hidden">
         <SocialMediaMobileTiles
           posts={posts}
           onSelectPost={onSelectPost}

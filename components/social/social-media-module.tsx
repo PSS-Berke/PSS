@@ -779,8 +779,8 @@ const renderTabButton = (
     }
 
     return (
-      <div className="rounded-xl border border-border/80 bg-background/80 p-4">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-xl border-0 md:border md:border-border/80 bg-background/80 -mx-3 md:mx-0 p-0 md:p-4">
+        <div className="mb-4 px-4 pt-4 md:px-0 md:pt-0 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Timer className="h-4 w-4 text-[#C33527]" />
             <h3 className="text-sm font-semibold text-foreground">Content calendar</h3>
@@ -998,7 +998,7 @@ const renderTabButton = (
       </CardHeader>
 
       {isExpanded ? (
-        <CardContent className="space-y-5">
+        <CardContent className="space-y-5 px-3 md:px-6">
           <div className="flex flex-col gap-3">
             <div className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-background/90 p-1">
               {TAB_CONFIG.map((tab) => renderTabButton(tab, activeTab, setActiveTab))}
