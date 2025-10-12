@@ -56,19 +56,23 @@ export default function DashboardPage() {
   const userModuleIds = React.useMemo(() => user?.modules?.map(m => m.id) || [], [user?.modules]);
 
   // Filter modules based on user's access and initialize state
-  const initialModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
-  const [modules, setModules] = useState<ModuleConfig[]>(initialModules);
-  const [isLoadingLayout, setIsLoadingLayout] = useState(true);
+  const [modules, setModules] = useState<ModuleConfig[]>([]);
+  const [isLoadingLayout, setIsLoadingLayout] = useState(false);
 
   // Track expanded state for each module
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
   // Fetch saved layout order and update modules when user's modules change
   React.useEffect(() => {
+    // Don't run if still loading auth
+    if (isLoading) {
+      return;
+    }
+
     const fetchLayoutAndUpdateModules = async () => {
       setIsLoadingLayout(true);
       const updatedModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
-      
+
       // If no token or no modules, just set the default order
       if (!token || updatedModules.length === 0) {
         setModules(updatedModules);
@@ -95,7 +99,7 @@ export default function DashboardPage() {
             const orderedModules = [...updatedModules].sort((a, b) => {
               const indexA = savedSequence.indexOf(a.id);
               const indexB = savedSequence.indexOf(b.id);
-              
+
               // If both are in the sequence, sort by their position
               if (indexA !== -1 && indexB !== -1) {
                 return indexA - indexB;
@@ -125,7 +129,7 @@ export default function DashboardPage() {
     };
 
     void fetchLayoutAndUpdateModules();
-  }, [userModuleIds, token]); // Re-run when user's module IDs or token change
+  }, [isLoading, userModuleIds, token]); // Re-run when auth loading completes, user's module IDs or token change
 
   // Configure sensors for drag detection
   const sensors = useSensors(

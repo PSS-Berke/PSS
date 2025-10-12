@@ -162,7 +162,7 @@ export interface SocialPost {
   content?: string;
   url_1?: string;
   url_2?: string;
-  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all';
+  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all' | 'x' | 'pinterest' | 'snapchat' | 'youtube-video' | 'youtube-short';
   scheduled_date: string;
   published: boolean;
   status?: 'draft' | 'approved' | 'published';
@@ -178,7 +178,7 @@ export interface SocialPostPayload {
   content: string;
   url_1?: string;
   url_2?: string;
-  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all';
+  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all' | 'x' | 'pinterest' | 'snapchat' | 'youtube-video' | 'youtube-short';
   scheduled_date: string;
   published?: boolean;
   status?: 'draft' | 'approved' | 'published';
