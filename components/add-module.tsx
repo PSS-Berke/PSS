@@ -19,7 +19,7 @@ type AddModuleProps = {
 };
 
 export function AddModule({ open, onClose }: AddModuleProps) {
-  const { token, refreshUser } = useAuth();
+  const { token, refreshUser, isLoading } = useAuth();
   const [moduleOptions, setModuleOptions] = React.useState<ModuleOption[]>([]);
   const [selectedModuleId, setSelectedModuleId] = React.useState<number | "">("");
   const [isFetching, setIsFetching] = React.useState(false);
@@ -32,6 +32,11 @@ export function AddModule({ open, onClose }: AddModuleProps) {
       setSelectedModuleId("");
       setError(null);
       setSuccessMessage(null);
+      return;
+    }
+
+    // Wait for auth to complete before fetching modules
+    if (isLoading) {
       return;
     }
 
@@ -83,7 +88,7 @@ export function AddModule({ open, onClose }: AddModuleProps) {
     return () => {
       isMounted = false;
     };
-  }, [open, token]);
+  }, [open, token, isLoading]);
 
   const handleCancel = () => {
     onClose();

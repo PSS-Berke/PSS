@@ -19,7 +19,7 @@ type ModuleManagerProps = {
 };
 
 export function ModuleManager({ open, onClose }: ModuleManagerProps) {
-  const { user, token, refreshUser } = useAuth();
+  const { user, token, refreshUser, isLoading } = useAuth();
   const [allModules, setAllModules] = React.useState<ModuleOption[]>([]);
   const [isFetching, setIsFetching] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -35,6 +35,11 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
     if (!open) {
       setError(null);
       setSuccessMessage(null);
+      return;
+    }
+
+    // Wait for auth to complete before fetching modules
+    if (isLoading) {
       return;
     }
 
@@ -100,7 +105,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
     return () => {
       isMounted = false;
     };
-  }, [open, token, userModules, userModuleIds]);
+  }, [open, token, userModules, userModuleIds, isLoading]);
 
   const handleCancel = () => {
     onClose();
