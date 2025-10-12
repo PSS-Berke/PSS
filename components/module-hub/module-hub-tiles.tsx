@@ -10,7 +10,7 @@ interface ModuleHubTilesProps {
 
 export function ModuleHubTiles({ onSelectTile }: ModuleHubTilesProps) {
   return (
-    <div className="grid grid-cols-2 gap-6 p-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 md:p-8">
       {/* Active Modules Tile */}
       <button
         onClick={() => onSelectTile('active-modules')}

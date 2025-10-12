@@ -159,6 +159,7 @@ export default function PermanentSidebar() {
         onLogout={logout}
         onContactSupport={() => setIsContactFormOpen(true)}
         onManageModules={user ? () => setIsModuleHubOpen(true) : undefined}
+        onSwitchCompany={handleSwitchCompany}
       />
 
       {user ? (

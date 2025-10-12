@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { MoreHorizontal, UserCircle2, Moon, Sun, LogOut, Mail, Plus } from 'lucide-react';
+import { MoreHorizontal, UserCircle2, Moon, Sun, LogOut, Mail, Plus, Building2, Check, Search } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -26,6 +26,7 @@ interface BottomNavProps {
   onLogout?: () => void;
   onContactSupport?: () => void;
   onManageModules?: () => void;
+  onSwitchCompany?: (companyId: number) => void;
 }
 
 export function BottomNav({
@@ -36,14 +37,39 @@ export function BottomNav({
   onLogout,
   onContactSupport,
   onManageModules,
+  onSwitchCompany,
 }: BottomNavProps) {
   const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isCompanySelectorOpen, setIsCompanySelectorOpen] = useState(false);
+  const [companySearch, setCompanySearch] = useState('');
+  const [isSwitching, setIsSwitching] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
 
   // Take first 3 items for bottom nav, rest go to More menu
   const visibleItems = items.slice(0, 3);
   const moreItems = items.slice(3);
+
+  // Handle company switching
+  const handleCompanySwitch = async (companyId: number) => {
+    if (!onSwitchCompany || isSwitching) return;
+
+    setIsSwitching(true);
+    try {
+      await onSwitchCompany(companyId);
+      setIsCompanySelectorOpen(false);
+      setCompanySearch('');
+    } catch (error) {
+      console.error('Failed to switch company:', error);
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
+  // Filter companies based on search
+  const filteredCompanies = user?.available_companies?.filter((company) =>
+    company.company_name.toLowerCase().includes(companySearch.toLowerCase())
+  ) || [];
 
   return (
     <>
@@ -130,6 +156,35 @@ export function BottomNav({
                     </span>
                   </div>
                 </div>
+
+                {/* Company Switcher - Only show if user has multiple companies */}
+                {user.available_companies && user.available_companies.length > 1 && onSwitchCompany && (
+                  <button
+                    onClick={() => {
+                      setIsMoreOpen(false);
+                      setIsCompanySelectorOpen(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors min-h-[48px] text-left"
+                  >
+                    <Building2 className="h-5 w-5" />
+                    <span className="text-sm font-medium">Switch Company</span>
+                  </button>
+                )}
+
+                {/* Manage Modules */}
+                {onManageModules && (
+                  <button
+                    onClick={() => {
+                      onManageModules();
+                      setIsMoreOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors min-h-[48px] text-left"
+                  >
+                    <Plus className="h-5 w-5 text-[#C33527]" />
+                    <span className="text-sm font-medium text-[#C33527]">Manage Modules</span>
+                  </button>
+                )}
+
                 <Separator />
               </div>
             )}
@@ -161,26 +216,6 @@ export function BottomNav({
                     </Link>
                   );
                 })}
-                <Separator className="my-4" />
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            {onManageModules && (
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-3 pb-2">
-                  Quick Actions
-                </p>
-                <button
-                  onClick={() => {
-                    onManageModules();
-                    setIsMoreOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors min-h-[48px] text-left"
-                >
-                  <Plus className="h-5 w-5 text-[#C33527]" />
-                  <span className="text-sm font-medium text-[#C33527]">Manage Modules</span>
-                </button>
                 <Separator className="my-4" />
               </div>
             )}
@@ -239,6 +274,73 @@ export function BottomNav({
                 </>
               )}
             </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Company Selector Sheet */}
+      <Sheet open={isCompanySelectorOpen} onOpenChange={setIsCompanySelectorOpen}>
+        <SheetContent
+          side="bottom"
+          className="h-auto max-h-[85vh] rounded-t-2xl pb-safe supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)]"
+        >
+          <SheetHeader className="pb-4">
+            <SheetTitle>Switch Company</SheetTitle>
+          </SheetHeader>
+
+          <div className="space-y-4">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={companySearch}
+                onChange={(e) => setCompanySearch(e.target.value)}
+                placeholder="Search company..."
+                className="w-full h-11 pl-10 pr-4 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {/* Company List */}
+            <div className="space-y-1 max-h-[50vh] overflow-y-auto">
+              {filteredCompanies.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No company found.
+                </div>
+              ) : (
+                filteredCompanies.map((company) => {
+                  const isCurrentCompany = user?.company_id === company.company_id;
+
+                  return (
+                    <button
+                      key={company.company_id}
+                      onClick={() => handleCompanySwitch(company.company_id)}
+                      disabled={isSwitching || isCurrentCompany}
+                      className={cn(
+                        'w-full flex items-center justify-between gap-3 px-3 py-3 rounded-lg transition-colors min-h-[48px] text-left',
+                        isCurrentCompany
+                          ? 'bg-accent text-foreground'
+                          : 'hover:bg-muted',
+                        isSwitching && 'opacity-50 cursor-not-allowed'
+                      )}
+                    >
+                      <span className="text-sm font-medium truncate">
+                        {company.company_name}
+                      </span>
+                      {isCurrentCompany && (
+                        <Check className="h-5 w-5 shrink-0 text-foreground" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {isSwitching && (
+              <div className="text-center py-2">
+                <span className="text-sm text-muted-foreground">Switching company...</span>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>

@@ -63,7 +63,9 @@ const MOCK_MODULES = [
 export function AddModuleView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
 
   const filteredModules = MOCK_MODULES.filter((module) => {
     // Filter by search query
@@ -93,7 +95,7 @@ export function AddModuleView() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Search Bar */}
-        <div className="flex-shrink-0 p-6 border-b">
+        <div className="flex-shrink-0 p-3 sm:p-4 md:p-6 border-b">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -107,7 +109,7 @@ export function AddModuleView() {
         </div>
 
         {/* Module Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           {filteredModules.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -118,18 +120,18 @@ export function AddModuleView() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {filteredModules.map((module) => {
                 const Icon = module.icon;
                 return (
                   <Card
                     key={module.id}
-                    className="p-6 hover:shadow-lg transition-all cursor-pointer border-2 hover:border-[#C33527] group"
+                    className="p-4 sm:p-5 md:p-6 hover:shadow-lg transition-all cursor-pointer border-2 hover:border-[#C33527] group"
                   >
                     <div className="flex flex-col gap-4">
                       <div className="flex items-start justify-between">
-                        <div className="p-3 bg-[#C33527]/10 rounded-lg group-hover:bg-[#C33527]/20 transition-colors">
-                          <Icon className="h-8 w-8 text-[#C33527]" />
+                        <div className="p-2 sm:p-3 bg-[#C33527]/10 rounded-lg group-hover:bg-[#C33527]/20 transition-colors">
+                          <Icon className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#C33527]" />
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {module.category}
@@ -137,7 +139,7 @@ export function AddModuleView() {
                       </div>
 
                       <div>
-                        <h3 className="font-semibold text-lg mb-2 group-hover:text-[#C33527] transition-colors">
+                        <h3 className="font-semibold text-base sm:text-lg mb-2 group-hover:text-[#C33527] transition-colors">
                           {module.name}
                         </h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">

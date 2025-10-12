@@ -320,6 +320,44 @@ export function SidebarContent(props: {
         <div className="flex-grow" />
       </div>
 
+      {/* Quick Actions - Collapsed Mode Only */}
+      {props.isCollapsed && props.user && (
+        <div className="border-t border-border px-2 py-3 flex flex-col gap-2">
+          <button
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+            className="flex h-10 w-full items-center justify-center rounded-lg hover:bg-muted/70 transition-colors"
+            title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Toggle theme"
+          >
+            {resolvedTheme === 'dark' ? (
+              <Sun className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <Moon className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setIsContactFormOpen(true)}
+            className="flex h-10 w-full items-center justify-center rounded-lg hover:bg-muted/70 transition-colors"
+            title="Contact support"
+            aria-label="Contact support"
+          >
+            <Mail className="h-5 w-5 text-muted-foreground" />
+          </button>
+
+          {props.onLogout && (
+            <button
+              onClick={props.onLogout}
+              className="flex h-10 w-full items-center justify-center rounded-lg hover:bg-destructive/10 transition-colors"
+              title="Logout"
+              aria-label="Logout"
+            >
+              <LogOut className="h-5 w-5 text-destructive" />
+            </button>
+          )}
+        </div>
+      )}
+
       {props.user ? (
         <div ref={profileMenuRef} className="relative border-t border-border">
           <button
@@ -345,7 +383,7 @@ export function SidebarContent(props: {
             )}
           </button>
 
-          {isProfileMenuOpen && !isContactFormOpen && (
+          {isProfileMenuOpen && !isContactFormOpen && !props.isCollapsed && (
             <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
               <div className="py-1">
                 <button
@@ -678,6 +716,7 @@ export default function SidebarLayout(props: {
         onLogout={logout}
         onContactSupport={() => setIsContactFormOpen(true)}
         onManageModules={user ? () => setIsAddModuleOpen(true) : undefined}
+        onSwitchCompany={handleSwitchCompany}
       />
 
       {/* Module Manager */}
