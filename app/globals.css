@@ -113,6 +113,18 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* Mobile-safe content wrapper - only affects <768px */
+  .mobile-safe-container {
+    @apply px-4 mx-auto;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-safe-container {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
 }
 
 @layer components {

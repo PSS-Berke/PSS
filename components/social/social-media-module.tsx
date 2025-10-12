@@ -878,7 +878,7 @@ const renderTabButton = (
     <Card
       className={cn(
         'w-full flex flex-col',
-        isExpanded ? 'min-h-[80vh]' : 'max-h-[80vh]',
+        isExpanded ? 'md:min-h-[80vh]' : 'md:max-h-[80vh]',
         className
       )}
     >
@@ -1010,7 +1010,7 @@ const renderTabButton = (
             ) : null}
           </div>
 
-          <div className="min-h-[400px] space-y-4 overflow-y-auto pr-2">
+          <div className="h-[500px] md:h-auto md:min-h-[400px] space-y-4 overflow-y-auto pr-2">
             {state.isLoading && state.posts.length === 0 ? (
               <div className="flex h-[320px] items-center justify-center">
                 <div className="flex items-center gap-2 text-muted-foreground">

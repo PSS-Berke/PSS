@@ -11,6 +11,7 @@ import { Linkedin, Instagram, type LucideProps } from 'lucide-react';
 import type { SocialPost } from '@/lib/xano/types';
 import { cn } from '@/lib/utils';
 import { SocialPostDetailsDialog } from './social-post-details-dialog';
+import { SocialMediaMobileTiles } from './social-media-mobile-tiles';
 
 // Custom TikTok icon component (lucide-react doesn't include TikTok)
 const TikTokIcon = ({ className, ...props }: LucideProps) => (
@@ -265,7 +266,8 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
 
   return (
     <>
-      <div className="calendar-wrapper rounded-xl bg-card p-3">
+      {/* Desktop View: Full Calendar (≥768px) */}
+      <div className="hidden md:block calendar-wrapper rounded-xl bg-card p-3">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
@@ -290,6 +292,14 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
           editable={Boolean(onReschedulePost)}
           eventDrop={handleEventDrop}
           eventDurationEditable={false}
+        />
+      </div>
+
+      {/* Mobile View: Next 3 Days Tiles (<768px) */}
+      <div className="block md:hidden rounded-xl bg-card overflow-hidden">
+        <SocialMediaMobileTiles
+          posts={posts}
+          onSelectPost={onSelectPost}
         />
       </div>
 

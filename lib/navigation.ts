@@ -15,7 +15,7 @@ export const navigationItems: SidebarItem[] = [
     type: 'item',
   },
   {
-    name: 'Automations',
+    name: 'Tools',
     href: '/automations',
     icon: Zap,
     type: 'item',
