@@ -191,36 +191,38 @@ export function AddModuleSidebar({
           </div>
 
           {/* Desktop: Vertical List */}
-          <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
-            {CATEGORIES.map((category) => {
-              const Icon = category.icon;
-              const isSelected = selectedCategory === category.id;
+          <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+            <div className="space-y-1 w-full">
+              {CATEGORIES.map((category) => {
+                const Icon = category.icon;
+                const isSelected = selectedCategory === category.id;
 
-              return (
-                <Card
-                  key={category.id}
-                  className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
-                    isSelected ? 'bg-accent border-[#C33527]' : ''
-                  }`}
-                  onClick={() => onSelectCategory?.(category.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-md ${isSelected ? 'bg-[#C33527]/10' : 'bg-muted'}`}>
-                      <Icon className={`h-4 w-4 ${isSelected ? 'text-[#C33527]' : 'text-muted-foreground'}`} />
+                return (
+                  <Card
+                    key={category.id}
+                    className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
+                      isSelected ? 'bg-accent border-[#C33527]' : ''
+                    }`}
+                    onClick={() => onSelectCategory?.(category.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-md ${isSelected ? 'bg-[#C33527]/10' : 'bg-muted'}`}>
+                        <Icon className={`h-4 w-4 ${isSelected ? 'text-[#C33527]' : 'text-muted-foreground'}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${isSelected ? 'text-[#C33527]' : ''}`}>
+                          {category.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {category.count} {category.count === 1 ? 'module' : 'modules'}
+                        </p>
+                      </div>
+                      {isSelected && <div className="w-2 h-2 bg-[#C33527] rounded-full" />}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${isSelected ? 'text-[#C33527]' : ''}`}>
-                        {category.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {category.count} {category.count === 1 ? 'module' : 'modules'}
-                      </p>
-                    </div>
-                    {isSelected && <div className="w-2 h-2 bg-[#C33527] rounded-full" />}
-                  </div>
-                </Card>
-              );
-            })}
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </>
       )}

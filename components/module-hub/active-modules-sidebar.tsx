@@ -191,34 +191,36 @@ export function ActiveModulesSidebar({
           </div>
 
           {/* Desktop: Vertical List */}
-          <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
-            {MOCK_ACTIVE_MODULES.map((module) => {
-              const Icon = module.icon;
-              const isSelected = selectedModuleId === module.id;
+          <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+            <div className="space-y-1 w-full">
+              {MOCK_ACTIVE_MODULES.map((module) => {
+                const Icon = module.icon;
+                const isSelected = selectedModuleId === module.id;
 
-              return (
-                <Card
-                  key={module.id}
-                  className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
-                    isSelected ? 'bg-accent border-primary' : ''
-                  }`}
-                  onClick={() => onSelectModule?.(module.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-md">
-                      <Icon className="h-4 w-4 text-primary" />
+                return (
+                  <Card
+                    key={module.id}
+                    className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
+                      isSelected ? 'bg-accent border-primary' : ''
+                    }`}
+                    onClick={() => onSelectModule?.(module.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-md">
+                        <Icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{module.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {module.userCount} users
+                        </p>
+                      </div>
+                      {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{module.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {module.userCount} users
-                      </p>
-                    </div>
-                    {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
-                  </div>
-                </Card>
-              );
-            })}
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </>
       )}

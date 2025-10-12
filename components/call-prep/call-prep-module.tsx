@@ -53,12 +53,15 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
       return <Badge variant="secondary">Loading...</Badge>;
     }
     if (state.isSubmitting) {
-      return <Badge variant="default" className="animate-pulse">Generating Call Prep...</Badge>;
+      return <Badge variant="default" className="animate-pulse">Generating...</Badge>;
+    }
+    if (state.currentAnalysis) {
+      return <Badge variant="default">Active Card</Badge>;
     }
     if (state.latestAnalysis) {
-      return <Badge variant="default">Analysis Ready</Badge>;
+      return <Badge variant="outline">Ready</Badge>;
     }
-    return <Badge variant="secondary">No Analysis</Badge>;
+    return <Badge variant="outline">Ready</Badge>;
   };
 
   return (
@@ -81,11 +84,12 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
             </div>
           </div>
 
-          {/* Right Section: Badges (hidden on mobile) + Expand Button */}
+          {/* Right Section: Badges + Expand Button */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Status info - hidden on mobile */}
-            <div className="hidden md:flex items-center gap-2 pr-6">
-              <div className="flex items-center gap-1.5">
+            {/* Status info - compact on mobile, full on desktop */}
+            <div className="flex items-center gap-1.5 md:gap-2 md:pr-6">
+              {/* FileCheck icon - hidden on mobile to save space */}
+              <div className="hidden md:flex items-center gap-1.5">
                 <FileCheck className="h-4 w-4 text-muted-foreground" />
               </div>
               {getStatusBadge()}

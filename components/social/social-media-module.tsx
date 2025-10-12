@@ -654,6 +654,19 @@ const renderTabButton = (
     const scheduledDate = new Date(post.scheduled_date);
     const isMutating = state.mutatingPostIds.includes(post.id);
 
+    // Determine status badge styling
+    const getStatusBadgeStyle = (status: string) => {
+      switch (status) {
+        case 'published':
+          return 'bg-green-100 text-green-800 border-green-200';
+        case 'approved':
+          return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'draft':
+        default:
+          return 'bg-gray-100 text-gray-800 border-gray-200';
+      }
+    };
+
     return (
       <div
         key={post.id}
@@ -667,7 +680,7 @@ const renderTabButton = (
           <div
             className="flex flex-1 flex-col gap-1"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={cn(
                   'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold capitalize',
@@ -677,6 +690,15 @@ const renderTabButton = (
                 {getPlatformIcon(post.content_type)}
                 {post.content_type}
               </span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  'capitalize text-xs font-medium',
+                  getStatusBadgeStyle(post.status || 'draft')
+                )}
+              >
+                {post.status || 'draft'}
+              </Badge>
               <span className="text-xs text-muted-foreground">
                 {format(scheduledDate, 'MMM d, yyyy • h:mm a')}
               </span>
@@ -696,7 +718,7 @@ const renderTabButton = (
               variant={post.published ? 'default' : 'outline'}
               size="sm"
               className={cn(
-                'h-8 rounded-full border-0 px-3 text-xs font-semibold',
+                'h-8 rounded-full border-0 px-3 text-xs font-semibold whitespace-nowrap',
                 post.published ? 'bg-[#C33527] hover:bg-[#DA857C]' : ''
               )}
               onClick={async (e) => {
@@ -763,20 +785,9 @@ const renderTabButton = (
             <Timer className="h-4 w-4 text-[#C33527]" />
             <h3 className="text-sm font-semibold text-foreground">Content calendar</h3>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
-              {state.posts.length}
-            </Badge>
-            <Button
-              variant="default"
-              size="sm"
-              className="gap-1 bg-[#C33527] hover:bg-[#DA857C]"
-              onClick={handleStartCreate}
-            >
-              <Plus className="h-4 w-4" />
-              Add Post
-            </Button>
-          </div>
+          <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
+            {state.posts.length}
+          </Badge>
         </div>
 
         <SocialMediaCalendar
@@ -826,20 +837,9 @@ const renderTabButton = (
               <Calendar className="h-4 w-4 text-[#C33527]" />
               <h3 className="text-sm font-semibold text-foreground">All posts</h3>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
-                {state.posts.length}
-              </Badge>
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-1 bg-[#C33527] hover:bg-[#DA857C]"
-                onClick={handleStartCreate}
-              >
-                <Plus className="h-4 w-4" />
-                Add Post
-              </Button>
-            </div>
+            <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
+              {state.posts.length}
+            </Badge>
           </div>
 
           <div className="flex max-h-[420px] flex-col gap-3 overflow-y-auto pr-2">
@@ -883,25 +883,40 @@ const renderTabButton = (
       )}
     >
       <CardHeader
-        className="cursor-pointer hover:bg-muted/50 transition-colors flex-row items-center space-y-0 gap-3 p-4 md:p-6"
+        className="cursor-pointer hover:bg-muted/50 transition-colors flex-row items-center space-y-0 gap-2 md:gap-3 p-3 md:p-6"
         onClick={toggleExpanded}
       >
         {/* Left Section: Icon + Title */}
         <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-          <div className="p-2 bg-[#C33527]/10 rounded-lg flex-shrink-0">
-            <Calendar className="h-5 w-5 text-[#C33527]" />
+          <div className="p-1.5 md:p-2 bg-[#C33527]/10 rounded-lg flex-shrink-0">
+            <Calendar className="h-4 w-4 md:h-5 md:w-5 text-[#C33527]" />
           </div>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-base md:text-lg truncate">Social Media Copilot</CardTitle>
-            <p className="text-sm text-muted-foreground hidden md:block">
+            <CardTitle className="text-sm md:text-base lg:text-lg truncate">Social Media Copilot</CardTitle>
+            <p className="text-xs md:text-sm text-muted-foreground hidden md:block">
               Plan and manage social content across platforms
             </p>
           </div>
         </div>
 
-        {/* Right Section: Badges & Actions (hidden on mobile) + Expand Button */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Status info and actions - hidden on mobile */}
+        {/* Right Section: Actions + Expand Button */}
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          {/* Mobile: Show only Add Post + Expand */}
+          <div className="flex md:hidden items-center gap-1">
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-1 bg-[#C33527] hover:bg-[#DA857C] h-8 px-2"
+              onClick={(event) => {
+                event.stopPropagation();
+                handleStartCreate();
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* Desktop: Full action bar */}
           <div className="hidden md:flex items-center gap-2 pr-6">
             <div className="flex items-center gap-1.5">
               <CalendarCheck className="h-4 w-4 text-muted-foreground" />
@@ -971,13 +986,13 @@ const renderTabButton = (
           <Button
             variant="ghost"
             size="sm"
-            className="flex-shrink-0 h-9 w-9 p-0"
+            className="flex-shrink-0 h-8 w-8 md:h-9 md:w-9 p-0"
             onClick={(e) => {
               e.stopPropagation();
               toggleExpanded();
             }}
           >
-            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isExpanded ? <ChevronUp className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4" />}
           </Button>
         </div>
       </CardHeader>
@@ -1012,17 +1027,17 @@ const renderTabButton = (
       ) : null}
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
-        <DialogContent className="max-w-2xl space-y-6 rounded-2xl border border-border/60 bg-background px-6 py-5 max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-full sm:max-w-2xl space-y-4 sm:space-y-6 rounded-xl sm:rounded-2xl border border-border/60 bg-background px-4 sm:px-6 py-4 sm:py-5 max-h-[90vh] sm:max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
               <div className={cn(
-                'flex h-12 w-12 items-center justify-center rounded-full flex-shrink-0',
+                'flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full flex-shrink-0',
                 CONTENT_COLORS[activeFormData.content_type ?? 'linkedin']
               )}>
                 {getPlatformIcon(activeFormData.content_type ?? 'linkedin', 'md')}
               </div>
-              <div className="flex flex-col">
-                <DialogTitle className="text-xl">
+              <div className="flex flex-col min-w-0">
+                <DialogTitle className="text-lg sm:text-xl truncate">
                   {activeFormData.content_type === 'youtube-video' ? 'YouTube Video' :
                    activeFormData.content_type === 'youtube-short' ? 'YouTube Short' :
                    activeFormData.content_type === 'x' ? 'X (Twitter)' :
@@ -1030,7 +1045,7 @@ const renderTabButton = (
                    (activeFormData.content_type || 'LinkedIn').charAt(0).toUpperCase() +
                    (activeFormData.content_type || 'LinkedIn').slice(1)}
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {isEditing ? 'Edit Post' : isCreating ? 'Create New Post' : 'Post Details'}
                 </p>
               </div>
@@ -1166,47 +1181,47 @@ const renderTabButton = (
             </div>
           ) : null}
 
-          <DialogFooter className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-between sm:space-x-3">
-            <div className="flex flex-1 flex-wrap justify-between gap-2">
-              <div className="flex gap-2">
-                {isEditing ? (
-                  <>
-                    <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSave} disabled={isSaving}>
-                      {isSaving ? 'Saving…' : 'Save'}
-                    </Button>
-                  </>
-                ) : isCreating ? (
-                  <>
-                    <Button variant="outline" onClick={handleCloseModal} disabled={isSaving}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreate} disabled={isSaving}>
-                      {isSaving ? 'Creating…' : 'Create'}
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="outline" onClick={handleCloseModal}>
-                    Close
+          <DialogFooter className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:justify-between">
+            <div className="flex flex-col sm:flex-row gap-2 sm:flex-1">
+              {isEditing ? (
+                <>
+                  <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving} className="w-full sm:w-auto">
+                    Cancel
                   </Button>
-                )}
-              </div>
+                  <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
+                    {isSaving ? 'Saving…' : 'Save'}
+                  </Button>
+                </>
+              ) : isCreating ? (
+                <>
+                  <Button variant="outline" onClick={handleCloseModal} disabled={isSaving} className="w-full sm:w-auto">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreate} disabled={isSaving} className="w-full sm:w-auto">
+                    {isSaving ? 'Creating…' : 'Create'}
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={handleCloseModal} className="w-full sm:w-auto">
+                  Close
+                </Button>
+              )}
+            </div>
 
-              <div className="flex gap-2">
+            {(!isFormEditable && selectedPost) || selectedPost ? (
+              <div className="flex gap-2 w-full sm:w-auto">
                 {!isFormEditable && selectedPost ? (
-                  <Button variant="secondary" onClick={handleEdit}>
+                  <Button variant="secondary" onClick={handleEdit} className="flex-1 sm:flex-none">
                     Edit
                   </Button>
                 ) : null}
                 {selectedPost ? (
-                  <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || isCreating}>
+                  <Button variant="destructive" onClick={handleDelete} disabled={isDeleting || isCreating} className="flex-1 sm:flex-none">
                     {isDeleting ? 'Deleting…' : 'Delete'}
                   </Button>
                 ) : null}
               </div>
-            </div>
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1263,117 +1278,117 @@ const renderTabButton = (
 
       {/* Platform Selection Modal */}
       <Dialog open={isPlatformSelectionModalOpen} onOpenChange={setIsPlatformSelectionModalOpen}>
-        <DialogContent className="max-w-3xl space-y-6 rounded-2xl border border-border/60 bg-background px-6 py-5">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-full sm:max-w-3xl space-y-4 sm:space-y-6 rounded-xl sm:rounded-2xl border border-border/60 bg-background px-4 sm:px-6 py-4 sm:py-5 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Choose Platform</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Choose Platform</DialogTitle>
+            <DialogDescription className="text-sm">
               Select which social media platform you want to post to
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
             {/* LinkedIn */}
             <button
               onClick={() => handlePlatformSelection('linkedin')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#0077B5] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#0077B5]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#0077B5] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#0077B5]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0077B5] text-white transition-transform group-hover:scale-110">
-                <Linkedin className="h-8 w-8" />
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#0077B5] text-white transition-transform group-hover:scale-110">
+                <Linkedin className="h-5 w-5 sm:h-8 sm:w-8" />
               </div>
-              <span className="font-semibold text-sm">LinkedIn</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">LinkedIn</span>
             </button>
 
             {/* Instagram */}
             <button
               onClick={() => handlePlatformSelection('instagram')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#E4405F] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#E4405F]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#E4405F] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#E4405F]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#FEDA75] via-[#FA7E1E] to-[#D62976] text-white transition-transform group-hover:scale-110">
-                <Instagram className="h-8 w-8" />
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#FEDA75] via-[#FA7E1E] to-[#D62976] text-white transition-transform group-hover:scale-110">
+                <Instagram className="h-5 w-5 sm:h-8 sm:w-8" />
               </div>
-              <span className="font-semibold text-sm">Instagram</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">Instagram</span>
             </button>
 
             {/* X (Twitter) */}
             <button
               onClick={() => handlePlatformSelection('x')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-black hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-black hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:scale-110">
-                <Twitter className="h-8 w-8" />
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:scale-110">
+                <Twitter className="h-5 w-5 sm:h-8 sm:w-8" />
               </div>
-              <span className="font-semibold text-sm">X (Twitter)</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">X (Twitter)</span>
             </button>
 
             {/* TikTok */}
             <button
               onClick={() => handlePlatformSelection('tiktok')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-black hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-black hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:scale-110">
-                <svg className="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:scale-110">
+                <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
                 </svg>
               </div>
-              <span className="font-semibold text-sm">TikTok</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">TikTok</span>
             </button>
 
             {/* YouTube Video */}
             <button
               onClick={() => handlePlatformSelection('youtube-video')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#FF0000] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF0000]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#FF0000] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF0000]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FF0000] text-white transition-transform group-hover:scale-110">
-                <Youtube className="h-8 w-8" />
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#FF0000] text-white transition-transform group-hover:scale-110">
+                <Youtube className="h-5 w-5 sm:h-8 sm:w-8" />
               </div>
-              <span className="font-semibold text-sm">YouTube Video</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">YouTube Video</span>
             </button>
 
             {/* YouTube Short */}
             <button
               onClick={() => handlePlatformSelection('youtube-short')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#FF0000] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF0000]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#FF0000] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF0000]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FF0000] text-white transition-transform group-hover:scale-110">
-                <svg className="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#FF0000] text-white transition-transform group-hover:scale-110">
+                <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M10 5.5L10 18.5L17 12L10 5.5Z"/>
                   <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" fill="none" strokeWidth="1.5"/>
                 </svg>
               </div>
-              <span className="font-semibold text-sm">YouTube Short</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">YouTube Short</span>
             </button>
 
             {/* Pinterest */}
             <button
               onClick={() => handlePlatformSelection('pinterest')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#E60023] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#E60023]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#E60023] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#E60023]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E60023] text-white transition-transform group-hover:scale-110">
-                <Pin className="h-8 w-8" />
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#E60023] text-white transition-transform group-hover:scale-110">
+                <Pin className="h-5 w-5 sm:h-8 sm:w-8" />
               </div>
-              <span className="font-semibold text-sm">Pinterest</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">Pinterest</span>
             </button>
 
             {/* Snapchat */}
             <button
               onClick={() => handlePlatformSelection('snapchat')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#FFFC00] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FFFC00]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#FFFC00] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FFFC00]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFFC00] text-black transition-transform group-hover:scale-110">
-                <svg className="h-8 w-8" viewBox="0 0 128 128" fill="currentColor">
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#FFFC00] text-black transition-transform group-hover:scale-110">
+                <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 128 128" fill="currentColor">
                   <path d="M95.918 22.002c-11.963-.087-24.145 4.54-32.031 13.717-6.995 7.405-9.636 17.901-9.284 27.868-.03 5.119.032 10.237.05 15.355-4.901-1.217-9.873-4.624-15.063-2.937-4.422 1.313-6.267 7.088-3.596 10.791 2.876 3.761 7.346 5.907 11.08 8.71 1.837 1.5 4.313 2.571 5.68 4.499-.001 4.62-2.425 8.897-4.722 12.786-5.597 8.802-14.342 15.531-23.705 20.18-2.39 1.035-4.59 4.144-2.473 6.499 3.862 3.622 9.327 4.778 14.195 6.486 2.047.64 5.078 1.34 4.886 4.084.335 2.923 2.205 6.066 5.492 6.078 7.873.91 16.289.522 23.345 4.741 6.917 4.006 14.037 8.473 22.255 8.96 8.188.767 16.623-.888 23.642-5.255 5.23-2.884 10.328-6.477 16.456-7.061 5.155-1.206 10.702-.151 15.685-2.072 3.193-1.367 2.762-5.244 4.104-7.808 2.532-1.747 5.77-1.948 8.59-3.102 3.687-1.47 8.335-2.599 10.268-6.413 1.148-3.038-2.312-4.698-4.453-5.88-11.38-5.874-21.631-14.921-26.121-27.191-.496-1.936-2.279-4.834.084-6.255 4.953-4.176 11.413-6.575 15.514-11.715 3.103-3.884.941-10.55-4.141-11.322-4.928-.78-9.525 1.893-14.152 3.127-.404-8.53.502-17.232-.776-25.746-2.429-13.808-13.514-25.157-26.813-29.124-4.521-1.401-9.266-2.037-13.996-2Z"/>
                 </svg>
               </div>
-              <span className="font-semibold text-sm">Snapchat</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">Snapchat</span>
             </button>
 
             {/* All Platforms */}
             <button
               onClick={() => handlePlatformSelection('all')}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-border bg-card p-6 transition-all hover:border-[#C33527] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#C33527]"
+              className="group relative flex flex-col items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border-2 border-border bg-card p-3 sm:p-6 transition-all hover:border-[#C33527] hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#C33527]"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#C33527] via-[#E4405F] to-[#0077B5] text-white transition-transform group-hover:scale-110">
-                <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#C33527] via-[#E4405F] to-[#0077B5] text-white transition-transform group-hover:scale-110">
+                <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/>
                   <circle cx="12" cy="12" r="6"/>
                   <circle cx="12" cy="12" r="2"/>
@@ -1383,7 +1398,7 @@ const renderTabButton = (
                   <line x1="20" y1="12" x2="22" y2="12"/>
                 </svg>
               </div>
-              <span className="font-semibold text-sm">All Platforms</span>
+              <span className="font-semibold text-xs sm:text-sm text-center leading-tight">All Platforms</span>
             </button>
           </div>
 

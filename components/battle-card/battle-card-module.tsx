@@ -60,16 +60,18 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
           </div>
         </div>
 
-        {/* Right Section: Badges (hidden on mobile) + Expand Button */}
+        {/* Right Section: Badges + Expand Button */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Status info - hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2 pr-6">
-            <div className="flex items-center gap-1.5">
+          {/* Status info - compact on mobile, full on desktop */}
+          <div className="flex items-center gap-1.5 md:gap-2 md:pr-6">
+            {/* Activity icon - hidden on mobile to save space */}
+            <div className="hidden md:flex items-center gap-1.5">
               <Activity className="h-4 w-4 text-muted-foreground" />
             </div>
             {getStatusBadge()}
+            {/* Card count - hidden on mobile to save space */}
             {state.battleCardsList.length > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <div className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
                 <FileText className="h-4 w-4" />
                 {state.battleCardsList.length} battle {state.battleCardsList.length === 1 ? 'card' : 'cards'}
               </div>
