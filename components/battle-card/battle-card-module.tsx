@@ -30,7 +30,7 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
       return <Badge variant="secondary">Loading...</Badge>;
     }
     if (state.isGenerating) {
-      return <Badge variant="default">Generating...</Badge>;
+      return <Badge variant="default" className="animate-pulse">Generating Battle Card...</Badge>;
     }
     if (state.activeBattleCard) {
       return <Badge variant="default">Active Card</Badge>;
@@ -92,7 +92,30 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="p-0">
+        <CardContent className="p-0 relative">
+          {/* Generation Loading Overlay */}
+          {state.isGenerating && (
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="text-center space-y-4 p-8">
+                <div className="relative">
+                  <div className="w-20 h-20 border-8 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
+                  <Target className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-gray-900">Generating Battle Card...</h3>
+                  <p className="text-sm text-gray-600 max-w-md">
+                    Analyzing competitive intelligence and strategic insights
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Mobile Layout: Stack vertically */}
           <div className="flex flex-col md:hidden h-[500px]">
             <BattleCardSidebar

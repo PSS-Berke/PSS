@@ -61,14 +61,17 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
       return;
     }
 
+    // Close the modal immediately
+    setShowNewCardModal(false);
+    setCompetitorName('');
+    setServiceName('');
+
+    // Call the generate API in the background
     try {
       await generateBattleCard({
         competitor_name: competitorName,
         service_name: serviceName,
       });
-      setShowNewCardModal(false);
-      setCompetitorName('');
-      setServiceName('');
     } catch (error) {
       console.error('Failed to create battle card:', error);
     }
