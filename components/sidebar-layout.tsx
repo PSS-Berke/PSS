@@ -210,6 +210,7 @@ export function SidebarContent(props: {
                 type="button"
                 role="combobox"
                 aria-expanded={isCompanySelectOpen}
+                aria-controls="company-select-popover"
                 className="inline-flex w-full items-center justify-between h-9 px-2 py-1.5 text-sm font-normal rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <span className="truncate">

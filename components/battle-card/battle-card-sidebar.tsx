@@ -430,7 +430,7 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
           </DialogHeader>
 
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete "{battleCardPendingDeletion?.competitor_name}"? All analysis data will be lost.
+            Are you sure you want to delete &quot;{battleCardPendingDeletion?.competitor_name}&quot;? All analysis data will be lost.
           </p>
 
           <DialogFooter className="sm:justify-end">
