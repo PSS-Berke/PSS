@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Plus, Trash2, Target, MoreHorizontal, ChevronDown, ChevronUp, MoreVertical } from 'lucide-react';
+import { Plus, Target, MoreHorizontal, ChevronDown, ChevronUp, MoreVertical, Loader2 } from 'lucide-react';
 import { useBattleCard } from '@/lib/xano/battle-card-context';
 import { cn } from '@/lib/utils';
+import type { BattleCardListItem } from '@/lib/xano/types';
 import {
   Dialog,
   DialogContent,
@@ -29,10 +30,31 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
   const [competitorName, setCompetitorName] = useState('');
   const [serviceName, setServiceName] = useState('');
   const [menuOpenForCard, setMenuOpenForCard] = useState<number | null>(null);
+  const [battleCardPendingDeletion, setBattleCardPendingDeletion] = useState<BattleCardListItem | null>(null);
+  const [isDeletingBattleCard, setIsDeletingBattleCard] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const formatDate = (timestamp: number | string) => {
+    const date = new Date(typeof timestamp === 'number' ? timestamp : timestamp);
+    return date.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getCardTitle = (card: BattleCardListItem) => {
+    if (card.competitor_name) {
+      return card.competitor_name.length > 30
+        ? card.competitor_name.substring(0, 30) + '...'
+        : card.competitor_name;
+    }
+    return `Battle Card #${card.id}`;
+  };
 
   const handleCreateCard = async () => {
     if (!competitorName || !serviceName) {
@@ -52,17 +74,23 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
     }
   };
 
-  const handleDeleteCard = async (cardId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (!confirm('Are you sure you want to delete this battle card?')) {
-      return;
+  const closeDeleteDialog = () => {
+    if (!isDeletingBattleCard) {
+      setBattleCardPendingDeletion(null);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!battleCardPendingDeletion) return;
 
     try {
-      await deleteBattleCard(cardId);
+      setIsDeletingBattleCard(true);
+      await deleteBattleCard(battleCardPendingDeletion.id);
+      setBattleCardPendingDeletion(null);
     } catch (error) {
-      console.error('Failed to delete battle card:', error);
+      console.error('Failed to delete battle card', error);
+    } finally {
+      setIsDeletingBattleCard(false);
     }
   };
 
@@ -127,9 +155,17 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
             {/* Header */}
             <div className="px-4 py-3 border-b flex-shrink-0">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Battle Cards ({state.battleCardsList.length})
-                </h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Battle Cards ({state.battleCardsList.length})
+                  </h3>
+                  {state.isLoading && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="hidden md:inline">Loading...</span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -173,7 +209,6 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
                   onMouseLeave={handleMouseLeave}
                 >
                   {state.battleCardsList.filter(card => card && card.id).map((card) => {
-                    const preview = card.competitor_overview?.substring(0, 50) || '';
                     const isSelected = state.activeBattleCard?.id === card.id;
 
                     return (
@@ -189,15 +224,15 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
                       >
                         <div className="flex flex-col gap-2">
                           <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-2 min-w-0 flex-1">
-                              <Target className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                               <div className="min-w-0 flex-1">
-                                <h4 className="text-sm font-medium line-clamp-2">
-                                  {card.competitor_name}
-                                </h4>
-                                {preview && (
-                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                    {preview}
+                                <p className="text-sm font-medium line-clamp-2">
+                                  {getCardTitle(card)}
+                                </p>
+                                {card.created_at && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {formatDate(card.created_at)}
                                   </p>
                                 )}
                               </div>
@@ -222,7 +257,11 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
                                     <button
                                       type="button"
                                       className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                                      onClick={(e) => handleDeleteCard(card.id, e)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMenuOpenForCard(null);
+                                        setBattleCardPendingDeletion(card);
+                                      }}
                                     >
                                       Delete
                                     </button>
@@ -240,55 +279,82 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
             </div>
 
             {/* Desktop: Vertical List */}
-            <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-              {state.battleCardsList.filter(card => card && card.id).map((card) => {
-                const preview = card.competitor_overview?.substring(0, 50) || '';
-                const isSelected = state.activeBattleCard?.id === card.id;
-
-                return (
-                  <div
-                    key={card.id}
-                    onClick={() => loadBattleCardDetail(card.id)}
-                    className={cn(
-                      'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors cursor-pointer',
-                      isSelected
-                        ? 'bg-accent border-primary font-medium'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h4 className={cn(
-                          "text-sm truncate",
-                          isSelected ? "font-medium text-foreground" : "font-medium text-foreground"
-                        )}>
-                          {card.competitor_name}
-                        </h4>
-                        {preview && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {preview}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleDeleteCard(card.id, e)}
-                        className="h-7 w-7 p-0 ml-2 hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {state.battleCardsList.length === 0 && (
-                <div className="text-center py-8">
-                  <Target className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No battle cards yet</p>
-                  <p className="text-xs text-muted-foreground/70">Click + to create one</p>
+            <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+              {!state.battleCardsList.length && !state.isLoading ? (
+                <div className="text-center text-muted-foreground">
+                  <Target className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No battle cards yet</p>
+                  <p className="text-xs">Click + to create one</p>
                 </div>
+              ) : (
+                state.battleCardsList.length > 0 && (
+                  <div className="space-y-1 w-full">
+                    {state.battleCardsList.filter(card => card && card.id).map((card) => {
+                      const isSelected = state.activeBattleCard?.id === card.id;
+
+                      return (
+                        <Card
+                          key={card.id}
+                          className={cn(
+                            'p-3 cursor-pointer transition-colors hover:bg-accent',
+                            isSelected
+                              ? 'bg-accent border-primary'
+                              : ''
+                          )}
+                          onClick={() => loadBattleCardDetail(card.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium truncate">
+                                  {getCardTitle(card)}
+                                </p>
+                                {card.created_at && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(card.created_at)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              {isSelected && (
+                                <div className="w-2 h-2 bg-primary rounded-full" />
+                              )}
+                              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={(e) => handleMenuToggle(card.id, e)}
+                                  aria-label="Open card actions"
+                                >
+                                  <MoreVertical className="h-3 w-3" />
+                                </Button>
+                                {menuOpenForCard === card.id && (
+                                  <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
+                                    <button
+                                      type="button"
+                                      className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setMenuOpenForCard(null);
+                                        setBattleCardPendingDeletion(card);
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )
               )}
             </div>
           </>
@@ -341,6 +407,52 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
               disabled={state.isGenerating || !competitorName || !serviceName}
             >
               {state.isGenerating ? 'Generating...' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!battleCardPendingDeletion}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDeleteDialog();
+          }
+        }}
+      >
+        <DialogContent className="max-w-md space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5">
+          <DialogHeader className="space-y-2">
+            <DialogTitle>Delete battle card?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The battle card will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete &quot;{battleCardPendingDeletion?.competitor_name}&quot;? All analysis data will be lost.
+          </p>
+
+          <DialogFooter className="sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeDeleteDialog}
+              disabled={isDeletingBattleCard}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeletingBattleCard}
+            >
+              {isDeletingBattleCard ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Delete'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

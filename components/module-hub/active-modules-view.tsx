@@ -15,7 +15,9 @@ const MODULE_NAMES: Record<number, string> = {
 
 export function ActiveModulesView() {
   const [selectedModuleId, setSelectedModuleId] = useState<number>(4); // Default to first module
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
 
   const selectedModuleName = MODULE_NAMES[selectedModuleId] || 'Module';
 

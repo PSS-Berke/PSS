@@ -217,6 +217,7 @@ export interface BattleCardListItem {
   id: number;
   competitor_name: string;
   competitor_overview: string;
+  created_at?: number | string;
 }
 
 // Website Analytics Copilot Types

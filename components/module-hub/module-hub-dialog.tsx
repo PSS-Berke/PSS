@@ -74,8 +74,8 @@ export function ModuleHubDialog({ open, onClose }: ModuleHubDialogProps) {
       <div
         className={`fixed z-[10000] overflow-hidden transition-all duration-300 ${
           isExpanded
-            ? 'inset-4 md:inset-8'
-            : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px]'
+            ? 'inset-2 sm:inset-4 md:inset-8'
+            : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-[600px] h-auto max-h-[90vh] sm:w-[600px] sm:h-[400px]'
         }`}
         onClick={(e) => e.stopPropagation()}
       >

@@ -40,7 +40,7 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
     if (enrichmentDialogOpen) {
       setEnrichmentDialogOpen(false);
     }
-  }, [state.latestAnalysis?.id]);
+  }, [state.latestAnalysis?.id, enrichmentDialogOpen]);
 
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
