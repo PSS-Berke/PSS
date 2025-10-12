@@ -451,6 +451,15 @@ export const linkedInApi = {
 
 type SocialPostRequestData = SocialPostPayload | SocialPostUpdatePayload;
 
+// Decode newlines from backend response
+const decodePostContent = (post: SocialPost): SocialPost => {
+  return {
+    ...post,
+    content: post.content?.replace(/<<NEWLINE>>/g, '\n') ?? post.content,
+    rich_content_text: post.rich_content_text?.replace(/<<NEWLINE>>/g, '\n') ?? post.rich_content_text,
+  };
+};
+
 const buildSocialPostRequestBody = (
   data: SocialPostRequestData,
   postId?: number
@@ -474,11 +483,15 @@ const buildSocialPostRequestBody = (
     fallbackDescription ??
     '';
 
+  // Encode newlines to preserve them through the API
+  // Replace \n with <<NEWLINE>> marker that backend can decode
+  const encodedContent = fallbackContent.replace(/\n/g, '<<NEWLINE>>');
+
   const requestPayload = {
     post_id: postId ?? (data as { post_id?: number }).post_id ?? 0,
     post_title: data.post_title ?? '',
     post_descrription: fallbackDescription,
-    post_content: fallbackContent,
+    post_content: encodedContent,
     url_1: data.url_1 ?? '',
     url_2: data.url_2 ?? '',
     content_type: data.content_type ?? '',
@@ -486,6 +499,11 @@ const buildSocialPostRequestBody = (
     published: data.published ?? false,
     status: data.status ?? 'draft',
   };
+
+  console.log('buildSocialPostRequestBody - Final payload:');
+  console.log('post_content (original):', JSON.stringify(fallbackContent));
+  console.log('post_content (encoded):', JSON.stringify(requestPayload.post_content));
+  console.log('post_descrription:', JSON.stringify(requestPayload.post_descrription));
 
   return requestPayload;
 };
@@ -508,7 +526,8 @@ export const socialCopilotApi = {
       );
     }
 
-    return response.json();
+    const posts: SocialPost[] = await response.json();
+    return posts.map(decodePostContent);
   },
 
   async createPost(token: string, data: SocialPostPayload): Promise<SocialPost> {
@@ -529,7 +548,8 @@ export const socialCopilotApi = {
       );
     }
 
-    return response.json();
+    const post: SocialPost = await response.json();
+    return decodePostContent(post);
   },
 
   async updatePost(token: string, postId: number, data: SocialPostUpdatePayload): Promise<SocialPost> {
@@ -553,9 +573,9 @@ export const socialCopilotApi = {
       );
     }
 
-    const result = await response.json();
+    const result: SocialPost = await response.json();
     console.log('Social API: updatePost response:', result);
-    return result;
+    return decodePostContent(result);
   },
 
   async getPost(token: string, postId: number): Promise<SocialPost> {
@@ -581,9 +601,9 @@ export const socialCopilotApi = {
       );
     }
 
-    const result = await response.json();
+    const result: SocialPost = await response.json();
     console.log('Social API: getPost response:', result);
-    return result;
+    return decodePostContent(result);
   },
 
   async deletePost(token: string, postId: number): Promise<void> {
@@ -601,6 +621,29 @@ export const socialCopilotApi = {
         errorData
       );
     }
+  },
+
+  async postToTwitter(token: string, content: string): Promise<any> {
+    const url = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/tweet';
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
   },
 };
 

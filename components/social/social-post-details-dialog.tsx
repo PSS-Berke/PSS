@@ -29,6 +29,11 @@ const CONTENT_COLORS: Record<SocialPost['content_type'], string> = {
   instagram: 'bg-[#E4405F] text-white',
   tiktok: 'bg-black text-white',
   all: 'bg-[#C33527] text-white',
+  x: 'bg-black text-white',
+  pinterest: 'bg-[#E60023] text-white',
+  snapchat: 'bg-[#FFFC00] text-black',
+  'youtube-video': 'bg-[#FF0000] text-white',
+  'youtube-short': 'bg-[#FF0000] text-white',
 };
 
 interface SocialPostDetailsDialogProps {
