@@ -290,14 +290,11 @@ export function SocialMediaMobileTiles({ posts, onSelectPost }: SocialMediaMobil
                         {/* Platform Badge */}
                         <div className="flex items-center justify-between gap-1">
                           <div className={cn(
-                            'inline-flex items-center gap-1.5 rounded-full px-2 py-1',
+                            'inline-flex items-center justify-center rounded-full p-1.5',
                             config.bgColor,
                             config.color
                           )}>
                             <Icon className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-xs font-semibold truncate">
-                              {config.label}
-                            </span>
                           </div>
 
                           {/* Status Dot */}
@@ -313,7 +310,7 @@ export function SocialMediaMobileTiles({ posts, onSelectPost }: SocialMediaMobil
 
                         {/* Post Title */}
                         <div className="flex-1">
-                          <h4 className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
+                          <h4 className="text-sm font-medium text-foreground line-clamp-2 break-words overflow-hidden leading-snug">
                             {post.post_title}
                           </h4>
                         </div>
@@ -336,19 +333,19 @@ export function SocialMediaMobileTiles({ posts, onSelectPost }: SocialMediaMobil
                         platform: group.platform,
                         date: format(column.date, 'yyyy-MM-dd')
                       })}
-                      className="w-full p-4 min-h-[90px] rounded-lg border border-border bg-card shadow-sm hover:shadow-md hover:bg-accent/50 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-2"
+                      className="w-full p-4 min-h-[90px] rounded-lg border border-border bg-card shadow-sm hover:shadow-md hover:bg-accent/50 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                     >
                       {/* Platform Icon Circle */}
                       <div className={cn(
-                        'flex items-center justify-center w-14 h-14 rounded-full flex-shrink-0',
+                        'flex items-center justify-center w-12 h-12 rounded-full flex-shrink-0',
                         config.bgColor,
                         config.color
                       )}>
-                        <Icon className="h-7 w-7" />
+                        <Icon className="h-6 w-6" />
                       </div>
 
                       {/* Post Count */}
-                      <div className="text-lg font-bold text-foreground">
+                      <div className="text-2xl font-bold text-foreground">
                         {group.count}
                       </div>
 
