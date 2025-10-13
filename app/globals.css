@@ -163,6 +163,93 @@
   .calendar-wrapper .fc .fc-timegrid-slot-label {
     color: hsl(var(--foreground));
   }
+
+  /* Reorder week days: Sat, Mon, Tue, Wed, Thu, Fri, Sun */
+  /* Header row reordering */
+  .calendar-wrapper .fc-col-header-cell {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .calendar-wrapper .fc-col-header-cell:nth-child(1) {
+    order: 1; /* Saturday stays first */
+  }
+
+  .calendar-wrapper .fc-col-header-cell:nth-child(2) {
+    order: 7; /* Sunday moves to last */
+  }
+
+  .calendar-wrapper .fc-col-header tr {
+    display: flex;
+    width: 100%;
+  }
+
+  /* Day grid body reordering - for month view */
+  .calendar-wrapper .fc-daygrid-body .fc-scrollgrid-sync-table {
+    display: table;
+    width: 100%;
+  }
+
+  .calendar-wrapper .fc-daygrid-body tbody {
+    display: table-row-group;
+  }
+
+  .calendar-wrapper .fc-daygrid-body tr {
+    display: flex;
+    width: 100%;
+  }
+
+  .calendar-wrapper .fc-daygrid-day {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+  }
+
+  .calendar-wrapper .fc-daygrid-day:nth-child(1) {
+    order: 1; /* Saturday stays first */
+  }
+
+  .calendar-wrapper .fc-daygrid-day:nth-child(2) {
+    order: 7; /* Sunday moves to last */
+  }
+
+  /* Week view (timeGrid) reordering */
+  .calendar-wrapper .fc-timegrid-body .fc-scrollgrid-sync-table {
+    display: flex;
+    width: 100%;
+  }
+
+  .calendar-wrapper .fc-timegrid-cols table {
+    display: flex;
+    width: 100%;
+  }
+
+  .calendar-wrapper .fc-timegrid-col {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .calendar-wrapper .fc-timegrid-col:nth-child(1) {
+    order: 1; /* Saturday stays first */
+  }
+
+  .calendar-wrapper .fc-timegrid-col:nth-child(2) {
+    order: 7; /* Sunday moves to last */
+  }
+
+  /* Ensure event container follows the same ordering */
+  .calendar-wrapper .fc-daygrid-day-frame {
+    width: 100%;
+    height: 100%;
+  }
+
+  .calendar-wrapper .fc-timegrid-col-frame {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .loader {
