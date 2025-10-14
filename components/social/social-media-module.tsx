@@ -757,8 +757,8 @@ const renderTabButton = (
     setIsConnectingX(true);
 
     try {
-      // Step 1: Call auth/start to get OAuth parameters as JSON
-      const authStartResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/auth/start', {
+      // Step 1: Call request_oauth_url to get OAuth parameters and auto-associate user to state
+      const authStartResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/request_oauth_url', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -766,7 +766,7 @@ const renderTabButton = (
       });
 
       if (!authStartResponse.ok) {
-        console.error('auth/start failed:', authStartResponse.status, authStartResponse.statusText);
+        console.error('request_oauth_url failed:', authStartResponse.status, authStartResponse.statusText);
         setIsConnectingX(false);
         return;
       }
@@ -774,29 +774,14 @@ const renderTabButton = (
       // Step 2: Parse the JSON response
       const authData = await authStartResponse.json();
 
-      if (!authData.state) {
-        console.error('No state in response:', authData);
-        setIsConnectingX(false);
-        return;
-      }
-
       if (!authData.authorization_url) {
         console.error('No authorization_url in response:', authData);
         setIsConnectingX(false);
         return;
       }
 
-      // Step 3: Call assign_user to associate the OAuth state with current user
-      await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/assign_user', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ state: authData.state }),
-      });
-
-      // Step 4: Redirect to Twitter OAuth URL - cookies will follow automatically
+     
+      // Step 3: Redirect to Twitter OAuth URL - cookies will follow automatically
       window.location.href = authData.authorization_url;
     } catch (error) {
       console.error('Error connecting X account:', error);
