@@ -65,6 +65,28 @@ export default function SignInPage() {
     } else if (searchParams.get('accepted') === 'true') {
       setSuccessMessage('Invitation accepted successfully! You can now sign in with your new password.');
     }
+    //call google sign in
+    const googleSignIn = async (code: string) => {
+      const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+      if (!redirectUri) {
+        setError('Google redirect URI is not set!');
+        return;
+      }
+      const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${code}&redirect_uri=${redirectUri}`, {
+        method: 'GET',
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log(data);
+      } else {
+        setError('Google sign in failed!');
+      }
+    }
+    const code = searchParams.get('code');
+    if (code) {
+      googleSignIn(code);
+    }
+
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
