@@ -287,6 +287,9 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
           dayMaxEvents={3}
           displayEventTime={false}
           firstDay={6}
+          slotMinTime="07:00:00"
+          slotMaxTime="19:00:00"
+          scrollTime="07:00:00"
           aspectRatio={1.75}
           eventClick={handleEventClick}
           editable={Boolean(onReschedulePost)}
