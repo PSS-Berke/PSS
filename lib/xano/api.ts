@@ -632,7 +632,7 @@ export const socialCopilotApi = {
     imageName?: string | null,
     url?: string | null
   ): Promise<any> {
-    const apiUrl = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/tweet';
+    const apiUrl = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/tweet';
     
     // Extract MIME type from base64 data URI (e.g., "data:image/png;base64,...")
     const getImageType = (base64String: string | null | undefined): string => {
