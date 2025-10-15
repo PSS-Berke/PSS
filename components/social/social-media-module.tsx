@@ -78,7 +78,7 @@ const getPlatformIcon = (contentType: SocialPost['content_type'], size: 'sm' | '
     case 'tiktok':
       return (
         <svg {...iconProps} viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
         </svg>
       );
     case 'x':
@@ -88,7 +88,7 @@ const getPlatformIcon = (contentType: SocialPost['content_type'], size: 'sm' | '
     case 'snapchat':
       return (
         <svg {...iconProps} viewBox="0 0 128 128" fill="currentColor">
-          <path d="M95.918 22.002c-11.963-.087-24.145 4.54-32.031 13.717-6.995 7.405-9.636 17.901-9.284 27.868-.03 5.119.032 10.237.05 15.355-4.901-1.217-9.873-4.624-15.063-2.937-4.422 1.313-6.267 7.088-3.596 10.791 2.876 3.761 7.346 5.907 11.08 8.71 1.837 1.5 4.313 2.571 5.68 4.499-.001 4.62-2.425 8.897-4.722 12.786-5.597 8.802-14.342 15.531-23.705 20.18-2.39 1.035-4.59 4.144-2.473 6.499 3.862 3.622 9.327 4.778 14.195 6.486 2.047.64 5.078 1.34 4.886 4.084.335 2.923 2.205 6.066 5.492 6.078 7.873.91 16.289.522 23.345 4.741 6.917 4.006 14.037 8.473 22.255 8.96 8.188.767 16.623-.888 23.642-5.255 5.23-2.884 10.328-6.477 16.456-7.061 5.155-1.206 10.702-.151 15.685-2.072 3.193-1.367 2.762-5.244 4.104-7.808 2.532-1.747 5.77-1.948 8.59-3.102 3.687-1.47 8.335-2.599 10.268-6.413 1.148-3.038-2.312-4.698-4.453-5.88-11.38-5.874-21.631-14.921-26.121-27.191-.496-1.936-2.279-4.834.084-6.255 4.953-4.176 11.413-6.575 15.514-11.715 3.103-3.884.941-10.55-4.141-11.322-4.928-.78-9.525 1.893-14.152 3.127-.404-8.53.502-17.232-.776-25.746-2.429-13.808-13.514-25.157-26.813-29.124-4.521-1.401-9.266-2.037-13.996-2Z"/>
+          <path d="M95.918 22.002c-11.963-.087-24.145 4.54-32.031 13.717-6.995 7.405-9.636 17.901-9.284 27.868-.03 5.119.032 10.237.05 15.355-4.901-1.217-9.873-4.624-15.063-2.937-4.422 1.313-6.267 7.088-3.596 10.791 2.876 3.761 7.346 5.907 11.08 8.71 1.837 1.5 4.313 2.571 5.68 4.499-.001 4.62-2.425 8.897-4.722 12.786-5.597 8.802-14.342 15.531-23.705 20.18-2.39 1.035-4.59 4.144-2.473 6.499 3.862 3.622 9.327 4.778 14.195 6.486 2.047.64 5.078 1.34 4.886 4.084.335 2.923 2.205 6.066 5.492 6.078 7.873.91 16.289.522 23.345 4.741 6.917 4.006 14.037 8.473 22.255 8.96 8.188.767 16.623-.888 23.642-5.255 5.23-2.884 10.328-6.477 16.456-7.061 5.155-1.206 10.702-.151 15.685-2.072 3.193-1.367 2.762-5.244 4.104-7.808 2.532-1.747 5.77-1.948 8.59-3.102 3.687-1.47 8.335-2.599 10.268-6.413 1.148-3.038-2.312-4.698-4.453-5.88-11.38-5.874-21.631-14.921-26.121-27.191-.496-1.936-2.279-4.834.084-6.255 4.953-4.176 11.413-6.575 15.514-11.715 3.103-3.884.941-10.55-4.141-11.322-4.928-.78-9.525 1.893-14.152 3.127-.404-8.53.502-17.232-.776-25.746-2.429-13.808-13.514-25.157-26.813-29.124-4.521-1.401-9.266-2.037-13.996-2Z" />
         </svg>
       );
     case 'youtube-video':
@@ -96,20 +96,20 @@ const getPlatformIcon = (contentType: SocialPost['content_type'], size: 'sm' | '
     case 'youtube-short':
       return (
         <svg {...iconProps} viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 5.5L10 18.5L17 12L10 5.5Z"/>
-          <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" fill="none" strokeWidth="1.5"/>
+          <path d="M10 5.5L10 18.5L17 12L10 5.5Z" />
+          <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" fill="none" strokeWidth="1.5" />
         </svg>
       );
     case 'all':
       return (
         <svg {...iconProps} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10"/>
-          <circle cx="12" cy="12" r="6"/>
-          <circle cx="12" cy="12" r="2"/>
-          <line x1="12" y1="2" x2="12" y2="4"/>
-          <line x1="12" y1="20" x2="12" y2="22"/>
-          <line x1="2" y1="12" x2="4" y2="12"/>
-          <line x1="20" y1="12" x2="22" y2="12"/>
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="6" />
+          <circle cx="12" cy="12" r="2" />
+          <line x1="12" y1="2" x2="12" y2="4" />
+          <line x1="12" y1="20" x2="12" y2="22" />
+          <line x1="2" y1="12" x2="4" y2="12" />
+          <line x1="20" y1="12" x2="22" y2="12" />
         </svg>
       );
     default:
@@ -199,9 +199,9 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
         setSelectedPost((prev) =>
           prev
             ? {
-                ...prev,
-                scheduled_date: nextPublishDate,
-              }
+              ...prev,
+              scheduled_date: nextPublishDate,
+            }
             : prev
         );
         setFormState((prev) => ({ ...prev, scheduled_date: nextPublishDate }));
@@ -282,11 +282,11 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
     );
   };
 
-const renderTabButton = (
-  tab: (typeof TAB_CONFIG)[number],
-  activeTab: TabKey,
-  setActiveTab: (key: TabKey) => void
-) => (
+  const renderTabButton = (
+    tab: (typeof TAB_CONFIG)[number],
+    activeTab: TabKey,
+    setActiveTab: (key: TabKey) => void
+  ) => (
     <button
       key={tab.key}
       type="button"
@@ -555,7 +555,7 @@ const renderTabButton = (
         url_2: formState.url_2 ?? selectedPost.url_2 ?? '',
         image: imageBase64,
         content_type: formState.content_type ?? selectedPost.content_type,
-        scheduled_date: isoScheduledDate,
+        scheduled_date: isoScheduledDate as string,
         published: formState.published ?? selectedPost.published,
       });
       setIsEditing(false);
@@ -573,7 +573,7 @@ const renderTabButton = (
         url_2: formState.url_2 ?? selectedPost.url_2,
         image: imageBase64,
         content_type: formState.content_type ?? selectedPost.content_type,
-        scheduled_date: isoScheduledDate,
+        scheduled_date: isoScheduledDate as string,
         published: formState.published ?? selectedPost.published,
       };
       setSelectedPost(updatedPost);
@@ -648,7 +648,7 @@ const renderTabButton = (
             url_2: formState.url_2?.trim() ?? '',
             image: imageBase64,
             content_type: contentType,
-            scheduled_date: isoScheduledDate,
+            scheduled_date: isoScheduledDate as string,
             published: true,
           } as const satisfies SocialPostPayload;
 
@@ -680,7 +680,7 @@ const renderTabButton = (
           url_2: formState.url_2?.trim() ?? '',
           image: imageBase64,
           content_type: contentType,
-          scheduled_date: isoScheduledDate,
+          scheduled_date: isoScheduledDate as string,
           published: formState.published ?? false,
         } as const satisfies SocialPostPayload;
 
@@ -780,7 +780,7 @@ const renderTabButton = (
         return;
       }
 
-     
+
       // Step 3: Redirect to Twitter OAuth URL - cookies will follow automatically
       window.location.href = authData.authorization_url;
     } catch (error) {
@@ -1179,11 +1179,11 @@ const renderTabButton = (
               <div className="flex flex-col min-w-0">
                 <DialogTitle className="text-lg sm:text-xl truncate">
                   {activeFormData.content_type === 'youtube-video' ? 'YouTube Video' :
-                   activeFormData.content_type === 'youtube-short' ? 'YouTube Short' :
-                   activeFormData.content_type === 'x' ? 'X (Twitter)' :
-                   activeFormData.content_type === 'all' ? 'All Platforms' :
-                   (activeFormData.content_type || 'LinkedIn').charAt(0).toUpperCase() +
-                   (activeFormData.content_type || 'LinkedIn').slice(1)}
+                    activeFormData.content_type === 'youtube-short' ? 'YouTube Short' :
+                      activeFormData.content_type === 'x' ? 'X (Twitter)' :
+                        activeFormData.content_type === 'all' ? 'All Platforms' :
+                          (activeFormData.content_type || 'LinkedIn').charAt(0).toUpperCase() +
+                          (activeFormData.content_type || 'LinkedIn').slice(1)}
                 </DialogTitle>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {isEditing ? 'Edit Post' : isCreating ? (activeFormData.published ? 'Publish Now' : 'Schedule Post') : 'Post Details'}
@@ -1586,7 +1586,7 @@ const renderTabButton = (
             >
               <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-black text-white transition-transform group-hover:scale-110">
                 <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
                 </svg>
               </div>
               <span className="font-semibold text-xs sm:text-sm text-center leading-tight">TikTok</span>
@@ -1610,8 +1610,8 @@ const renderTabButton = (
             >
               <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#FF0000] text-white transition-transform group-hover:scale-110">
                 <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10 5.5L10 18.5L17 12L10 5.5Z"/>
-                  <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" fill="none" strokeWidth="1.5"/>
+                  <path d="M10 5.5L10 18.5L17 12L10 5.5Z" />
+                  <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" fill="none" strokeWidth="1.5" />
                 </svg>
               </div>
               <span className="font-semibold text-xs sm:text-sm text-center leading-tight">YouTube Short</span>
@@ -1635,7 +1635,7 @@ const renderTabButton = (
             >
               <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#FFFC00] text-black transition-transform group-hover:scale-110">
                 <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 128 128" fill="currentColor">
-                  <path d="M95.918 22.002c-11.963-.087-24.145 4.54-32.031 13.717-6.995 7.405-9.636 17.901-9.284 27.868-.03 5.119.032 10.237.05 15.355-4.901-1.217-9.873-4.624-15.063-2.937-4.422 1.313-6.267 7.088-3.596 10.791 2.876 3.761 7.346 5.907 11.08 8.71 1.837 1.5 4.313 2.571 5.68 4.499-.001 4.62-2.425 8.897-4.722 12.786-5.597 8.802-14.342 15.531-23.705 20.18-2.39 1.035-4.59 4.144-2.473 6.499 3.862 3.622 9.327 4.778 14.195 6.486 2.047.64 5.078 1.34 4.886 4.084.335 2.923 2.205 6.066 5.492 6.078 7.873.91 16.289.522 23.345 4.741 6.917 4.006 14.037 8.473 22.255 8.96 8.188.767 16.623-.888 23.642-5.255 5.23-2.884 10.328-6.477 16.456-7.061 5.155-1.206 10.702-.151 15.685-2.072 3.193-1.367 2.762-5.244 4.104-7.808 2.532-1.747 5.77-1.948 8.59-3.102 3.687-1.47 8.335-2.599 10.268-6.413 1.148-3.038-2.312-4.698-4.453-5.88-11.38-5.874-21.631-14.921-26.121-27.191-.496-1.936-2.279-4.834.084-6.255 4.953-4.176 11.413-6.575 15.514-11.715 3.103-3.884.941-10.55-4.141-11.322-4.928-.78-9.525 1.893-14.152 3.127-.404-8.53.502-17.232-.776-25.746-2.429-13.808-13.514-25.157-26.813-29.124-4.521-1.401-9.266-2.037-13.996-2Z"/>
+                  <path d="M95.918 22.002c-11.963-.087-24.145 4.54-32.031 13.717-6.995 7.405-9.636 17.901-9.284 27.868-.03 5.119.032 10.237.05 15.355-4.901-1.217-9.873-4.624-15.063-2.937-4.422 1.313-6.267 7.088-3.596 10.791 2.876 3.761 7.346 5.907 11.08 8.71 1.837 1.5 4.313 2.571 5.68 4.499-.001 4.62-2.425 8.897-4.722 12.786-5.597 8.802-14.342 15.531-23.705 20.18-2.39 1.035-4.59 4.144-2.473 6.499 3.862 3.622 9.327 4.778 14.195 6.486 2.047.64 5.078 1.34 4.886 4.084.335 2.923 2.205 6.066 5.492 6.078 7.873.91 16.289.522 23.345 4.741 6.917 4.006 14.037 8.473 22.255 8.96 8.188.767 16.623-.888 23.642-5.255 5.23-2.884 10.328-6.477 16.456-7.061 5.155-1.206 10.702-.151 15.685-2.072 3.193-1.367 2.762-5.244 4.104-7.808 2.532-1.747 5.77-1.948 8.59-3.102 3.687-1.47 8.335-2.599 10.268-6.413 1.148-3.038-2.312-4.698-4.453-5.88-11.38-5.874-21.631-14.921-26.121-27.191-.496-1.936-2.279-4.834.084-6.255 4.953-4.176 11.413-6.575 15.514-11.715 3.103-3.884.941-10.55-4.141-11.322-4.928-.78-9.525 1.893-14.152 3.127-.404-8.53.502-17.232-.776-25.746-2.429-13.808-13.514-25.157-26.813-29.124-4.521-1.401-9.266-2.037-13.996-2Z" />
                 </svg>
               </div>
               <span className="font-semibold text-xs sm:text-sm text-center leading-tight">Snapchat</span>
@@ -1648,13 +1648,13 @@ const renderTabButton = (
             >
               <div className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#C33527] via-[#E4405F] to-[#0077B5] text-white transition-transform group-hover:scale-110">
                 <svg className="h-5 w-5 sm:h-8 sm:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <circle cx="12" cy="12" r="6"/>
-                  <circle cx="12" cy="12" r="2"/>
-                  <line x1="12" y1="2" x2="12" y2="4"/>
-                  <line x1="12" y1="20" x2="12" y2="22"/>
-                  <line x1="2" y1="12" x2="4" y2="12"/>
-                  <line x1="20" y1="12" x2="22" y2="12"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="6" />
+                  <circle cx="12" cy="12" r="2" />
+                  <line x1="12" y1="2" x2="12" y2="4" />
+                  <line x1="12" y1="20" x2="12" y2="22" />
+                  <line x1="2" y1="12" x2="4" y2="12" />
+                  <line x1="20" y1="12" x2="22" y2="12" />
                 </svg>
               </div>
               <span className="font-semibold text-xs sm:text-sm text-center leading-tight">All Platforms</span>

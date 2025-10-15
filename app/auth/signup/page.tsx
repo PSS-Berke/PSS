@@ -81,6 +81,24 @@ export default function SignUpPage() {
     }
   };
 
+  const generateGoogleSignInUrl = async () => {
+    const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+    if (!redirectUri) {
+      setError('Google redirect URI is not set!');
+      return;
+    }
+
+    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${redirectUri}`, {
+      method: 'GET',
+    });
+    const data = await response.json();
+    if (response.ok) {
+      window.open(data.authUrl, '_blank');
+    } else {
+      setError('Google sign in failed!');
+    }
+  }
+
   const currentYear = new Date().getFullYear();
 
   return (
@@ -210,6 +228,17 @@ export default function SignUpPage() {
                     disabled={isLoading}
                   >
                     {isLoading ? 'Creating account…' : 'Sign Up'}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="w-full rounded-lg bg-white py-2.5 text-base font-medium text-black shadow-md shadow-[#C33527]/20 transition-colors hover:bg-white/90"
+                    disabled={isLoading}
+                    onClick={() => generateGoogleSignInUrl()}
+                  > <div className="flex items-center justify-center gap-3">
+                      <Image src="/img/google.png" alt="Google" width={20} height={20} />
+                      Sign up with Google
+
+                    </div>
                   </Button>
                 </form>
 
