@@ -648,7 +648,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
             url_2: formState.url_2?.trim() ?? '',
             image: imageBase64,
             content_type: contentType,
-            scheduled_date: isoScheduledDate,
+            scheduled_date: isoScheduledDate as string,
             published: true,
           } as const satisfies SocialPostPayload;
 
@@ -680,7 +680,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           url_2: formState.url_2?.trim() ?? '',
           image: imageBase64,
           content_type: contentType,
-          scheduled_date: isoScheduledDate,
+          scheduled_date: isoScheduledDate as string,
           published: formState.published ?? false,
         } as const satisfies SocialPostPayload;
 
