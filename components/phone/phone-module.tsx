@@ -13,7 +13,60 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/xano/auth-context';
+import { Device } from '@twilio/voice-sdk';
 
+
+type TwilioError = {
+  code: string
+  message: string
+  payload: {
+    code: number
+    message: string
+    more_info: string
+    status: number
+  }
+}
+
+type TwilioResponse = {
+  account_sid: string
+  annotation: string | null
+  answered_by: string | null
+  api_version: string
+  caller_name: string | null
+  date_created: string | null
+  date_updated: string | null
+  direction: string
+  duration: number | null
+  end_time: string | null
+  forwarded_from: string | null
+  from: string
+  from_formatted: string
+  group_sid: string | null
+  parent_call_sid: string | null
+  phone_number_sid: string
+  price: number | null
+  price_unit: string
+  queue_time: string
+  sid: string
+  start_time: string | null
+  status: string
+  subresource_uris: {
+    events: string
+    notifications: string
+    payments: string
+    recordings: string
+    siprec: string
+    streams: string
+    transcriptions: string
+    user_defined_message_subscriptions: string
+    user_defined_messages: string
+  },
+  to: string
+  to_formatted: string
+  trunk_sid: string | null,
+  uri: string
+}
 // Mock data
 const initialMockCallLogs = [
   {
@@ -86,7 +139,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [copiedNumber, setCopiedNumber] = useState(false);
   const [contacts, setContacts] = useState(initialMockContacts);
   const [callLogs] = useState(initialMockCallLogs);
-
+  const { token } = useAuth();
   const [newContact, setNewContact] = useState({
     name: '',
     company: '',
@@ -94,6 +147,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     email: '',
     is_favorite: false,
   });
+  const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
+  const [isDeviceReady, setIsDeviceReady] = useState(false);
+
 
   const [settings, setSettings] = useState({
     phoneNumber: '+1 (555) 900-1234',
@@ -147,8 +203,91 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setDialedNumber(prev => prev.slice(0, -1));
   };
 
-  const makeCall = (number: string) => {
+  // Initialize Twilio device
+  const initializeTwilioDevice = async () => {
+    if (twilioDevice) return;
+
+    try {
+      // Step 1: Get Twilio token
+      const tokenResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:sOWCvXFH/token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ identity: "agent" }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to get Twilio token');
+      }
+
+      const { token: twilioToken } = await tokenResponse.json();
+
+      // Step 2: Create and register device
+      const device = new Device(twilioToken, {
+        logLevel: 1,
+      });
+
+      // Set up event handlers
+      device.on('registered', () => {
+        console.log('Twilio device registered and ready!');
+        setIsDeviceReady(true);
+      });
+
+      device.on('error', (error) => {
+        console.error('Twilio device error:', error);
+        setIsDeviceReady(false);
+      });
+
+      device.on('incoming', (call) => {
+        console.log('Incoming call from:', call.parameters.From);
+        // Handle incoming call
+        setActiveCall({
+          phone_number: call.parameters.From,
+          contact_name: 'Unknown',
+          status: 'incoming',
+          startTime: new Date().toISOString(),
+        });
+        call.accept(); // Auto-accept for now
+      });
+
+      // Register the device
+      await device.register();
+      setTwilioDevice(device);
+    } catch (error) {
+      console.error('Failed to initialize Twilio device:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      initializeTwilioDevice();
+    }
+  }, [token]);
+
+  const makeCall = async (number: string) => {
     const contact = contacts.find(c => c.phone_number === number);
+    //get twilio token
+    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:sOWCvXFH/call`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phone: number,
+      }),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      const error = data as TwilioError;
+      console.error(error);
+      return;
+    }
+    const data = await response.json();
+    console.log(data);
+
     setActiveCall({
       phone_number: number,
       contact_name: contact?.name,
@@ -474,9 +613,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   <div className="space-y-2">
                     {filteredCallLogs.map(log => {
                       const Icon = log.status === 'missed' ? PhoneMissed :
-                                   log.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
+                        log.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
                       const iconColor = log.status === 'missed' ? 'text-red-500' :
-                                       log.direction === 'inbound' ? 'text-blue-500' : 'text-green-500';
+                        log.direction === 'inbound' ? 'text-blue-500' : 'text-green-500';
 
                       return (
                         <div key={log.id} className="flex items-center justify-between gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors">
@@ -858,9 +997,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     <div className="space-y-2">
                       {filteredCallLogs.map(log => {
                         const Icon = log.status === 'missed' ? PhoneMissed :
-                                     log.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
+                          log.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
                         const iconColor = log.status === 'missed' ? 'text-red-500' :
-                                         log.direction === 'inbound' ? 'text-blue-500' : 'text-green-500';
+                          log.direction === 'inbound' ? 'text-blue-500' : 'text-green-500';
 
                         return (
                           <div key={log.id} className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors">
