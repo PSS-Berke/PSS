@@ -494,6 +494,7 @@ const buildSocialPostRequestBody = (
     post_content: encodedContent,
     url_1: data.url_1 ?? '',
     url_2: data.url_2 ?? '',
+    image: data.image ?? null,
     content_type: data.content_type ?? '',
     scheduled_date: normalizedScheduledDate,
     published: data.published ?? false,
@@ -504,6 +505,7 @@ const buildSocialPostRequestBody = (
   console.log('post_content (original):', JSON.stringify(fallbackContent));
   console.log('post_content (encoded):', JSON.stringify(requestPayload.post_content));
   console.log('post_descrription:', JSON.stringify(requestPayload.post_descrription));
+  console.log('image:', data.image ? 'Image included' : 'null');
 
   return requestPayload;
 };
@@ -623,15 +625,55 @@ export const socialCopilotApi = {
     }
   },
 
-  async postToTwitter(token: string, content: string): Promise<any> {
-    const url = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/tweet';
-    const response = await fetch(url, {
+  async postToTwitter(
+    token: string, 
+    content: string, 
+    imageData?: string | null, 
+    imageName?: string | null,
+    url?: string | null
+  ): Promise<any> {
+    const apiUrl = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:7ADR8XmZ/tweet';
+    
+    // Extract MIME type from base64 data URI (e.g., "data:image/png;base64,...")
+    const getImageType = (base64String: string | null | undefined): string => {
+      if (!base64String) return 'image/png';
+      const match = base64String.match(/^data:(image\/[a-zA-Z]+);base64,/);
+      return match && match[1] ? match[1] : 'image/png';
+    };
+
+    // Calculate file size from base64 string
+    const getImageSize = (base64String: string | null | undefined): number => {
+      if (!base64String) return 0;
+      
+      // Remove the data URI prefix
+      const base64Data = base64String.split(',')[1] || base64String;
+      
+      // Calculate size: base64 is ~33% larger than binary
+      // Size = (base64Length * 3) / 4, accounting for padding
+      const paddingCount = (base64Data.match(/=/g) || []).length;
+      const base64Length = base64Data.length;
+      
+      return Math.floor((base64Length * 3) / 4) - paddingCount;
+    };
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ 
+        content, 
+        image: imageData ? { 
+          path: imageData,
+          name: imageName || 'image.png',
+          type: getImageType(imageData),
+          mime: getImageType(imageData),
+          size: getImageSize(imageData),
+          meta: {}
+        } : null,
+        url: url ?? null
+      }),
     });
 
     if (!response.ok) {

@@ -214,6 +214,7 @@ export function SocialMediaProvider({
           rich_content_html: currentPost.rich_content_html ?? '',
           url_1: currentPost.url_1 ?? '',
           url_2: currentPost.url_2 ?? '',
+          image: currentPost.image ?? null,
           content_type: currentPost.content_type,
           scheduled_date: currentPost.scheduled_date,
           published: newStatus === 'published',

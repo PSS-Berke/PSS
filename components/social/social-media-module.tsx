@@ -21,6 +21,8 @@ import {
   Pin,
   Clock,
   Send,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
 
@@ -135,6 +137,9 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
   const [isScheduleChoiceModalOpen, setIsScheduleChoiceModalOpen] = useState(false);
   const [isPlatformSelectionModalOpen, setIsPlatformSelectionModalOpen] = useState(false);
   const [pendingPublishState, setPendingPublishState] = useState<boolean>(false);
+  const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const activeFormData = React.useMemo<Partial<SocialPost>>(() => {
     if (isCreating) {
       return {
@@ -251,6 +256,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
       setFormState({});
       setIsCreating(false);
       setFormError(null);
+      setAttachedFile(null);
+      setFileError(null);
     }
   }, [isModalOpen]);
 
@@ -359,6 +366,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
       setFormState({});
       setIsCreating(false);
       setFormError(null);
+      setAttachedFile(null);
+      setFileError(null);
     }, 150);
   };
 
@@ -447,6 +456,62 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
     });
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setAttachedFile(null);
+      setFileError(null);
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setFileError('Please select a valid image file (PNG, JPG, GIF, or WEBP)');
+      setAttachedFile(null);
+      return;
+    }
+
+    // Validate file size
+    const maxSize = file.type === 'image/gif' ? 15 * 1024 * 1024 : 5 * 1024 * 1024; // 15MB for GIF, 5MB for others
+    if (file.size > maxSize) {
+      const maxSizeMB = file.type === 'image/gif' ? 15 : 5;
+      setFileError(`File size must be less than ${maxSizeMB}MB`);
+      setAttachedFile(null);
+      return;
+    }
+
+    setAttachedFile(file);
+    setFileError(null);
+  };
+
+  const handleRemoveFile = () => {
+    setAttachedFile(null);
+    setFileError(null);
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const getImageNameFromBase64 = (base64String: string | null | undefined): string => {
+    if (!base64String) return 'image.png';
+    
+    // Extract MIME type from data URI (e.g., "data:image/png;base64,...")
+    const match = base64String.match(/^data:image\/([a-zA-Z]+);base64,/);
+    if (match && match[1]) {
+      const extension = match[1].toLowerCase();
+      return `image.${extension}`;
+    }
+    
+    return 'image.png';
+  };
+
   const parseScheduledDate = (value?: string) => {
     if (!value) return null;
     // If the value is already an ISO string, new Date handles it as UTC
@@ -466,6 +531,20 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
     setIsSaving(true);
     try {
       const updatedContent = formState.content ?? formState.rich_content_text ?? selectedPost.content ?? selectedPost.rich_content_text ?? '';
+      
+      // Convert attached file to base64 if exists
+      let imageBase64: string | null = null;
+      if (attachedFile) {
+        try {
+          imageBase64 = await convertFileToBase64(attachedFile);
+        } catch (error) {
+          console.error('Failed to convert image to base64:', error);
+          setFormError('Failed to process image. Please try again.');
+          setIsSaving(false);
+          return;
+        }
+      }
+
       await updatePost(selectedPost.id, {
         post_title: formState.post_title ?? selectedPost.post_title,
         post_description: 'post_description' in formState ? (formState.post_description ?? '') : (selectedPost.post_description ?? ''),
@@ -474,6 +553,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
         rich_content_html: '',
         url_1: formState.url_1 ?? selectedPost.url_1 ?? '',
         url_2: formState.url_2 ?? selectedPost.url_2 ?? '',
+        image: imageBase64,
         content_type: formState.content_type ?? selectedPost.content_type,
         scheduled_date: isoScheduledDate as string,
         published: formState.published ?? selectedPost.published,
@@ -491,6 +571,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
         rich_content_html: '',
         url_1: formState.url_1 ?? selectedPost.url_1,
         url_2: formState.url_2 ?? selectedPost.url_2,
+        image: imageBase64,
         content_type: formState.content_type ?? selectedPost.content_type,
         scheduled_date: isoScheduledDate as string,
         published: formState.published ?? selectedPost.published,
@@ -512,6 +593,20 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
 
     const contentType = formState.content_type ?? DEFAULT_CONTENT_TYPE;
 
+    // If content type is X (Twitter) and publishing now, show confirmation
+    if (contentType === 'x' && formState.published) {
+      setIsPublishConfirmModalOpen(true);
+      return;
+    }
+
+    await executeCreate();
+  };
+
+  const executeCreate = async () => {
+    const trimmedTitle = formState.post_title?.trim() ?? '';
+    const isoScheduledDate = parseScheduledDate(formState.scheduled_date);
+    const contentType = formState.content_type ?? DEFAULT_CONTENT_TYPE;
+
     setIsSaving(true);
     setFormError(null);
     try {
@@ -521,31 +616,89 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
         trimPreserveNewlines(formState.post_description ?? '') ||
         '';
 
-      const payload = {
-        post_title: trimmedTitle,
-        post_description: trimPreserveNewlines(formState.post_description ?? ''),
-        rich_content_text: contentValue,
-        content: contentValue,
-        rich_content_html: '',
-        url_1: formState.url_1?.trim() ?? '',
-        url_2: formState.url_2?.trim() ?? '',
-        content_type: contentType,
-        scheduled_date: isoScheduledDate as string,
-        published: formState.published ?? false,
-      } as const satisfies SocialPostPayload;
+      // Convert attached file to base64 if exists
+      let imageBase64: string | null = null;
+      if (attachedFile) {
+        try {
+          imageBase64 = await convertFileToBase64(attachedFile);
+        } catch (error) {
+          console.error('Failed to convert image to base64:', error);
+          setFormError('Failed to process image. Please try again.');
+          setIsSaving(false);
+          return;
+        }
+      }
 
-      console.log('Creating post with payload:');
-      console.log('content:', JSON.stringify(payload.content));
-      console.log('rich_content_text:', JSON.stringify(payload.rich_content_text));
+      // If publishing to X, call the tweet API directly
+      if (contentType === 'x' && formState.published && token) {
+        try {
+          // Step 1: Publish to X (Twitter)
+          const { socialCopilotApi } = await import('@/lib/xano/api');
+          const imageName = attachedFile?.name ?? null;
+          await socialCopilotApi.postToTwitter(token, contentValue, imageBase64, imageName, formState.url_1?.trim() ?? null);
+          
+          // Step 2: Save to database via /post endpoint
+          const payload = {
+            post_title: trimmedTitle,
+            post_description: trimPreserveNewlines(formState.post_description ?? ''),
+            rich_content_text: contentValue,
+            content: contentValue,
+            rich_content_html: '',
+            url_1: formState.url_1?.trim() ?? '',
+            url_2: formState.url_2?.trim() ?? '',
+            image: imageBase64,
+            content_type: contentType,
+            scheduled_date: isoScheduledDate,
+            published: true,
+          } as const satisfies SocialPostPayload;
 
-      const created = await createPost(payload);
+          const created = await createPost(payload);
+          
+          if (created) {
+            // Step 3: Refresh posts and close modal
+            await refreshPosts();
+            setIsModalOpen(false);
+            setIsCreating(false);
+            setFormState({});
+            setFormError(null);
+            setAttachedFile(null);
+          }
+        } catch (error) {
+          console.error('Failed to publish to X:', error);
+          setFormError('Failed to publish to X. Please try again.');
+          return;
+        }
+      } else {
+        // Normal create flow for other platforms
+        const payload = {
+          post_title: trimmedTitle,
+          post_description: trimPreserveNewlines(formState.post_description ?? ''),
+          rich_content_text: contentValue,
+          content: contentValue,
+          rich_content_html: '',
+          url_1: formState.url_1?.trim() ?? '',
+          url_2: formState.url_2?.trim() ?? '',
+          image: imageBase64,
+          content_type: contentType,
+          scheduled_date: isoScheduledDate,
+          published: formState.published ?? false,
+        } as const satisfies SocialPostPayload;
 
-      if (created) {
-        setIsModalOpen(false);
-        setIsCreating(false);
-        setFormState({});
-        setFormError(null);
-        await refreshPosts();
+        console.log('Creating post with payload:');
+        console.log('content:', JSON.stringify(payload.content));
+        console.log('rich_content_text:', JSON.stringify(payload.rich_content_text));
+        console.log('image:', imageBase64 ? 'Base64 image included' : 'null');
+
+        const created = await createPost(payload);
+
+        if (created) {
+          setIsModalOpen(false);
+          setIsCreating(false);
+          setFormState({});
+          setFormError(null);
+          setAttachedFile(null);
+          await refreshPosts();
+        }
       }
     } finally {
       setIsSaving(false);
@@ -580,7 +733,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
         const content = selectedPost.content || selectedPost.rich_content_text || selectedPost.post_description || '';
         if (content) {
           const { socialCopilotApi } = await import('@/lib/xano/api');
-          await socialCopilotApi.postToTwitter(token, content);
+          const imageName = getImageNameFromBase64(selectedPost.image);
+          await socialCopilotApi.postToTwitter(token, content, selectedPost.image ?? null, imageName, selectedPost.url_1 ?? null);
         }
       } catch (error) {
         console.error('Failed to post to Twitter:', error);
@@ -716,7 +870,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                     const content = post.content || post.rich_content_text || post.post_description || '';
                     if (content) {
                       const { socialCopilotApi } = await import('@/lib/xano/api');
-                      await socialCopilotApi.postToTwitter(token, content);
+                      const imageName = getImageNameFromBase64(post.image);
+                      await socialCopilotApi.postToTwitter(token, content, post.image ?? null, imageName, post.url_1 ?? null);
                     }
                   } catch (error) {
                     console.error('Failed to post to Twitter:', error);
@@ -1031,7 +1186,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                           (activeFormData.content_type || 'LinkedIn').slice(1)}
                 </DialogTitle>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  {isEditing ? 'Edit Post' : isCreating ? 'Create New Post' : 'Post Details'}
+                  {isEditing ? 'Edit Post' : isCreating ? (activeFormData.published ? 'Publish Now' : 'Schedule Post') : 'Post Details'}
                 </p>
               </div>
             </div>
@@ -1093,6 +1248,59 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                   )}
                 </div>
 
+                {/* File Attachment - Only show when creating/editing */}
+                {isFormEditable && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="media">Media Attachment (Optional)</Label>
+                    <div className="space-y-2">
+                      {!attachedFile ? (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('media-upload')?.click()}
+                            className="gap-2"
+                          >
+                            <ImageIcon className="h-4 w-4" />
+                            Upload Image
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            PNG, JPG, GIF, WEBP (max 5MB, GIF up to 15MB)
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 p-3">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm flex-1 truncate">{attachedFile.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {(attachedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleRemoveFile}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <input
+                        id="media-upload"
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      {fileError && (
+                        <p className="text-sm text-destructive">{fileError}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="url_1">URL 1</Label>
@@ -1124,23 +1332,26 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                   </div>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="scheduled_date">Scheduled Date</Label>
-                  {isFormEditable ? (
-                    <Input
-                      id="scheduled_date"
-                      type="datetime-local"
-                      value={scheduledInputValue}
-                      onChange={(event) => handleChange('scheduled_date', event.target.value)}
-                    />
-                  ) : (
-                    <p className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm text-foreground">
-                      {selectedPost
-                        ? format(new Date(selectedPost.scheduled_date), 'MMM d, yyyy • h:mm a')
-                        : '—'}
-                    </p>
-                  )}
-                </div>
+                {/* Only show scheduled date if not publishing now */}
+                {!(isCreating && activeFormData.published) && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="scheduled_date">Scheduled Date</Label>
+                    {isFormEditable ? (
+                      <Input
+                        id="scheduled_date"
+                        type="datetime-local"
+                        value={scheduledInputValue}
+                        onChange={(event) => handleChange('scheduled_date', event.target.value)}
+                      />
+                    ) : (
+                      <p className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm text-foreground">
+                        {selectedPost
+                          ? format(new Date(selectedPost.scheduled_date), 'MMM d, yyyy • h:mm a')
+                          : '—'}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid gap-2">
                   <Label htmlFor="status">Status</Label>
@@ -1174,7 +1385,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                     Cancel
                   </Button>
                   <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
-                    {isSaving ? 'Saving…' : 'Save'}
+                    {isSaving ? 'Scheduling…' : 'Schedule Post'}
                   </Button>
                 </>
               ) : isCreating ? (
@@ -1182,8 +1393,15 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                   <Button variant="outline" onClick={handleCloseModal} disabled={isSaving} className="w-full sm:w-auto">
                     Cancel
                   </Button>
-                  <Button onClick={handleCreate} disabled={isSaving} className="w-full sm:w-auto">
-                    {isSaving ? 'Creating…' : 'Create'}
+                  <Button onClick={handleCreate} disabled={isSaving} className={cn(
+                    "w-full sm:w-auto",
+                    activeFormData.content_type === 'x' && activeFormData.published && 'bg-black hover:bg-black/90'
+                  )}>
+                    {isSaving ? (
+                      activeFormData.content_type === 'x' && activeFormData.published ? 'Publishing to X…' : 'Scheduling…'
+                    ) : (
+                      activeFormData.content_type === 'x' && activeFormData.published ? 'Publish to X' : 'Schedule Post'
+                    )}
                   </Button>
                 </>
               ) : (
@@ -1215,7 +1433,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
       <Dialog open={isScheduleChoiceModalOpen} onOpenChange={setIsScheduleChoiceModalOpen}>
         <DialogContent className="max-w-md space-y-6 rounded-2xl border border-border/60 bg-background px-6 py-5">
           <DialogHeader>
-            <DialogTitle>Create New Post</DialogTitle>
+            <DialogTitle>New Post</DialogTitle>
             <DialogDescription>
               Choose when you want to publish this post.
             </DialogDescription>
@@ -1256,6 +1474,62 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsScheduleChoiceModalOpen(false)}>
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Publish Confirmation Modal */}
+      <Dialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
+        <DialogContent className="max-w-md space-y-6 rounded-2xl border border-border/60 bg-background px-6 py-5">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white">
+                <Twitter className="h-5 w-5" />
+              </div>
+              Publish to X?
+            </DialogTitle>
+            <DialogDescription>
+              This will immediately publish your post to X (Twitter). This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
+            <div>
+              <p className="text-sm font-medium mb-2">Preview:</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {formState.content || formState.rich_content_text || formState.post_description || '(No content)'}
+              </p>
+            </div>
+            {attachedFile && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Attached Media:</p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <ImageIcon className="h-4 w-4" />
+                  <span>{attachedFile.name}</span>
+                  <span className="text-xs">({(attachedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsPublishConfirmModalOpen(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={async () => {
+                setIsPublishConfirmModalOpen(false);
+                await executeCreate();
+              }}
+              disabled={isSaving}
+              className="bg-black hover:bg-black/90"
+            >
+              {isSaving ? 'Publishing…' : 'Publish Now'}
             </Button>
           </DialogFooter>
         </DialogContent>
