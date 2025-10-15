@@ -142,7 +142,7 @@ export default function DashboardPage() {
   // Handle drag end - reorder modules and save to backend
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     console.log('=== handleDragEnd called ===');
     console.log('active.id:', active.id);
     console.log('over:', over);
@@ -151,21 +151,21 @@ export default function DashboardPage() {
 
     if (over && active.id !== over.id) {
       console.log('Reordering modules...');
-      
+
       setModules((items) => {
         console.log('Inside setModules, items:', items);
         const oldIndex = items.findIndex((item) => item.sortId === active.id);
         const newIndex = items.findIndex((item) => item.sortId === over.id);
         console.log('oldIndex:', oldIndex, 'newIndex:', newIndex);
-        
+
         const newModuleOrder = arrayMove(items, oldIndex, newIndex);
         console.log('newModuleOrder:', newModuleOrder);
-        
+
         // Save the new order to the backend
         if (token && newModuleOrder.length > 0) {
           const sequence = newModuleOrder.map(m => m.id);
           console.log('Saving layout order:', sequence);
-          
+
           fetch(
             'https://xnpm-iauo-ef2d.n7e.xano.io/api:omCf_wtg/position',
             {
@@ -177,22 +177,22 @@ export default function DashboardPage() {
               }),
             }
           )
-          .then(response => {
-            console.log('Response received:', response.status);
-            if (response.ok) {
-              console.log('Layout saved successfully');
-            } else {
-              console.error('Failed to save layout, status:', response.status);
-              return response.text().then(text => console.error('Error details:', text));
-            }
-          })
-          .catch(error => {
-            console.error('Failed to save layout:', error);
-          });
+            .then(response => {
+              console.log('Response received:', response.status);
+              if (response.ok) {
+                console.log('Layout saved successfully');
+              } else {
+                console.error('Failed to save layout, status:', response.status);
+                return response.text().then(text => console.error('Error details:', text));
+              }
+            })
+            .catch(error => {
+              console.error('Failed to save layout:', error);
+            });
         } else {
           console.log('Not saving - token:', !!token, 'newModuleOrder.length:', newModuleOrder.length);
         }
-        
+
         return newModuleOrder;
       });
     } else {

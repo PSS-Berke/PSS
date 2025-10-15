@@ -28,6 +28,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tiptap/react": "^3.6.5",
     "@tiptap/starter-kit": "^3.6.5",
+    "@twilio/voice-sdk": "^2.16.0",
     "@types/js-cookie": "^3.0.6",
     "@xano/js-sdk": "^3.0.0",
     "class-variance-authority": "^0.7.0",

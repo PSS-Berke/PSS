@@ -46,6 +46,7 @@ import type { SocialPost, SocialPostPayload } from '@/lib/xano/types';
 import { Textarea } from '@/components/ui/textarea';
 import { SocialMediaCalendar } from './social-media-calendar';
 import { UnicodeTextFormatter } from '@/components/ui/unicode-text-formatter';
+import { useSearchParams } from 'next/navigation';
 
 type TabKey = 'calendar' | 'tasks';
 
@@ -125,6 +126,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
   const { state, refreshPosts, getPost, togglePublish, updateStatus, updatePost, deletePost, createPost } =
     useSocialMedia();
   const { token, user, refreshUser } = useAuth();
+  const searchParams = useSearchParams();
   const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -140,6 +142,50 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  // Twitter OAuth callback handler
+  React.useEffect(() => {
+    const handleTwitterCallback = async () => {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+
+      if (code && state && token) {
+        try {
+          console.log('Twitter OAuth callback detected:', { code, state });
+
+          // Send GET request to Twitter callback API
+          const callbackUrl = `https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+
+          const response = await fetch(callbackUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Twitter OAuth callback successful:', result);
+
+            // Refresh user data to update X access status
+            await refreshUser();
+
+
+
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Twitter OAuth callback failed:', response.status, errorData);
+          }
+        } catch (error) {
+          console.error('Twitter OAuth callback error:', error);
+        }
+      }
+    };
+
+    handleTwitterCallback();
+  }, [searchParams, token, refreshUser]);
+
   const activeFormData = React.useMemo<Partial<SocialPost>>(() => {
     if (isCreating) {
       return {
@@ -501,14 +547,14 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
 
   const getImageNameFromBase64 = (base64String: string | null | undefined): string => {
     if (!base64String) return 'image.png';
-    
+
     // Extract MIME type from data URI (e.g., "data:image/png;base64,...")
     const match = base64String.match(/^data:image\/([a-zA-Z]+);base64,/);
     if (match && match[1]) {
       const extension = match[1].toLowerCase();
       return `image.${extension}`;
     }
-    
+
     return 'image.png';
   };
 
@@ -531,7 +577,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
     setIsSaving(true);
     try {
       const updatedContent = formState.content ?? formState.rich_content_text ?? selectedPost.content ?? selectedPost.rich_content_text ?? '';
-      
+
       // Convert attached file to base64 if exists
       let imageBase64: string | null = null;
       if (attachedFile) {
@@ -636,7 +682,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           const { socialCopilotApi } = await import('@/lib/xano/api');
           const imageName = attachedFile?.name ?? null;
           await socialCopilotApi.postToTwitter(token, contentValue, imageBase64, imageName, formState.url_1?.trim() ?? null);
-          
+
           // Step 2: Save to database via /post endpoint
           const payload = {
             post_title: trimmedTitle,
@@ -653,7 +699,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           } as const satisfies SocialPostPayload;
 
           const created = await createPost(payload);
-          
+
           if (created) {
             // Step 3: Refresh posts and close modal
             await refreshPosts();
@@ -759,9 +805,10 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
     try {
       // Step 1: Call request_oauth_url to get OAuth parameters and auto-associate user to state
       const authStartResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/request_oauth_url', {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -782,7 +829,7 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
 
 
       // Step 3: Redirect to Twitter OAuth URL - cookies will follow automatically
-      window.location.href = authData.authorization_url;
+      window.open(authData.authorization_url, '_blank');
     } catch (error) {
       console.error('Error connecting X account:', error);
       setIsConnectingX(false);
@@ -1514,14 +1561,14 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           </div>
 
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsPublishConfirmModalOpen(false)}
               disabled={isSaving}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={async () => {
                 setIsPublishConfirmModalOpen(false);
                 await executeCreate();
