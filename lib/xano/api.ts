@@ -181,14 +181,44 @@ export const authApi = {
   },
 
   async switchCompany(token: string, companyId: number): Promise<void> {
-    return apiRequest<void>(
-      '/auth/switch_company',
-      {
+    console.log('=== SWITCH COMPANY API CALL START ===');
+    console.log('Token exists:', !!token);
+    console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('Company ID to switch to:', companyId);
+    console.log('Company ID type:', typeof companyId);
+
+    // Try sending as query parameter instead of body
+    const urlWithParams = `${getApiUrl('/auth/switch_company')}?company_id=${companyId}`;
+    console.log('Full URL with query params:', urlWithParams);
+
+    try {
+      // Try with query parameters instead of body
+      const response = await fetch(urlWithParams, {
         method: 'PATCH',
-        body: JSON.stringify({ company_id: companyId }),
-      },
-      token
-    );
+        headers: getAuthHeaders(token),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ SWITCH COMPANY API CALL FAILED');
+        console.error('Status:', response.status);
+        console.error('Response:', errorData);
+        throw new XanoApiError(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData
+        );
+      }
+
+      const result = await response.json().catch(() => ({}));
+      console.log('✅ Switch company API call succeeded');
+      console.log('Response:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ SWITCH COMPANY API CALL FAILED');
+      console.error('Error object:', error);
+      throw error;
+    }
   },
 };
 

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Mail, Phone, Linkedin, MapPin, Briefcase } from 'lucide-react';
 import type { PDLPersonProfile } from '@/lib/peopledatalab/types';
+import { sanitizeLinkedInUrl } from '@/lib/utils/call-prep-data';
 
 interface PersonContactModuleProps {
   person: PDLPersonProfile;
@@ -66,19 +67,22 @@ export function PersonContactModule({ person }: PersonContactModuleProps) {
             </div>
           )}
 
-          {person.linkedin_url && (
-            <div className="flex items-center gap-3">
-              <Linkedin className="h-4 w-4 text-[#C33527] flex-shrink-0" />
-              <a
-                href={person.linkedin_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                View LinkedIn Profile
-              </a>
-            </div>
-          )}
+          {(() => {
+            const sanitizedLinkedInUrl = sanitizeLinkedInUrl(person.linkedin_url);
+            return sanitizedLinkedInUrl && (
+              <div className="flex items-center gap-3">
+                <Linkedin className="h-4 w-4 text-[#C33527] flex-shrink-0" />
+                <a
+                  href={sanitizedLinkedInUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  View LinkedIn Profile
+                </a>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

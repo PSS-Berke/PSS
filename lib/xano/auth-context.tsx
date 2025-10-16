@@ -236,30 +236,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
+    console.log('=== REFRESH USER START ===');
     const token = getStoredToken();
-    if (!token) throw new Error('Not authenticated');
+    if (!token) {
+      console.error('❌ No token for refresh');
+      throw new Error('Not authenticated');
+    }
 
     try {
+      console.log('Fetching user data from /auth/me...');
       const userData = await authApi.getMe(token);
+      console.log('✅ User data fetched:', userData);
+      console.log('Company ID in response:', userData?.company_id);
+      console.log('Available companies in response:', userData?.available_companies);
       setUser(userData);
+      console.log('✅ User state updated');
     } catch (error) {
-      console.error('Refresh user failed:', error);
+      console.error('❌ Refresh user failed:', error);
       throw error;
     }
   }, []);
 
   const switchCompany = useCallback(async (companyId: number) => {
+    console.log('=== AUTH CONTEXT: SWITCH COMPANY START ===');
+    console.log('Current user:', user);
+    console.log('Current company_id:', user?.company_id);
+    console.log('Target company_id:', companyId);
+    console.log('Available companies:', user?.available_companies);
+
     const token = getStoredToken();
-    if (!token) throw new Error('Not authenticated');
+    console.log('Token retrieved:', !!token);
+
+    if (!token) {
+      console.error('❌ No token available');
+      throw new Error('Not authenticated');
+    }
 
     try {
+      console.log('Calling authApi.switchCompany...');
       await authApi.switchCompany(token, companyId);
+      console.log('✅ authApi.switchCompany succeeded, now refreshing user...');
+
       await refreshUser();
+      console.log('✅ refreshUser succeeded');
+      console.log('Updated user:', user);
+      console.log('Updated company_id:', user?.company_id);
     } catch (error) {
-      console.error('Switch company failed:', error);
+      console.error('❌ AUTH CONTEXT: Switch company failed');
+      console.error('Error details:', error);
       throw error;
     }
-  }, [refreshUser]);
+  }, [refreshUser, user]);
 
   const value: AuthContextType = {
     user,

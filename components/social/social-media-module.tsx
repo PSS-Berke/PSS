@@ -684,66 +684,81 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           await socialCopilotApi.postToTwitter(token, contentValue, imageBase64, imageName, formState.url_1?.trim() ?? null);
 
           // Step 2: Save to database via /post endpoint
-          const payload = {
+          const postPayload = {
             post_title: trimmedTitle,
             post_description: trimPreserveNewlines(formState.post_description ?? ''),
-            rich_content_text: contentValue,
-            content: contentValue,
-            rich_content_html: '',
             url_1: formState.url_1?.trim() ?? '',
             url_2: formState.url_2?.trim() ?? '',
-            image: imageBase64,
             content_type: contentType,
-            scheduled_date: isoScheduledDate as string,
-            published: true,
-          } as const satisfies SocialPostPayload;
+            scheduled_date: new Date(isoScheduledDate as string).getTime(),
+            content: contentValue,
+            status: 'published',
+          };
 
-          const created = await createPost(payload);
+          // Call the POST endpoint directly
+          const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:ydIfcjKj/post', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(postPayload),
+          });
 
-          if (created) {
-            // Step 3: Refresh posts and close modal
-            await refreshPosts();
-            setIsModalOpen(false);
-            setIsCreating(false);
-            setFormState({});
-            setFormError(null);
-            setAttachedFile(null);
+          if (!response.ok) {
+            throw new Error('Failed to save post to database');
           }
+
+          // Step 3: Refresh posts and close modal
+          await refreshPosts();
+          setIsModalOpen(false);
+          setIsCreating(false);
+          setFormState({});
+          setFormError(null);
+          setAttachedFile(null);
         } catch (error) {
           console.error('Failed to publish to X:', error);
           setFormError('Failed to publish to X. Please try again.');
           return;
         }
       } else {
-        // Normal create flow for other platforms
-        const payload = {
+        // Normal create flow for other platforms - use POST endpoint
+        const postPayload = {
           post_title: trimmedTitle,
           post_description: trimPreserveNewlines(formState.post_description ?? ''),
-          rich_content_text: contentValue,
-          content: contentValue,
-          rich_content_html: '',
           url_1: formState.url_1?.trim() ?? '',
           url_2: formState.url_2?.trim() ?? '',
-          image: imageBase64,
           content_type: contentType,
-          scheduled_date: isoScheduledDate as string,
-          published: formState.published ?? false,
-        } as const satisfies SocialPostPayload;
+          scheduled_date: new Date(isoScheduledDate as string).getTime(),
+          content: contentValue,
+          status: formState.published ? 'published' : 'draft',
+        };
 
-        console.log('Creating post with payload:');
-        console.log('content:', JSON.stringify(payload.content));
-        console.log('rich_content_text:', JSON.stringify(payload.rich_content_text));
-        console.log('image:', imageBase64 ? 'Base64 image included' : 'null');
+        console.log('Creating post with payload:', postPayload);
 
-        const created = await createPost(payload);
+        try {
+          const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:ydIfcjKj/post', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(postPayload),
+          });
 
-        if (created) {
+          if (!response.ok) {
+            throw new Error('Failed to create post');
+          }
+
           setIsModalOpen(false);
           setIsCreating(false);
           setFormState({});
           setFormError(null);
           setAttachedFile(null);
           await refreshPosts();
+        } catch (error) {
+          console.error('Failed to create post:', error);
+          setFormError('Failed to create post. Please try again.');
         }
       }
     } finally {
@@ -1284,14 +1299,14 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                   <Label htmlFor="content">Post Content</Label>
                   {isFormEditable ? (
                     <UnicodeTextFormatter
-                      content={activeFormData.content ?? ''}
+                      content={activeFormData.content ?? activeFormData.rich_content_text ?? ''}
                       onChange={(text) => handleChange('content', text)}
                       editable={true}
                       placeholder="Write your post content with Unicode formatting..."
                     />
                   ) : (
                     <div className="rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-foreground whitespace-pre-wrap">
-                      {selectedPost?.content || '—'}
+                      {selectedPost?.content || selectedPost?.rich_content_text || '—'}
                     </div>
                   )}
                 </div>
