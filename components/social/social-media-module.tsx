@@ -681,7 +681,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
           // Step 1: Publish to X (Twitter)
           const { socialCopilotApi } = await import('@/lib/xano/api');
           const imageName = attachedFile?.name ?? null;
-          await socialCopilotApi.postToTwitter(token, contentValue, imageBase64, imageName, formState.url_1?.trim() ?? null);
+          const company_id = user?.company_id || 0;
+          await socialCopilotApi.postToTwitter(company_id, token, contentValue, imageBase64, imageName, formState.url_1?.trim() ?? null);
 
           // Step 2: Save to database via /post endpoint
           const postPayload = {
@@ -795,7 +796,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
         if (content) {
           const { socialCopilotApi } = await import('@/lib/xano/api');
           const imageName = getImageNameFromBase64(selectedPost.image);
-          await socialCopilotApi.postToTwitter(token, content, selectedPost.image ?? null, imageName, selectedPost.url_1 ?? null);
+          const company_id = user?.company_id || 0;
+          await socialCopilotApi.postToTwitter(company_id, token, content, selectedPost.image ?? null, imageName, selectedPost.url_1 ?? null);
         }
       } catch (error) {
         console.error('Failed to post to Twitter:', error);
@@ -934,7 +936,8 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
                     if (content) {
                       const { socialCopilotApi } = await import('@/lib/xano/api');
                       const imageName = getImageNameFromBase64(post.image);
-                      await socialCopilotApi.postToTwitter(token, content, post.image ?? null, imageName, post.url_1 ?? null);
+                      const company_id = user?.company_id || 0;
+                      await socialCopilotApi.postToTwitter(company_id, token, content, post.image ?? null, imageName, post.url_1 ?? null);
                     }
                   } catch (error) {
                     console.error('Failed to post to Twitter:', error);

@@ -273,7 +273,7 @@ export const linkedInApi = {
 
   async sendMessage(token: string, data: SendMessageRequest): Promise<string> {
     const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.SEND_MESSAGE);
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: getAuthHeaders(token),
@@ -295,10 +295,10 @@ export const linkedInApi = {
   async getMessages(token: string): Promise<LinkedInMessage[]> {
     const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.GET_MESSAGES);
     const headers = getAuthHeaders(token);
-    
+
     console.log('LinkedIn API: getMessages URL:', url);
     console.log('LinkedIn API: getMessages headers:', headers);
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers,
@@ -325,10 +325,10 @@ export const linkedInApi = {
   async getPages(token: string): Promise<CampaignPage[]> {
     const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.GET_PAGES);
     const headers = getAuthHeaders(token);
-    
+
     console.log('LinkedIn API: getPages URL:', url);
     console.log('LinkedIn API: getPages headers:', headers);
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers,
@@ -354,7 +354,7 @@ export const linkedInApi = {
 
   async changeChat(token: string, data: ChangeChatRequest): Promise<LinkedInSession> {
     const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.CHANGE_CHAT);
-    
+
     const response = await fetch(url, {
       method: 'PATCH',
       headers: getAuthHeaders(token),
@@ -375,7 +375,7 @@ export const linkedInApi = {
 
   async deleteChat(token: string, data: DeleteChatRequest): Promise<LinkedInSession> {
     const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.DELETE_CHAT);
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: getAuthHeaders(token),
@@ -656,14 +656,16 @@ export const socialCopilotApi = {
   },
 
   async postToTwitter(
-    token: string, 
-    content: string, 
-    imageData?: string | null, 
+    company_id: number,
+    token: string,
+    content: string,
+    imageData?: string | null,
     imageName?: string | null,
-    url?: string | null
+    url?: string | null,
+   
   ): Promise<any> {
     const apiUrl = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/tweet';
-    
+
     // Extract MIME type from base64 data URI (e.g., "data:image/png;base64,...")
     const getImageType = (base64String: string | null | undefined): string => {
       if (!base64String) return 'image/png';
@@ -674,17 +676,18 @@ export const socialCopilotApi = {
     // Calculate file size from base64 string
     const getImageSize = (base64String: string | null | undefined): number => {
       if (!base64String) return 0;
-      
+
       // Remove the data URI prefix
       const base64Data = base64String.split(',')[1] || base64String;
-      
+
       // Calculate size: base64 is ~33% larger than binary
       // Size = (base64Length * 3) / 4, accounting for padding
       const paddingCount = (base64Data.match(/=/g) || []).length;
       const base64Length = base64Data.length;
-      
+
       return Math.floor((base64Length * 3) / 4) - paddingCount;
     };
+
 
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -692,9 +695,10 @@ export const socialCopilotApi = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        content, 
-        image: imageData ? { 
+      body: JSON.stringify({
+        content,
+        company_id: company_id,
+        image: imageData ? {
           path: imageData,
           name: imageName || 'image.png',
           type: getImageType(imageData),
