@@ -818,8 +818,9 @@ export function SocialMediaModule({ className, onExpandedChange }: { className?:
     setIsConnectingX(true);
 
     try {
+      const company_id = user?.company_id;
       // Step 1: Call request_oauth_url to get OAuth parameters and auto-associate user to state
-      const authStartResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/request_oauth_url', {
+      const authStartResponse = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/request_oauth_url?company_id=${company_id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
