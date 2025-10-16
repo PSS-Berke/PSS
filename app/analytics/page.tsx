@@ -5,6 +5,8 @@ import { WixAnalyticsProvider } from '@/lib/xano/wix-analytics-context';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/xano/auth-context';
 import { useSearchParams } from 'next/navigation';
+import { Loader2, Twitter } from 'lucide-react';
+import { FaGoogle } from 'react-icons/fa';
 
 export default function AnalyticsPage() {
   const { user, token, refreshUser } = useAuth();
@@ -94,7 +96,30 @@ export default function AnalyticsPage() {
             <WixAnalyticsModule className="w-full" />
           </div>
           <div className="w-full px-2">
-            <Button onClick={handleConnectGoogleAnalytics}>Connect Google Analytics to your website</Button>
+          {user?.ga_access?.access && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 px-3"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (!user?.ga_access?.connected) {
+                    handleConnectGoogleAnalytics();
+                  }
+                }}
+                disabled={isConnectingGoogleAnalytics || user?.ga_access?.connected}
+              >
+                {isConnectingGoogleAnalytics ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FaGoogle className="h-4 w-4" />
+                )}
+                <span className="hidden lg:inline">
+                  {user?.ga_access?.connected ? 'Google Analytics Connected' : isConnectingGoogleAnalytics ? 'Connecting...' : 'Connect Google Analytics'}
+                </span>
+              </Button>
+            )}
+            
           </div>
         </div>
       </main>

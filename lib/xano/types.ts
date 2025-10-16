@@ -16,6 +16,11 @@ export interface XAccess {
   connected: boolean;
 }
 
+export interface GoogleAccess {
+  access: boolean;
+  connected: boolean;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -29,6 +34,7 @@ export interface User {
   available_companies?: Company[];
   avatar_url?: string;
   x_access?: XAccess;
+  ga_access?: GoogleAccess;
   created_at: string;
   updated_at: string;
 }
