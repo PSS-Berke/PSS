@@ -558,10 +558,19 @@ export default function SidebarLayout(props: {
   const { isCollapsed, toggleSidebar } = useSidebar();
 
   const handleSwitchCompany = async (companyId: number) => {
+    console.log('=== SIDEBAR: handleSwitchCompany called ===');
+    console.log('User before switch:', user);
+    console.log('Switching from company_id:', user?.company_id);
+    console.log('Switching to company_id:', companyId);
+
     try {
       await switchCompany(companyId);
+      console.log('✅ SIDEBAR: Switch completed successfully');
+      console.log('User after switch:', user);
+      console.log('Company ID after switch:', user?.company_id);
     } catch (error) {
-      console.error('Failed to switch company:', error);
+      console.error('❌ SIDEBAR: Failed to switch company');
+      console.error('Error:', error);
     }
   };
 
