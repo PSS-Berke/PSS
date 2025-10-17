@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, ChevronDown, ChevronUp, FileCheck, Plus, Settings } from 'lucide-react';
+import { Building2, ChevronDown, ChevronUp, FileCheck, Plus, Settings, Users } from 'lucide-react';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
 import { CallPrepContent } from './call-prep-content';
 import { CallPrepPromptDialog } from './call-prep-prompt-dialog';
 import { CallPrepSidebar } from './call-prep-sidebar';
 import { CallPrepSettingsDialog } from './call-prep-settings-dialog';
+import { KeyDecisionMakersModal } from './key-decision-makers-modal';
 
 interface CallPrepModuleProps {
   className?: string;
@@ -20,7 +21,8 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
   const [isExpanded, setIsExpanded] = useState(false);
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const { state, loadLatestAnalysis, generateCallPrep } = useCallPrep();
+  const [enrichmentDialogOpen, setEnrichmentDialogOpen] = useState(false);
+  const { state, loadLatestAnalysis, generateCallPrep, enrichPersonData } = useCallPrep();
   const hasLoadedRef = React.useRef(false);
 
   // Load data when module is expanded
