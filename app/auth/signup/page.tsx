@@ -14,11 +14,7 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
 
   return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-3"
-      aria-label="Parallel Strategies home"
-    >
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="Parallel Strategies home">
       <span
         className={
           isDark
@@ -36,7 +32,11 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
         />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className={isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'}>
+        <span
+          className={
+            isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'
+          }
+        >
           Parallel Strategies
         </span>
         <span className={isDark ? 'text-sm text-white/70' : 'text-sm text-[#C33527]/70'}>
@@ -71,7 +71,7 @@ export default function SignUpPage() {
         password,
         name,
         company,
-        company_code: companyCode ? parseInt(companyCode) : undefined
+        company_code: companyCode ? parseInt(companyCode) : undefined,
       });
       setSuccess(true);
     } catch (err: any) {
@@ -88,16 +88,19 @@ export default function SignUpPage() {
       return;
     }
 
-    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${redirectUri}`, {
-      method: 'GET',
-    });
+    const response = await fetch(
+      `https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${redirectUri}`,
+      {
+        method: 'GET',
+      },
+    );
     const data = await response.json();
     if (response.ok) {
       window.open(data.authUrl, '_blank');
     } else {
       setError('Google sign in failed!');
     }
-  }
+  };
 
   const currentYear = new Date().getFullYear();
 
@@ -112,18 +115,23 @@ export default function SignUpPage() {
                 Create your workspace.
               </h2>
               <p className="text-base leading-7 text-white/80">
-                Join Parallel Strategies to collaborate with your team, orchestrate campaigns,
-                and build a consistent brand presence with our red-themed intelligence hub.
+                Join Parallel Strategies to collaborate with your team, orchestrate campaigns, and
+                build a consistent brand presence with our red-themed intelligence hub.
               </p>
             </div>
           </div>
           <div className="space-y-2 text-sm text-white/70">
             <p className="font-medium">Already have an account?</p>
-            <Link href="/auth/signin" className="inline-flex items-center gap-1 font-semibold text-white hover:text-white/80">
+            <Link
+              href="/auth/signin"
+              className="inline-flex items-center gap-1 font-semibold text-white hover:text-white/80"
+            >
               Sign in instead
             </Link>
           </div>
-          <p className="text-xs text-white/50">© {currentYear} Parallel Strategies. All rights reserved.</p>
+          <p className="text-xs text-white/50">
+            © {currentYear} Parallel Strategies. All rights reserved.
+          </p>
         </div>
 
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 lg:py-14">
@@ -134,7 +142,9 @@ export default function SignUpPage() {
 
             <Card className="flex h-full w-full flex-col border border-border/50 shadow-lg shadow-[#C33527]/20">
               <CardHeader className="space-y-3 lg:shrink-0 lg:text-left">
-                <CardTitle className="text-3xl font-semibold text-[#C33527]">Create account</CardTitle>
+                <CardTitle className="text-3xl font-semibold text-[#C33527]">
+                  Create account
+                </CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Set up your workspace credentials to begin
                 </CardDescription>
@@ -156,7 +166,10 @@ export default function SignUpPage() {
                     />
                   </div>
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="company" className="text-sm font-medium text-muted-foreground/90">
+                    <Label
+                      htmlFor="company"
+                      className="text-sm font-medium text-muted-foreground/90"
+                    >
                       Company
                     </Label>
                     <Input
@@ -169,7 +182,10 @@ export default function SignUpPage() {
                     />
                   </div>
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="companyCode" className="text-sm font-medium text-muted-foreground/90">
+                    <Label
+                      htmlFor="companyCode"
+                      className="text-sm font-medium text-muted-foreground/90"
+                    >
                       Company Code
                     </Label>
                     <Input
@@ -196,7 +212,10 @@ export default function SignUpPage() {
                     />
                   </div>
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="password" className="text-sm font-medium text-muted-foreground/90">
+                    <Label
+                      htmlFor="password"
+                      className="text-sm font-medium text-muted-foreground/90"
+                    >
                       Password
                     </Label>
                     <Input
@@ -234,17 +253,21 @@ export default function SignUpPage() {
                     className="w-full rounded-lg bg-white py-2.5 text-base font-medium text-black shadow-md shadow-[#C33527]/20 transition-colors hover:bg-white/90"
                     disabled={isLoading}
                     onClick={() => generateGoogleSignInUrl()}
-                  > <div className="flex items-center justify-center gap-3">
+                  >
+                    {' '}
+                    <div className="flex items-center justify-center gap-3">
                       <Image src="/img/google.png" alt="Google" width={20} height={20} />
                       Sign up with Google
-
                     </div>
                   </Button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">
                   Already have an account?{' '}
-                  <Link href="/auth/signin" className="font-semibold text-[#C33527] hover:text-[#9E2A1F]">
+                  <Link
+                    href="/auth/signin"
+                    className="font-semibold text-[#C33527] hover:text-[#9E2A1F]"
+                  >
                     Sign in
                   </Link>
                 </div>

@@ -9,11 +9,7 @@ import React, {
   useRef,
 } from 'react';
 import { socialCopilotApi } from './api';
-import type {
-  SocialPost,
-  SocialPostPayload,
-  SocialPostUpdatePayload,
-} from './types';
+import type { SocialPost, SocialPostPayload, SocialPostUpdatePayload } from './types';
 import { useAuth } from './auth-context';
 
 interface SocialMediaState {
@@ -45,10 +41,7 @@ const initialState: SocialMediaState = {
   lastFetchedAt: null,
 };
 
-function socialMediaReducer(
-  state: SocialMediaState,
-  action: SocialMediaAction
-): SocialMediaState {
+function socialMediaReducer(state: SocialMediaState, action: SocialMediaAction): SocialMediaState {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
@@ -61,9 +54,7 @@ function socialMediaReducer(
     case 'UPDATE_POST':
       return {
         ...state,
-        posts: state.posts.map((post) =>
-          post.id === action.payload.id ? action.payload : post
-        ),
+        posts: state.posts.map((post) => (post.id === action.payload.id ? action.payload : post)),
       };
     case 'ADD_POST':
       return { ...state, posts: [action.payload, ...state.posts] };
@@ -92,23 +83,14 @@ interface SocialMediaContextValue {
   getPost: (postId: number) => Promise<SocialPost | null>;
   togglePublish: (postId: number, nextStatus: boolean) => Promise<void>;
   updateStatus: (postId: number, status: 'draft' | 'approved' | 'published') => Promise<void>;
-  updatePost: (
-    postId: number,
-    payload: SocialPostUpdatePayload
-  ) => Promise<void>;
+  updatePost: (postId: number, payload: SocialPostUpdatePayload) => Promise<void>;
   createPost: (payload: SocialPostPayload) => Promise<SocialPost | null>;
   deletePost: (postId: number) => Promise<void>;
 }
 
-const SocialMediaContext = createContext<SocialMediaContextValue | undefined>(
-  undefined
-);
+const SocialMediaContext = createContext<SocialMediaContextValue | undefined>(undefined);
 
-export function SocialMediaProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function SocialMediaProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(socialMediaReducer, initialState);
   const { token, user } = useAuth();
   const postsRef = useRef<SocialPost[]>(state.posts);
@@ -137,9 +119,7 @@ export function SocialMediaProvider({
       const sorted = posts
         .slice()
         .sort(
-          (a, b) =>
-            new Date(a.scheduled_date).getTime() -
-            new Date(b.scheduled_date).getTime()
+          (a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime(),
         );
       dispatch({ type: 'SET_POSTS', payload: sorted });
       dispatch({
@@ -150,10 +130,7 @@ export function SocialMediaProvider({
       console.error('Social Media: Failed to fetch posts', error);
       dispatch({
         type: 'SET_ERROR',
-        payload:
-          error instanceof Error
-            ? error.message
-            : 'Failed to load social media posts',
+        payload: error instanceof Error ? error.message : 'Failed to load social media posts',
       });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -180,15 +157,12 @@ export function SocialMediaProvider({
         console.error('Social Media: Failed to fetch post', error);
         dispatch({
           type: 'SET_ERROR',
-          payload:
-            error instanceof Error
-              ? error.message
-              : 'Failed to fetch post',
+          payload: error instanceof Error ? error.message : 'Failed to fetch post',
         });
         return null;
       }
     },
-    [token]
+    [token],
   );
 
   const updateStatus = useCallback(
@@ -200,7 +174,7 @@ export function SocialMediaProvider({
 
       try {
         // Use ref to get current posts without adding to dependencies
-        const currentPost = postsRef.current.find(post => post.id === postId);
+        const currentPost = postsRef.current.find((post) => post.id === postId);
         if (!currentPost) {
           throw new Error('Post not found');
         }
@@ -225,20 +199,21 @@ export function SocialMediaProvider({
         console.error('Social Media: Failed to update status', error);
         dispatch({
           type: 'SET_ERROR',
-          payload:
-            error instanceof Error
-              ? error.message
-              : 'Failed to update post status',
+          payload: error instanceof Error ? error.message : 'Failed to update post status',
         });
       } finally {
         dispatch({ type: 'SET_MUTATING', payload: { id: postId, isMutating: false } });
       }
-  }, [token]);
+    },
+    [token],
+  );
 
   const togglePublish = useCallback(
     async (postId: number, nextStatus: boolean) => {
       await updateStatus(postId, nextStatus ? 'published' : 'draft');
-  }, [updateStatus]);
+    },
+    [updateStatus],
+  );
 
   const updatePost = useCallback(
     async (postId: number, payload: SocialPostUpdatePayload) => {
@@ -254,16 +229,13 @@ export function SocialMediaProvider({
         console.error('Social Media: Failed to update post', error);
         dispatch({
           type: 'SET_ERROR',
-          payload:
-            error instanceof Error
-              ? error.message
-              : 'Failed to update post',
+          payload: error instanceof Error ? error.message : 'Failed to update post',
         });
       } finally {
         dispatch({ type: 'SET_MUTATING', payload: { id: postId, isMutating: false } });
       }
     },
-    [token]
+    [token],
   );
 
   const createPost = useCallback(
@@ -280,15 +252,12 @@ export function SocialMediaProvider({
         console.error('Social Media: Failed to create post', error);
         dispatch({
           type: 'SET_ERROR',
-          payload:
-            error instanceof Error
-              ? error.message
-              : 'Failed to create post',
+          payload: error instanceof Error ? error.message : 'Failed to create post',
         });
         return null;
       }
     },
-    [token]
+    [token],
   );
 
   const deletePost = useCallback(
@@ -305,16 +274,13 @@ export function SocialMediaProvider({
         console.error('Social Media: Failed to delete post', error);
         dispatch({
           type: 'SET_ERROR',
-          payload:
-            error instanceof Error
-              ? error.message
-              : 'Failed to delete post',
+          payload: error instanceof Error ? error.message : 'Failed to delete post',
         });
       } finally {
         dispatch({ type: 'SET_MUTATING', payload: { id: postId, isMutating: false } });
       }
     },
-    [token]
+    [token],
   );
 
   useEffect(() => {
@@ -329,7 +295,7 @@ export function SocialMediaProvider({
       console.log('Social Media: Company changed, reloading posts for company:', user.company_id);
       fetchPosts();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.company_id]);
 
   const value: SocialMediaContextValue = {
@@ -343,11 +309,7 @@ export function SocialMediaProvider({
     deletePost,
   };
 
-  return (
-    <SocialMediaContext.Provider value={value}>
-      {children}
-    </SocialMediaContext.Provider>
-  );
+  return <SocialMediaContext.Provider value={value}>{children}</SocialMediaContext.Provider>;
 }
 
 export function useSocialMedia(): SocialMediaContextValue {
@@ -357,4 +319,3 @@ export function useSocialMedia(): SocialMediaContextValue {
   }
   return context;
 }
-

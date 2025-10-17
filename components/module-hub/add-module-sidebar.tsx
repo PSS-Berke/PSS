@@ -48,7 +48,7 @@ export function AddModuleSidebar({
   onSelectCategory,
 }: AddModuleSidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = React.useState(
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false,
   );
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -99,7 +99,7 @@ export function AddModuleSidebar({
         'bg-muted/30 flex flex-col w-full transition-all duration-300',
         isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-64 lg:w-72 xl:w-80 h-auto md:h-full',
         'md:border-r border-b md:border-b-0',
-        className
+        className,
       )}
     >
       {/* Collapsed Toggle Button */}
@@ -124,9 +124,7 @@ export function AddModuleSidebar({
           {/* Header */}
           <div className="px-4 py-3 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Categories
-              </h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Categories</h3>
               <Button
                 onClick={() => setCollapsed(true)}
                 size="sm"
@@ -162,16 +160,18 @@ export function AddModuleSidebar({
                     key={category.id}
                     className={cn(
                       'p-4 cursor-pointer transition-all hover:bg-accent flex-shrink-0 w-48',
-                      isSelected
-                        ? 'bg-accent border-[#C33527] ring-2 ring-[#C33527]/20'
-                        : ''
+                      isSelected ? 'bg-accent border-[#C33527] ring-2 ring-[#C33527]/20' : '',
                     )}
                     onClick={() => onSelectCategory?.(category.id)}
                   >
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
-                        <div className={`p-2 rounded-md ${isSelected ? 'bg-[#C33527]/10' : 'bg-muted'}`}>
-                          <Icon className={`h-5 w-5 ${isSelected ? 'text-[#C33527]' : 'text-muted-foreground'}`} />
+                        <div
+                          className={`p-2 rounded-md ${isSelected ? 'bg-[#C33527]/10' : 'bg-muted'}`}
+                        >
+                          <Icon
+                            className={`h-5 w-5 ${isSelected ? 'text-[#C33527]' : 'text-muted-foreground'}`}
+                          />
                         </div>
                         {isSelected && <div className="w-2 h-2 bg-[#C33527] rounded-full" />}
                       </div>
@@ -206,11 +206,17 @@ export function AddModuleSidebar({
                     onClick={() => onSelectCategory?.(category.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-md ${isSelected ? 'bg-[#C33527]/10' : 'bg-muted'}`}>
-                        <Icon className={`h-4 w-4 ${isSelected ? 'text-[#C33527]' : 'text-muted-foreground'}`} />
+                      <div
+                        className={`p-2 rounded-md ${isSelected ? 'bg-[#C33527]/10' : 'bg-muted'}`}
+                      >
+                        <Icon
+                          className={`h-4 w-4 ${isSelected ? 'text-[#C33527]' : 'text-muted-foreground'}`}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${isSelected ? 'text-[#C33527]' : ''}`}>
+                        <p
+                          className={`text-sm font-medium truncate ${isSelected ? 'text-[#C33527]' : ''}`}
+                        >
                           {category.name}
                         </p>
                         <p className="text-xs text-muted-foreground">

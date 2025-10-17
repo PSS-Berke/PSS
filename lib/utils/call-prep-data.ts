@@ -71,7 +71,7 @@ export interface KeyDecisionMakerWithEnrichment extends KeyDecisionMaker {
  */
 export function mergeKeyDecisionMakersWithEnrichment(
   keyDecisionMakersJson: string,
-  peopleDataJson: string
+  peopleDataJson: string,
 ): KeyDecisionMakerWithEnrichment[] {
   // Parse JSON strings
   let keyDecisionMakers: KeyDecisionMaker[] = [];
@@ -90,7 +90,7 @@ export function mergeKeyDecisionMakersWithEnrichment(
   }
 
   // Create a map of people data by matching fields
-  const peopleDataMap = new Map<string, { enrichment: EnrichmentData[], kdm_id: number }>();
+  const peopleDataMap = new Map<string, { enrichment: EnrichmentData[]; kdm_id: number }>();
 
   peopleData.forEach((person) => {
     // Create multiple keys for matching flexibility
@@ -111,14 +111,14 @@ export function mergeKeyDecisionMakersWithEnrichment(
     }
 
     // Store enrichment data AND kdm_id under all possible keys
-    keys.forEach(key => {
+    keys.forEach((key) => {
       peopleDataMap.set(key, { enrichment: person.x2_data, kdm_id: person.kdm_id });
     });
   });
 
   // Merge enrichment data into key decision makers
   return keyDecisionMakers.map((kdm) => {
-    let enrichmentData: { enrichment: EnrichmentData[], kdm_id: number } | undefined;
+    let enrichmentData: { enrichment: EnrichmentData[]; kdm_id: number } | undefined;
 
     // Try to find enrichment data by name
     if (kdm.name) {
@@ -190,20 +190,22 @@ function formatDateRange(startDate?: string | null, endDate?: string | null): st
 /**
  * Calculate years of experience from experience array
  */
-export function calculateYearsOfExperience(experience?: EnrichmentData['free_data']['experience']): number | null {
+export function calculateYearsOfExperience(
+  experience?: EnrichmentData['free_data']['experience'],
+): number | null {
   if (!experience || experience.length === 0) return null;
 
   const dates = experience
-    .map(exp => ({
+    .map((exp) => ({
       start: exp.start_date ? parseInt(exp.start_date.split('-')[0]) : null,
-      end: exp.end_date ? parseInt(exp.end_date.split('-')[0]) : new Date().getFullYear()
+      end: exp.end_date ? parseInt(exp.end_date.split('-')[0]) : new Date().getFullYear(),
     }))
-    .filter(d => d.start !== null);
+    .filter((d) => d.start !== null);
 
   if (dates.length === 0) return null;
 
-  const earliestYear = Math.min(...dates.map(d => d.start!));
-  const latestYear = Math.max(...dates.map(d => d.end));
+  const earliestYear = Math.min(...dates.map((d) => d.start!));
+  const latestYear = Math.max(...dates.map((d) => d.end));
 
   return latestYear - earliestYear;
 }
@@ -226,9 +228,11 @@ export function getPrimaryEmail(kdm: KeyDecisionMakerWithEnrichment): string | n
  */
 export function getEnrichmentStats(decisionMakers: KeyDecisionMakerWithEnrichment[]) {
   const total = decisionMakers.length;
-  const enriched = decisionMakers.filter(kdm => kdm.enrichment && kdm.enrichment.length > 0).length;
-  const withEmail = decisionMakers.filter(kdm => getPrimaryEmail(kdm) !== null).length;
-  const withLinkedIn = decisionMakers.filter(kdm => kdm.linkedin_url).length;
+  const enriched = decisionMakers.filter(
+    (kdm) => kdm.enrichment && kdm.enrichment.length > 0,
+  ).length;
+  const withEmail = decisionMakers.filter((kdm) => getPrimaryEmail(kdm) !== null).length;
+  const withLinkedIn = decisionMakers.filter((kdm) => kdm.linkedin_url).length;
 
   return {
     total,
@@ -245,7 +249,7 @@ export function getEnrichmentStats(decisionMakers: KeyDecisionMakerWithEnrichmen
  */
 export function sortDecisionMakers(
   decisionMakers: KeyDecisionMakerWithEnrichment[],
-  sortBy: 'name' | 'enrichment' | 'experience'
+  sortBy: 'name' | 'enrichment' | 'experience',
 ): KeyDecisionMakerWithEnrichment[] {
   const sorted = [...decisionMakers];
 
@@ -263,10 +267,10 @@ export function sortDecisionMakers(
     case 'experience':
       return sorted.sort((a, b) => {
         const aExp = a.enrichment?.[0]
-          ? calculateYearsOfExperience(a.enrichment[0].free_data.experience) ?? 0
+          ? (calculateYearsOfExperience(a.enrichment[0].free_data.experience) ?? 0)
           : 0;
         const bExp = b.enrichment?.[0]
-          ? calculateYearsOfExperience(b.enrichment[0].free_data.experience) ?? 0
+          ? (calculateYearsOfExperience(b.enrichment[0].free_data.experience) ?? 0)
           : 0;
         return bExp - aExp; // Most experienced first
       });

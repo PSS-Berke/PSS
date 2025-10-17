@@ -9,7 +9,8 @@ interface CompanyFundingModuleProps {
 }
 
 export function CompanyFundingModule({ company }: CompanyFundingModuleProps) {
-  const hasFundingData = company.funding_total || company.funding_stage || company.last_funding_date;
+  const hasFundingData =
+    company.funding_total || company.funding_stage || company.last_funding_date;
   const hasGrowthData = company.employee_growth_rate;
 
   if (!hasFundingData && !hasGrowthData) {
@@ -65,9 +66,13 @@ export function CompanyFundingModule({ company }: CompanyFundingModuleProps) {
               {company.employee_growth_rate['3_month'] !== undefined && (
                 <div>
                   <p className="text-xs text-gray-600">3 Months</p>
-                  <p className={`text-sm font-semibold ${
-                    company.employee_growth_rate['3_month'] > 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <p
+                    className={`text-sm font-semibold ${
+                      company.employee_growth_rate['3_month'] > 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
                     {company.employee_growth_rate['3_month'] > 0 ? '+' : ''}
                     {(company.employee_growth_rate['3_month'] * 100).toFixed(1)}%
                   </p>
@@ -76,9 +81,13 @@ export function CompanyFundingModule({ company }: CompanyFundingModuleProps) {
               {company.employee_growth_rate['12_month'] !== undefined && (
                 <div>
                   <p className="text-xs text-gray-600">12 Months</p>
-                  <p className={`text-sm font-semibold ${
-                    company.employee_growth_rate['12_month'] > 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <p
+                    className={`text-sm font-semibold ${
+                      company.employee_growth_rate['12_month'] > 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
                     {company.employee_growth_rate['12_month'] > 0 ? '+' : ''}
                     {(company.employee_growth_rate['12_month'] * 100).toFixed(1)}%
                   </p>

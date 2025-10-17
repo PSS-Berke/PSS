@@ -64,7 +64,7 @@ export function AddModuleView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false,
   );
 
   const filteredModules = MOCK_MODULES.filter((module) => {

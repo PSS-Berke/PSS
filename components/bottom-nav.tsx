@@ -5,7 +5,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { MoreHorizontal, UserCircle2, Moon, Sun, LogOut, Mail, Plus, Building2, Check, Search } from 'lucide-react';
+import {
+  MoreHorizontal,
+  UserCircle2,
+  Moon,
+  Sun,
+  LogOut,
+  Mail,
+  Plus,
+  Building2,
+  Check,
+  Search,
+} from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -67,9 +78,10 @@ export function BottomNav({
   };
 
   // Filter companies based on search
-  const filteredCompanies = user?.available_companies?.filter((company) =>
-    company.company_name.toLowerCase().includes(companySearch.toLowerCase())
-  ) || [];
+  const filteredCompanies =
+    user?.available_companies?.filter((company) =>
+      company.company_name.toLowerCase().includes(companySearch.toLowerCase()),
+    ) || [];
 
   return (
     <>
@@ -77,13 +89,14 @@ export function BottomNav({
         className={cn(
           'fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border md:hidden',
           'pb-safe supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)]',
-          className
+          className,
         )}
       >
         <div className="flex items-center justify-around h-16 px-2">
           {visibleItems.map((item) => {
             const fullHref = basePath + item.href;
-            const isActive = pathname === fullHref || (item.href !== '/' && pathname.startsWith(fullHref));
+            const isActive =
+              pathname === fullHref || (item.href !== '/' && pathname.startsWith(fullHref));
 
             return (
               <Link
@@ -92,21 +105,19 @@ export function BottomNav({
                 className={cn(
                   'flex flex-col items-center justify-center gap-1 min-w-0 flex-1 py-2 px-2 rounded-lg transition-colors active:scale-95',
                   'min-h-[44px]', // Touch-friendly tap target
-                  isActive
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                  isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <item.icon
                   className={cn(
                     'h-6 w-6 transition-colors',
-                    isActive ? 'text-[#C33527]' : 'text-muted-foreground'
+                    isActive ? 'text-[#C33527]' : 'text-muted-foreground',
                   )}
                 />
                 <span
                   className={cn(
                     'text-[10px] font-medium truncate w-full text-center',
-                    isActive ? 'text-foreground' : 'text-muted-foreground'
+                    isActive ? 'text-foreground' : 'text-muted-foreground',
                   )}
                 >
                   {item.name}
@@ -120,7 +131,7 @@ export function BottomNav({
             onClick={() => setIsMoreOpen(true)}
             className={cn(
               'flex flex-col items-center justify-center gap-1 min-w-0 flex-1 py-2 px-2 rounded-lg transition-colors active:scale-95',
-              'min-h-[44px] text-muted-foreground hover:text-foreground'
+              'min-h-[44px] text-muted-foreground hover:text-foreground',
             )}
           >
             <MoreHorizontal className="h-6 w-6" />
@@ -149,7 +160,7 @@ export function BottomNav({
                   </span>
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {user.company ?? "Company"}
+                      {user.company ?? 'Company'}
                     </span>
                     <span className="text-sm font-medium text-foreground truncate">
                       {user.email}
@@ -158,18 +169,20 @@ export function BottomNav({
                 </div>
 
                 {/* Company Switcher - Only show if user has multiple companies */}
-                {user.available_companies && user.available_companies.length > 1 && onSwitchCompany && (
-                  <button
-                    onClick={() => {
-                      setIsMoreOpen(false);
-                      setIsCompanySelectorOpen(true);
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors min-h-[48px] text-left"
-                  >
-                    <Building2 className="h-5 w-5" />
-                    <span className="text-sm font-medium">Switch Company</span>
-                  </button>
-                )}
+                {user.available_companies &&
+                  user.available_companies.length > 1 &&
+                  onSwitchCompany && (
+                    <button
+                      onClick={() => {
+                        setIsMoreOpen(false);
+                        setIsCompanySelectorOpen(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors min-h-[48px] text-left"
+                    >
+                      <Building2 className="h-5 w-5" />
+                      <span className="text-sm font-medium">Switch Company</span>
+                    </button>
+                  )}
 
                 {/* Manage Modules */}
                 {onManageModules && (
@@ -197,7 +210,8 @@ export function BottomNav({
                 </p>
                 {moreItems.map((item) => {
                   const fullHref = basePath + item.href;
-                  const isActive = pathname === fullHref || (item.href !== '/' && pathname.startsWith(fullHref));
+                  const isActive =
+                    pathname === fullHref || (item.href !== '/' && pathname.startsWith(fullHref));
 
                   return (
                     <Link
@@ -208,7 +222,7 @@ export function BottomNav({
                         'flex items-center gap-3 px-3 py-3 rounded-lg transition-colors min-h-[48px]',
                         isActive
                           ? 'bg-accent text-foreground'
-                          : 'hover:bg-muted text-muted-foreground'
+                          : 'hover:bg-muted text-muted-foreground',
                       )}
                     >
                       <item.icon className="h-5 w-5" />
@@ -318,18 +332,12 @@ export function BottomNav({
                       disabled={isSwitching || isCurrentCompany}
                       className={cn(
                         'w-full flex items-center justify-between gap-3 px-3 py-3 rounded-lg transition-colors min-h-[48px] text-left',
-                        isCurrentCompany
-                          ? 'bg-accent text-foreground'
-                          : 'hover:bg-muted',
-                        isSwitching && 'opacity-50 cursor-not-allowed'
+                        isCurrentCompany ? 'bg-accent text-foreground' : 'hover:bg-muted',
+                        isSwitching && 'opacity-50 cursor-not-allowed',
                       )}
                     >
-                      <span className="text-sm font-medium truncate">
-                        {company.company_name}
-                      </span>
-                      {isCurrentCompany && (
-                        <Check className="h-5 w-5 shrink-0 text-foreground" />
-                      )}
+                      <span className="text-sm font-medium truncate">{company.company_name}</span>
+                      {isCurrentCompany && <Check className="h-5 w-5 shrink-0 text-foreground" />}
                     </button>
                   );
                 })

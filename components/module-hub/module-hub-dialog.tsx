@@ -67,10 +67,7 @@ export function ModuleHubDialog({ open, onClose }: ModuleHubDialogProps) {
   if (!open || !mounted) return null;
 
   const modalContent = (
-    <div
-      className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm" onClick={onClose}>
       <div
         className={`fixed z-[10000] overflow-hidden transition-all duration-300 ${
           isExpanded
@@ -91,19 +88,11 @@ export function ModuleHubDialog({ open, onClose }: ModuleHubDialogProps) {
               </div>
               <div className="flex items-center gap-2">
                 {isExpanded && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleBack}
-                  >
+                  <Button variant="outline" size="sm" onClick={handleBack}>
                     Back
                   </Button>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                >
+                <Button variant="ghost" size="sm" onClick={onClose}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -112,9 +101,7 @@ export function ModuleHubDialog({ open, onClose }: ModuleHubDialogProps) {
 
           {/* Content */}
           <div className="flex-1 overflow-hidden">
-            {view === 'tiles' && (
-              <ModuleHubTiles onSelectTile={handleSelectTile} />
-            )}
+            {view === 'tiles' && <ModuleHubTiles onSelectTile={handleSelectTile} />}
             {view === 'add-module' && <AddModuleView />}
             {view === 'active-modules' && <ActiveModulesView />}
           </div>

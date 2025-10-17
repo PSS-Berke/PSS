@@ -11,11 +11,7 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
 
   return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-3"
-      aria-label="Parallel Strategies home"
-    >
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="Parallel Strategies home">
       <span
         className={
           isDark
@@ -33,7 +29,11 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
         />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className={isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'}>
+        <span
+          className={
+            isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'
+          }
+        >
           Parallel Strategies
         </span>
         <span className={isDark ? 'text-sm text-white/70' : 'text-sm text-[#C33527]/70'}>
@@ -62,7 +62,7 @@ export default function VerifyEmailPage() {
 
       try {
         const response = await fetch(
-          `https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/auth/call_back?token=${token}`
+          `https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/auth/call_back?token=${token}`,
         );
 
         if (response.status === 200) {
@@ -97,12 +97,14 @@ export default function VerifyEmailPage() {
                 Email Verification
               </h2>
               <p className="text-base leading-7 text-white/80">
-                We&apos;re verifying your email address to complete your account setup.
-                This will only take a moment.
+                We&apos;re verifying your email address to complete your account setup. This will
+                only take a moment.
               </p>
             </div>
           </div>
-          <p className="text-xs text-white/50">© {currentYear} Parallel Strategies. All rights reserved.</p>
+          <p className="text-xs text-white/50">
+            © {currentYear} Parallel Strategies. All rights reserved.
+          </p>
         </div>
 
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-12 lg:h-full">

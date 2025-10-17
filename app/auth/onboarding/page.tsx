@@ -15,11 +15,7 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
 
   return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-3"
-      aria-label="Parallel Strategies home"
-    >
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="Parallel Strategies home">
       <span
         className={
           isDark
@@ -37,7 +33,11 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
         />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className={isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'}>
+        <span
+          className={
+            isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'
+          }
+        >
           Parallel Strategies
         </span>
         <span className={isDark ? 'text-sm text-white/70' : 'text-sm text-[#C33527]/70'}>
@@ -56,7 +56,7 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState(false);
 
   const { onboardCompany } = useAuth();
-
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -65,16 +65,18 @@ export default function SignUpPage() {
     try {
       await onboardCompany({
         company,
-        company_code: companyCode ? parseInt(companyCode) : undefined
+        company_code: companyCode ? parseInt(companyCode) : undefined,
       });
       setSuccess(true);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to complete onboarding');
     } finally {
       setIsLoading(false);
     }
   };
-
 
   const currentYear = new Date().getFullYear();
 
@@ -85,17 +87,18 @@ export default function SignUpPage() {
           <div className="space-y-10">
             <BrandMark variant="dark" />
             <div className="space-y-6">
-              <h2 className="text-3xl font-semibold leading-tight md:text-4xl">
-                Onboarding.
-              </h2>
+              <h2 className="text-3xl font-semibold leading-tight md:text-4xl">Onboarding.</h2>
               <p className="text-base leading-7 text-white/80">
-                Complete your onboarding to join Parallel Strategies to collaborate with your team, orchestrate campaigns,
-                and build a consistent brand presence with our red-themed intelligence hub.
+                Complete your onboarding to join Parallel Strategies to collaborate with your team,
+                orchestrate campaigns, and build a consistent brand presence with our red-themed
+                intelligence hub.
               </p>
             </div>
           </div>
-          
-          <p className="text-xs text-white/50">© {currentYear} Parallel Strategies. All rights reserved.</p>
+
+          <p className="text-xs text-white/50">
+            © {currentYear} Parallel Strategies. All rights reserved.
+          </p>
         </div>
 
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 lg:py-14">
@@ -106,16 +109,20 @@ export default function SignUpPage() {
 
             <Card className="flex h-full w-full flex-col border border-border/50 shadow-lg shadow-[#C33527]/20">
               <CardHeader className="space-y-3 lg:shrink-0 lg:text-left">
-                <CardTitle className="text-3xl font-semibold text-[#C33527]">Create account</CardTitle>
+                <CardTitle className="text-3xl font-semibold text-[#C33527]">
+                  Create account
+                </CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Set up your workspace credentials to begin
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto pr-1 sm:pr-2 lg:pr-3">
                 <form onSubmit={handleSubmit} className="space-y-5">
-
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="company" className="text-sm font-medium text-muted-foreground/90">
+                    <Label
+                      htmlFor="company"
+                      className="text-sm font-medium text-muted-foreground/90"
+                    >
                       Company
                     </Label>
                     <Input
@@ -123,12 +130,16 @@ export default function SignUpPage() {
                       type="text"
                       placeholder="Your Company"
                       value={company}
+                      required
                       onChange={(e) => setCompany(e.target.value)}
                       className="border-muted focus-visible:ring-[#C33527] focus-visible:ring-offset-2"
                     />
                   </div>
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="companyCode" className="text-sm font-medium text-muted-foreground/90">
+                    <Label
+                      htmlFor="companyCode"
+                      className="text-sm font-medium text-muted-foreground/90"
+                    >
                       Company Code
                     </Label>
                     <Input
@@ -140,7 +151,6 @@ export default function SignUpPage() {
                       className="border-muted focus-visible:ring-[#C33527] focus-visible:ring-offset-2"
                     />
                   </div>
-
 
                   {success && (
                     <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-600">
@@ -161,10 +171,7 @@ export default function SignUpPage() {
                   >
                     {isLoading ? 'Completing onboarding…' : 'Complete onboarding'}
                   </Button>
-
                 </form>
-
-
               </CardContent>
             </Card>
           </div>

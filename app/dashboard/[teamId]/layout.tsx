@@ -1,33 +1,43 @@
 'use client';
 
 import React from 'react';
-import SidebarLayout, { SidebarItem } from "@/components/sidebar-layout";
-import { useAuth } from "@/lib/xano/auth-context";
-import { BadgePercent, BarChart4, Columns3, Globe, Locate, Settings2, ShoppingBag, ShoppingCart, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
+import SidebarLayout, { SidebarItem } from '@/components/sidebar-layout';
+import { useAuth } from '@/lib/xano/auth-context';
+import {
+  BadgePercent,
+  BarChart4,
+  Columns3,
+  Globe,
+  Locate,
+  Settings2,
+  ShoppingBag,
+  ShoppingCart,
+  Users,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const navigationItems: SidebarItem[] = [
   {
-    name: "Overview",
-    href: "/",
+    name: 'Overview',
+    href: '/',
     icon: Globe,
-    type: "item",
+    type: 'item',
   },
   {
     type: 'label',
     name: 'Core',
   },
   {
-    name: "People",
-    href: "/people",
+    name: 'People',
+    href: '/people',
     icon: Users,
-    type: "item",
+    type: 'item',
   },
   {
-    name: "Revenue",
-    href: "/revenue",
+    name: 'Revenue',
+    href: '/revenue',
     icon: BarChart4,
-    type: "item",
+    type: 'item',
   },
 ];
 
@@ -51,13 +61,15 @@ export default function Layout(props: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarLayout 
+    <SidebarLayout
       items={navigationItems}
       basePath="/dashboard"
-      baseBreadcrumb={[{
-        title: "Dashboard",
-        href: "/dashboard",
-      }]}
+      baseBreadcrumb={[
+        {
+          title: 'Dashboard',
+          href: '/dashboard',
+        },
+      ]}
     >
       {props.children}
     </SidebarLayout>

@@ -34,7 +34,7 @@ export async function lookupPersonCache(
   firstName: string,
   lastName: string,
   companyName?: string,
-  token?: string
+  token?: string,
 ): Promise<PDLPersonProfile | null> {
   try {
     const params = new URLSearchParams({
@@ -46,13 +46,10 @@ export async function lookupPersonCache(
       params.append('search_company_name', companyName);
     }
 
-    const response = await fetch(
-      `${PDL_CACHE_BASE_URL}/pdl_person_cache?${params.toString()}`,
-      {
-        method: 'GET',
-        headers: getAuthHeaders(token),
-      }
-    );
+    const response = await fetch(`${PDL_CACHE_BASE_URL}/pdl_person_cache?${params.toString()}`, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
 
     if (!response.ok) {
       console.log(`Person cache lookup failed: ${response.status}`);
@@ -83,7 +80,7 @@ export async function savePersonCache(
   pdlData: PDLPersonProfile,
   likelihood: number,
   companyName?: string,
-  token?: string
+  token?: string,
 ): Promise<void> {
   try {
     const payload = {
@@ -118,20 +115,17 @@ export async function savePersonCache(
 // Company Cache Functions
 export async function lookupCompanyCache(
   companyName: string,
-  token?: string
+  token?: string,
 ): Promise<PDLCompanyProfile | null> {
   try {
     const params = new URLSearchParams({
       company_name: companyName,
     });
 
-    const response = await fetch(
-      `${PDL_CACHE_BASE_URL}/pdl_company_cache?${params.toString()}`,
-      {
-        method: 'GET',
-        headers: getAuthHeaders(token),
-      }
-    );
+    const response = await fetch(`${PDL_CACHE_BASE_URL}/pdl_company_cache?${params.toString()}`, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
 
     if (!response.ok) {
       console.log(`Company cache lookup failed: ${response.status}`);
@@ -159,7 +153,7 @@ export async function saveCompanyCache(
   companyName: string,
   pdlData: PDLCompanyProfile,
   likelihood: number,
-  token?: string
+  token?: string,
 ): Promise<void> {
   try {
     const payload = {

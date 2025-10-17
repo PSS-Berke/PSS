@@ -1,15 +1,15 @@
-import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Provider } from "./provider";
-import { AuthProvider } from "@/lib/xano/auth-context";
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { Provider } from './provider';
+import { AuthProvider } from '@/lib/xano/auth-context';
 import { ConditionalSidebar } from '@/components/permanent-sidebar';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Multi-tenant App",
-  description: "A Multi-tenant Next.js Starter Template with Xano",
+  title: 'Multi-tenant App',
+  description: 'A Multi-tenant Next.js Starter Template with Xano',
 };
 
 export const viewport: Viewport = {
@@ -30,9 +30,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Provider>
           <AuthProvider>
-            <ConditionalSidebar>
-              {children}
-            </ConditionalSidebar>
+            <ConditionalSidebar>{children}</ConditionalSidebar>
           </AuthProvider>
         </Provider>
       </body>

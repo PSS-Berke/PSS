@@ -10,9 +10,9 @@ export default function InfographicStudio() {
     mood: 'modern',
     colors: 'vibrant',
     details: '',
-    size: '1024x1024'
+    size: '1024x1024',
   });
-  
+
   const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export default function InfographicStudio() {
     { value: 'colorful', label: 'Colorful & Bold' },
     { value: 'illustrated', label: 'Hand-Illustrated' },
     { value: 'modern', label: 'Modern & Sleek' },
-    { value: 'vintage', label: 'Vintage' }
+    { value: 'vintage', label: 'Vintage' },
   ];
 
   const moods = [
@@ -35,7 +35,7 @@ export default function InfographicStudio() {
     { value: 'corporate', label: 'Corporate' },
     { value: 'playful', label: 'Playful' },
     { value: 'serious', label: 'Serious' },
-    { value: 'elegant', label: 'Elegant' }
+    { value: 'elegant', label: 'Elegant' },
   ];
 
   const colorSchemes = [
@@ -44,29 +44,29 @@ export default function InfographicStudio() {
     { value: 'monochrome', label: 'Monochrome' },
     { value: 'blue', label: 'Blue Tones' },
     { value: 'warm', label: 'Warm Colors' },
-    { value: 'cool', label: 'Cool Colors' }
+    { value: 'cool', label: 'Cool Colors' },
   ];
 
   const sizes = [
     { value: '1024x1024', label: 'Square (1024x1024)' },
     { value: '1024x1792', label: 'Portrait (1024x1792)' },
-    { value: '1792x1024', label: 'Landscape (1792x1024)' }
+    { value: '1792x1024', label: 'Landscape (1792x1024)' },
   ];
 
   const buildPrompt = () => {
     const { topic, style, mood, colors, details } = formData;
-    
+
     let prompt = `Create a high-quality infographic image about "${topic}". `;
     prompt += `Style: ${style} design with a ${mood} feel. `;
     prompt += `Use a ${colors} color scheme. `;
     prompt += `The image should be suitable for professional use, with clear visual hierarchy and good composition. `;
-    
+
     if (details) {
       prompt += `Additional requirements: ${details}. `;
     }
-    
+
     prompt += `Make it visually appealing, well-balanced, and easy to understand.`;
-    
+
     return prompt;
   };
 
@@ -89,19 +89,19 @@ export default function InfographicStudio() {
       const prompt = buildPrompt();
       const [width, height] = formData.size.split('x').map(Number);
 
-      const response = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "dall-e-3",
+          model: 'dall-e-3',
           prompt: prompt,
           n: 1,
           size: formData.size,
-          quality: "hd"
-        })
+          quality: 'hd',
+        }),
       });
 
       if (!response.ok) {
@@ -110,25 +110,28 @@ export default function InfographicStudio() {
       }
 
       const data = await response.json();
-      
+
       if (data.data && data.data[0] && data.data[0].url) {
         const newCampaign = {
           id: Date.now(),
           name: formData.topic,
           imageUrl: data.data[0].url,
           prompt: prompt,
-          timestamp: new Date().toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }),
+          timestamp: new Date().toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: '2-digit',
+          }),
           fullTimestamp: new Date().toLocaleString(),
-          ...formData
+          ...formData,
         };
-        
+
         setCampaigns([newCampaign, ...campaigns]);
         setSelectedCampaign(newCampaign);
         setShowModal(false);
       } else {
         throw new Error('No image URL in response');
       }
-
     } catch (err) {
       console.error('Error:', err);
       setError(`Failed to generate image: ${err.message}`);
@@ -163,7 +166,7 @@ export default function InfographicStudio() {
       mood: 'modern',
       colors: 'vibrant',
       details: '',
-      size: '1024x1024'
+      size: '1024x1024',
     });
     setError('');
     setShowModal(true);
@@ -172,7 +175,9 @@ export default function InfographicStudio() {
   return (
     <div className="flex h-screen bg-white">
       {/* Left Sidebar */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-80'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}>
+      <div
+        className={`${sidebarCollapsed ? 'w-16' : 'w-80'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}
+      >
         {/* Header */}
         {!sidebarCollapsed ? (
           <div className="p-6 border-b border-gray-200">
@@ -182,9 +187,7 @@ export default function InfographicStudio() {
                   <span className="text-white text-sm font-bold">AI</span>
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-base font-semibold text-gray-900">
-                    AI Infographic Studio
-                  </h1>
+                  <h1 className="text-base font-semibold text-gray-900">AI Infographic Studio</h1>
                   <p className="text-xs text-gray-500">AI-powered content creation</p>
                 </div>
               </div>
@@ -212,7 +215,9 @@ export default function InfographicStudio() {
           <div className={`${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             {!sidebarCollapsed && (
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Campaigns</span>
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Campaigns
+                </span>
                 <button
                   onClick={createNewCampaign}
                   className="w-6 h-6 bg-gray-900 text-white rounded flex items-center justify-center hover:bg-gray-800"
@@ -300,9 +305,12 @@ export default function InfographicStudio() {
             <div className="max-w-3xl">
               <div className="flex items-start gap-3">
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-amber-900 mb-1">OpenAI API Key Required</h3>
+                  <h3 className="text-sm font-medium text-amber-900 mb-1">
+                    OpenAI API Key Required
+                  </h3>
                   <p className="text-xs text-amber-700 mb-3">
-                    ⚠️ Security Note: Your API key is stored only in browser memory and is never saved. You'll need to re-enter it each session.
+                    ⚠️ Security Note: Your API key is stored only in browser memory and is never
+                    saved. You'll need to re-enter it each session.
                   </p>
                   <input
                     type="password"
@@ -332,7 +340,9 @@ export default function InfographicStudio() {
                 <div className="border-b border-gray-200 p-6">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">{selectedCampaign.name}</h2>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {selectedCampaign.name}
+                      </h2>
                       <p className="text-sm text-gray-500 mt-1">
                         {selectedCampaign.timestamp} - {selectedCampaign.style} design
                       </p>
@@ -361,7 +371,9 @@ export default function InfographicStudio() {
                   </button>
 
                   <div className="mt-4 p-4 bg-white rounded border border-gray-200">
-                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Generated Prompt</h4>
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      Generated Prompt
+                    </h4>
                     <p className="text-sm text-gray-700 leading-relaxed">
                       {selectedCampaign.prompt}
                     </p>
@@ -421,16 +433,16 @@ export default function InfographicStudio() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Style
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Style</label>
                       <select
                         value={formData.style}
                         onChange={(e) => setFormData({ ...formData, style: e.target.value })}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
                       >
-                        {styles.map(s => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
+                        {styles.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -444,8 +456,10 @@ export default function InfographicStudio() {
                         onChange={(e) => setFormData({ ...formData, mood: e.target.value })}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
                       >
-                        {moods.map(m => (
-                          <option key={m.value} value={m.value}>{m.label}</option>
+                        {moods.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -461,8 +475,10 @@ export default function InfographicStudio() {
                         onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
                       >
-                        {colorSchemes.map(c => (
-                          <option key={c.value} value={c.value}>{c.label}</option>
+                        {colorSchemes.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -476,8 +492,10 @@ export default function InfographicStudio() {
                         onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
                       >
-                        {sizes.map(s => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
+                        {sizes.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
                         ))}
                       </select>
                     </div>

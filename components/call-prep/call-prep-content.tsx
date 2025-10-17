@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRight, ClipboardCheck, Settings, LucideIcon } from 'lucide-react';
+import {
+  Building2,
+  Users,
+  Newspaper,
+  AlertCircle,
+  MessageSquare,
+  Zap,
+  ArrowRight,
+  ClipboardCheck,
+  Settings,
+  LucideIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
 import { CallPrepDetailDialog } from './call-prep-detail-dialog';
@@ -18,7 +29,14 @@ interface CardSectionProps {
   onCardClick: (title: string, content: string, cardKey: string, icon: LucideIcon) => void;
 }
 
-function CardSection({ title, content, cardKey, icon: Icon, onCardClick, disabled = false }: CardSectionProps) {
+function CardSection({
+  title,
+  content,
+  cardKey,
+  icon: Icon,
+  onCardClick,
+  disabled = false,
+}: CardSectionProps) {
   const summary = content && content.length > 150 ? content.substring(0, 150) + '...' : content;
 
   return (
@@ -27,9 +45,7 @@ function CardSection({ title, content, cardKey, icon: Icon, onCardClick, disable
       disabled={disabled}
       className={cn(
         'group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all border-t-transparent border-t-[3px]',
-        disabled
-          ? 'opacity-60 cursor-not-allowed'
-          : 'hover:shadow-lg hover:border-t-[#C33527]'
+        disabled ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-lg hover:border-t-[#C33527]',
       )}
     >
       <div className="flex flex-col gap-4">
@@ -39,9 +55,7 @@ function CardSection({ title, content, cardKey, icon: Icon, onCardClick, disable
             {title}
           </h3>
         </div>
-        <p className="text-sm text-gray-600 line-clamp-3">
-          {summary || 'No data available'}
-        </p>
+        <p className="text-sm text-gray-600 line-clamp-3">{summary || 'No data available'}</p>
       </div>
     </button>
   );
@@ -57,7 +71,12 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [enrichedDialogOpen, setEnrichedDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; cardKey: string; icon?: LucideIcon }>({
+  const [selectedCard, setSelectedCard] = useState<{
+    title: string;
+    content: string;
+    cardKey: string;
+    icon?: LucideIcon;
+  }>({
     title: '',
     content: '',
     cardKey: '',
@@ -111,7 +130,9 @@ export function CallPrepContent({ className }: CallPrepContentProps) {
         <div className="text-center">
           <Building2 className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-foreground mb-2">No Call Prep Available</h3>
-          <p className="text-muted-foreground mb-6">Click &quot;Generate Call Prep&quot; to create a new analysis</p>
+          <p className="text-muted-foreground mb-6">
+            Click &quot;Generate Call Prep&quot; to create a new analysis
+          </p>
         </div>
       </div>
     );

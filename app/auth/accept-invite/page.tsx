@@ -14,11 +14,7 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
 
   return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-3"
-      aria-label="Parallel Strategies home"
-    >
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="Parallel Strategies home">
       <span
         className={
           isDark
@@ -36,7 +32,11 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
         />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className={isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'}>
+        <span
+          className={
+            isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'
+          }
+        >
           Parallel Strategies
         </span>
         <span className={isDark ? 'text-sm text-white/70' : 'text-sm text-[#C33527]/70'}>
@@ -59,7 +59,7 @@ export default function AcceptInvitePage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -74,13 +74,16 @@ export default function AcceptInvitePage() {
       }
 
       try {
-        const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/invite/accept/get_data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await fetch(
+          'https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/invite/accept/get_data',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
           },
-          body: JSON.stringify({ token }),
-        });
+        );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -101,7 +104,7 @@ export default function AcceptInvitePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!token) {
       setError('No invitation token provided');
       return;
@@ -111,16 +114,19 @@ export default function AcceptInvitePage() {
     setError('');
 
     try {
-      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/invite/accept', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/invite/accept',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            password,
+            token,
+          }),
         },
-        body: JSON.stringify({
-          password,
-          token,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -149,18 +155,23 @@ export default function AcceptInvitePage() {
                 You&apos;ve been invited.
               </h2>
               <p className="text-base leading-7 text-white/80">
-                Accept your invitation to join the Parallel Strategies control center and start 
+                Accept your invitation to join the Parallel Strategies control center and start
                 collaborating with your team using our unified red-themed experience.
               </p>
             </div>
           </div>
           <div className="space-y-2 text-sm text-white/70">
             <p className="font-medium">Already have an account?</p>
-            <Link href="/auth/signin" className="inline-flex items-center gap-1 font-semibold text-white hover:text-white/80">
+            <Link
+              href="/auth/signin"
+              className="inline-flex items-center gap-1 font-semibold text-white hover:text-white/80"
+            >
               Sign in instead
             </Link>
           </div>
-          <p className="text-xs text-white/50">© {currentYear} Parallel Strategies. All rights reserved.</p>
+          <p className="text-xs text-white/50">
+            © {currentYear} Parallel Strategies. All rights reserved.
+          </p>
         </div>
 
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-12 lg:h-full">
@@ -171,7 +182,9 @@ export default function AcceptInvitePage() {
 
             <Card className="border border-border/50 shadow-lg shadow-[#C33527]/20">
               <CardHeader className="space-y-3 text-center">
-                <CardTitle className="text-3xl font-semibold text-[#C33527]">Accept Invitation</CardTitle>
+                <CardTitle className="text-3xl font-semibold text-[#C33527]">
+                  Accept Invitation
+                </CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Set your password to complete your account setup
                 </CardDescription>
@@ -187,9 +200,7 @@ export default function AcceptInvitePage() {
                       {error}
                     </div>
                     <Link href="/auth/signin">
-                      <Button
-                        className="w-full rounded-lg bg-[#C33527] py-2.5 text-base font-medium text-white shadow-md shadow-[#C33527]/20 transition-colors hover:bg-[#a32a1f]"
-                      >
+                      <Button className="w-full rounded-lg bg-[#C33527] py-2.5 text-base font-medium text-white shadow-md shadow-[#C33527]/20 transition-colors hover:bg-[#a32a1f]">
                         Go to Sign In
                       </Button>
                     </Link>
@@ -207,14 +218,20 @@ export default function AcceptInvitePage() {
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Role</p>
-                        <Badge variant={inviteData.admin ? "default" : "secondary"} className={inviteData.admin ? "bg-[#C33527] hover:bg-[#a32a1f]" : ""}>
+                        <Badge
+                          variant={inviteData.admin ? 'default' : 'secondary'}
+                          className={inviteData.admin ? 'bg-[#C33527] hover:bg-[#a32a1f]' : ''}
+                        >
                           {inviteData.admin ? 'Admin' : 'User'}
                         </Badge>
                       </div>
                     </div>
 
                     <div className="space-y-2 text-left">
-                      <Label htmlFor="password" className="text-sm font-medium text-muted-foreground/90">
+                      <Label
+                        htmlFor="password"
+                        className="text-sm font-medium text-muted-foreground/90"
+                      >
                         Create Password
                       </Label>
                       <Input
@@ -246,7 +263,10 @@ export default function AcceptInvitePage() {
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">
                   Already have an account?{' '}
-                  <Link href="/auth/signin" className="font-semibold text-[#C33527] hover:text-[#9E2A1F]">
+                  <Link
+                    href="/auth/signin"
+                    className="font-semibold text-[#C33527] hover:text-[#9E2A1F]"
+                  >
                     Sign in
                   </Link>
                 </div>
@@ -258,4 +278,3 @@ export default function AcceptInvitePage() {
     </div>
   );
 }
-

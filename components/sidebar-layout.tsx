@@ -1,16 +1,28 @@
-"use client";
+'use client';
 
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/xano/auth-context";
-import { LogOut, LucideIcon, Menu, Moon, Plus, Sun, UserCircle2, Check, ChevronsUpDown, Mail, Loader2 } from "lucide-react";
-import { useTheme } from "next-themes";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import Image from "next/image";
-import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import type { User } from "@/lib/xano/types";
-import { useSidebar } from "@/lib/contexts/sidebar-context";
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/xano/auth-context';
+import {
+  LogOut,
+  LucideIcon,
+  Menu,
+  Moon,
+  Plus,
+  Sun,
+  UserCircle2,
+  Check,
+  ChevronsUpDown,
+  Mail,
+  Loader2,
+} from 'lucide-react';
+import { useTheme } from 'next-themes';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import type { User } from '@/lib/xano/types';
+import { useSidebar } from '@/lib/contexts/sidebar-context';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,12 +30,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "./ui/breadcrumb";
-import { Separator } from "./ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Button } from "./ui/button";
-import { ModuleManager } from "./module-manager";
-import { BottomNav, type BottomNavItem } from "./bottom-nav";
+} from './ui/breadcrumb';
+import { Separator } from './ui/separator';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Button } from './ui/button';
+import { ModuleManager } from './module-manager';
+import { BottomNav, type BottomNavItem } from './bottom-nav';
 import {
   Dialog,
   DialogContent,
@@ -31,34 +43,30 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 // Removed cmdk Command components to avoid React 19 ref incompatibility in this view
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 function useSegment(basePath: string) {
   const path = usePathname();
   const result = path.slice(basePath.length, path.length);
-  return result ? result : "/";
+  return result ? result : '/';
 }
 
 type Item = {
   name: React.ReactNode;
   href: string;
   icon: LucideIcon;
-  type: "item";
+  type: 'item';
 };
 
 type Sep = {
-  type: "separator";
+  type: 'separator';
 };
 
 type Label = {
   name: React.ReactNode;
-  type: "label";
+  type: 'label';
 };
 
 export type SidebarItem = Item | Sep | Label;
@@ -85,23 +93,21 @@ function NavItem(props: {
     <Link
       href={fullHref}
       className={cn(
-        "group flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-        props.isCollapsed ? "justify-center gap-0" : "gap-3",
+        'group flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+        props.isCollapsed ? 'justify-center gap-0' : 'gap-3',
         selected
-          ? "bg-muted text-foreground shadow-sm"
-          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+          ? 'bg-muted text-foreground shadow-sm'
+          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
       )}
       onClick={handleClick}
       prefetch={true}
-      aria-current={selected ? "page" : undefined}
+      aria-current={selected ? 'page' : undefined}
       title={props.isCollapsed ? String(props.item.name) : undefined}
     >
       <props.item.icon
         className={cn(
-          "h-5 w-5 transition-colors",
-          selected
-            ? "text-foreground"
-            : "text-muted-foreground group-hover:text-foreground"
+          'h-5 w-5 transition-colors',
+          selected ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground',
         )}
       />
       {!props.isCollapsed && <span>{props.item.name}</span>}
@@ -129,7 +135,7 @@ export function SidebarContent(props: {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>('');
   const [mounted, setMounted] = useState(false);
-  const [companySearch, setCompanySearch] = useState("");
+  const [companySearch, setCompanySearch] = useState('');
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const contactFormRef = useRef<HTMLDivElement>(null);
 
@@ -166,18 +172,21 @@ export function SidebarContent(props: {
         return;
       }
 
-      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${props.token}`,
+      const response = await fetch(
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${props.token}`,
+          },
+          body: JSON.stringify({
+            name: contactForm.name,
+            email: contactForm.email,
+            message: contactForm.message,
+          }),
         },
-        body: JSON.stringify({
-          name: contactForm.name,
-          email: contactForm.email,
-          message: contactForm.message,
-        }),
-      });
+      );
 
       if (response.ok) {
         setContactForm({ name: '', email: '', message: '' });
@@ -196,97 +205,107 @@ export function SidebarContent(props: {
 
   return (
     <div className="hidden md:flex h-full flex-col bg-background">
-      <div className="flex items-center border-b border-border px-4 py-4">
-        {props.sidebarTop}
-      </div>
-      {!props.isCollapsed && props.user?.available_companies && props.user.available_companies.length > 1 && (
-        <div className="border-b border-border px-4 py-3">
-          <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 mb-1.5">
-            Company
-          </label>
-          <Popover open={isCompanySelectOpen} onOpenChange={setIsCompanySelectOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                role="combobox"
-                aria-expanded={isCompanySelectOpen}
-                aria-controls="company-select-popover"
-                className="inline-flex w-full items-center justify-between h-9 px-2 py-1.5 text-sm font-normal rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <span className="truncate">
-                  {props.user?.available_companies?.find(
-                    (company) => company.company_id === props.user?.company_id
-                  )?.company_name || "Select company..."}
-                </span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[228px] p-0" align="start">
-              {mounted && isCompanySelectOpen ? (
-                <div className="w-full">
-                  <div className="flex items-center border-b px-2">
-                    <input
-                      type="text"
-                      value={companySearch}
-                      onChange={(e) => setCompanySearch(e.target.value)}
-                      placeholder="Search company..."
-                      className="h-9 w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
-                    />
+      <div className="flex items-center border-b border-border px-4 py-4">{props.sidebarTop}</div>
+      {!props.isCollapsed &&
+        props.user?.available_companies &&
+        props.user.available_companies.length > 1 && (
+          <div className="border-b border-border px-4 py-3">
+            <label className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 mb-1.5">
+              Company
+            </label>
+            <Popover open={isCompanySelectOpen} onOpenChange={setIsCompanySelectOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  role="combobox"
+                  aria-expanded={isCompanySelectOpen}
+                  aria-controls="company-select-popover"
+                  className="inline-flex w-full items-center justify-between h-9 px-2 py-1.5 text-sm font-normal rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <span className="truncate">
+                    {props.user?.available_companies?.find(
+                      (company) => company.company_id === props.user?.company_id,
+                    )?.company_name || 'Select company...'}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[228px] p-0" align="start">
+                {mounted && isCompanySelectOpen ? (
+                  <div className="w-full">
+                    <div className="flex items-center border-b px-2">
+                      <input
+                        type="text"
+                        value={companySearch}
+                        onChange={(e) => setCompanySearch(e.target.value)}
+                        placeholder="Search company..."
+                        className="h-9 w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+                      />
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto">
+                      {(
+                        props.user?.available_companies?.filter((c) =>
+                          (c?.company_name ?? '')
+                            .toLowerCase()
+                            .includes((companySearch ?? '').toLowerCase()),
+                        ) || []
+                      ).length === 0 ? (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                          No company found.
+                        </div>
+                      ) : (
+                        <div className="p-1">
+                          {(props.user?.available_companies || [])
+                            .filter((c) =>
+                              (c?.company_name ?? '')
+                                .toLowerCase()
+                                .includes((companySearch ?? '').toLowerCase()),
+                            )
+                            .map((company) => (
+                              <button
+                                key={company.company_id}
+                                type="button"
+                                onClick={() => {
+                                  props.onSwitchCompany?.(company.company_id);
+                                  setIsCompanySelectOpen(false);
+                                  setCompanySearch('');
+                                }}
+                                className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                              >
+                                <span className="truncate">{company.company_name}</span>
+                                <Check
+                                  className={cn(
+                                    'ml-auto h-4 w-4',
+                                    props.user?.company_id === company.company_id
+                                      ? 'opacity-100'
+                                      : 'opacity-0',
+                                  )}
+                                />
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="max-h-[300px] overflow-y-auto">
-                    {(
-                      props.user?.available_companies?.filter((c) =>
-                        ((c?.company_name ?? '').toLowerCase()).includes((companySearch ?? '').toLowerCase())
-                      ) || []
-                    ).length === 0 ? (
-                      <div className="py-6 text-center text-sm text-muted-foreground">No company found.</div>
-                    ) : (
-                      <div className="p-1">
-                        {(props.user?.available_companies || [])
-                          .filter((c) => ((c?.company_name ?? '').toLowerCase()).includes((companySearch ?? '').toLowerCase()))
-                          .map((company) => (
-                            <button
-                              key={company.company_id}
-                              type="button"
-                              onClick={() => {
-                                props.onSwitchCompany?.(company.company_id);
-                                setIsCompanySelectOpen(false);
-                                setCompanySearch("");
-                              }}
-                              className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-                            >
-                              <span className="truncate">{company.company_name}</span>
-                              <Check
-                                className={cn(
-                                  "ml-auto h-4 w-4",
-                                  props.user?.company_id === company.company_id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
+                ) : null}
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
       <div className="flex flex-grow flex-col gap-2 overflow-y-auto px-3 py-4">
         {props.onAddModule ? (
           <div className="pb-2">
             <button
               type="button"
               className={cn(
-                "group flex w-full items-center px-2 text-sm font-medium text-[#C33527] transition-colors hover:text-[#DA857C]",
-                props.isCollapsed ? "justify-center" : "justify-start"
+                'group flex w-full items-center px-2 text-sm font-medium text-[#C33527] transition-colors hover:text-[#DA857C]',
+                props.isCollapsed ? 'justify-center' : 'justify-start',
               )}
               onClick={() => {
                 props.onAddModule?.();
                 props.onNavigate?.();
               }}
-              title={props.isCollapsed ? "Manage Modules" : undefined}
+              title={props.isCollapsed ? 'Manage Modules' : undefined}
             >
               <span className="text-left">Manage Modules</span>
             </button>
@@ -294,9 +313,9 @@ export function SidebarContent(props: {
         ) : null}
 
         {props.items.map((item, index) => {
-          if (item.type === "separator") {
+          if (item.type === 'separator') {
             return !props.isCollapsed ? <Separator key={index} className="my-3" /> : null;
-          } else if (item.type === "item") {
+          } else if (item.type === 'item') {
             return (
               <div key={index} className="flex">
                 <NavItem
@@ -364,8 +383,8 @@ export function SidebarContent(props: {
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             className={cn(
-              "w-full px-4 py-4 flex items-center hover:bg-muted/50 transition-colors",
-              props.isCollapsed ? "justify-center gap-0" : "gap-3"
+              'w-full px-4 py-4 flex items-center hover:bg-muted/50 transition-colors',
+              props.isCollapsed ? 'justify-center gap-0' : 'gap-3',
             )}
             title={props.isCollapsed ? props.user.email : undefined}
           >
@@ -375,11 +394,9 @@ export function SidebarContent(props: {
             {!props.isCollapsed && (
               <div className="flex flex-col text-left">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {props.user.company ?? "Company"}
+                  {props.user.company ?? 'Company'}
                 </span>
-                <span className="text-sm font-medium text-foreground">
-                  {props.user.email}
-                </span>
+                <span className="text-sm font-medium text-foreground">{props.user.email}</span>
               </div>
             )}
           </button>
@@ -435,95 +452,103 @@ export function SidebarContent(props: {
               </div>
             </div>
           )}
-
         </div>
       ) : null}
 
-      {mounted && isContactFormOpen && createPortal(
-        <div ref={contactFormRef} className="fixed bottom-24 left-4 w-[400px] bg-popover border border-border rounded-lg shadow-2xl overflow-hidden z-[10001]">
-          <form onSubmit={handleContactSubmit} className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Contact Support</h3>
-            {submitError && (
-              <div className="mb-4 px-3 py-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-                {submitError}
+      {mounted &&
+        isContactFormOpen &&
+        createPortal(
+          <div
+            ref={contactFormRef}
+            className="fixed bottom-24 left-4 w-[400px] bg-popover border border-border rounded-lg shadow-2xl overflow-hidden z-[10001]"
+          >
+            <form onSubmit={handleContactSubmit} className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Contact Support</h3>
+              {submitError && (
+                <div className="mb-4 px-3 py-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                  {submitError}
+                </div>
+              )}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium mb-2">
+                    Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-2">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    required
+                    rows={5}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsContactFormOpen(false);
+                      setContactForm({ name: '', email: '', message: '' });
+                      setSubmitError('');
+                    }}
+                    className="flex-1 px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
               </div>
-            )}
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-2">
-                  Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  required
-                  value={contactForm.name}
-                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-2">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium mb-2">
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  required
-                  rows={5}
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsContactFormOpen(false);
-                    setContactForm({ name: '', email: '', message: '' });
-                    setSubmitError('');
-                  }}
-                  className="flex-1 px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Sending...' : 'Send'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>,
-        document.body
-      )}
+            </form>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
 
 export type HeaderBreadcrumbItem = { title: string; href: string };
 
-function HeaderBreadcrumb(props: { items: SidebarItem[], baseBreadcrumb?: HeaderBreadcrumbItem[], basePath: string }) {
+function HeaderBreadcrumb(props: {
+  items: SidebarItem[];
+  baseBreadcrumb?: HeaderBreadcrumbItem[];
+  basePath: string;
+}) {
   const segment = useSegment(props.basePath);
-  console.log(segment)
+  console.log(segment);
   const item = props.items.find((item) => item.type === 'item' && item.href === segment);
-  const title: string | undefined = (item as any)?.name
+  const title: string | undefined = (item as any)?.name;
 
   return (
     <Breadcrumb>
@@ -578,10 +603,10 @@ export default function SidebarLayout(props: {
     <button
       onClick={toggleSidebar}
       className={cn(
-        "flex w-full items-center rounded-md px-2 py-2 transition-colors hover:bg-muted/70",
-        isCollapsed ? "justify-center gap-0" : "gap-3"
+        'flex w-full items-center rounded-md px-2 py-2 transition-colors hover:bg-muted/70',
+        isCollapsed ? 'justify-center gap-0' : 'gap-3',
       )}
-      title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >
       <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
         <Image
@@ -624,18 +649,21 @@ export default function SidebarLayout(props: {
         return;
       }
 
-      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: contactForm.name,
+            email: contactForm.email,
+            message: contactForm.message,
+          }),
         },
-        body: JSON.stringify({
-          name: contactForm.name,
-          email: contactForm.email,
-          message: contactForm.message,
-        }),
-      });
+      );
 
       if (response.ok) {
         setContactForm({ name: '', email: '', message: '' });
@@ -683,21 +711,28 @@ export default function SidebarLayout(props: {
       {/* Main Content Area */}
       <div
         className={cn(
-          "flex flex-col flex-grow w-0 transition-all duration-300 ease-in-out",
-          "ml-0", // Mobile: no margin
-          "md:ml-[80px]", // Desktop collapsed: 80px margin
-          !isCollapsed && "md:ml-[260px]" // Desktop expanded: 260px margin
+          'flex flex-col flex-grow w-0 transition-all duration-300 ease-in-out',
+          'ml-0', // Mobile: no margin
+          'md:ml-[80px]', // Desktop collapsed: 80px margin
+          !isCollapsed && 'md:ml-[260px]', // Desktop expanded: 260px margin
         )}
       >
         {/* Top Header */}
         <div className="h-14 border-b flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm dark:bg-background/95 z-10 px-4 md:px-6">
           {/* Desktop: Breadcrumb only */}
           <div className="hidden md:flex">
-            <HeaderBreadcrumb baseBreadcrumb={props.baseBreadcrumb} basePath={props.basePath} items={props.items} />
+            <HeaderBreadcrumb
+              baseBreadcrumb={props.baseBreadcrumb}
+              basePath={props.basePath}
+              items={props.items}
+            />
           </div>
 
           {/* Mobile: Logo centered */}
-          <Link href={props.basePath} className="flex md:hidden items-center gap-2 flex-1 justify-center">
+          <Link
+            href={props.basePath}
+            className="flex md:hidden items-center gap-2 flex-1 justify-center"
+          >
             <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
               <Image
                 src="/White%20logo.png"
@@ -708,9 +743,7 @@ export default function SidebarLayout(props: {
                 priority
               />
             </span>
-            <span className="text-sm font-semibold text-foreground">
-              Parallel Strategies
-            </span>
+            <span className="text-sm font-semibold text-foreground">Parallel Strategies</span>
           </Link>
         </div>
 
@@ -801,10 +834,7 @@ export default function SidebarLayout(props: {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

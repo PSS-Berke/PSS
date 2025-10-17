@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Target, Settings, Building2, Users, Newspaper, AlertCircle, MessageSquare, Zap, ArrowRight, ClipboardCheck, LucideIcon } from 'lucide-react';
+import {
+  Target,
+  Settings,
+  Building2,
+  Users,
+  Newspaper,
+  AlertCircle,
+  MessageSquare,
+  Zap,
+  ArrowRight,
+  ClipboardCheck,
+  LucideIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBattleCard } from '@/lib/xano/battle-card-context';
 import { BattleCardDetailDialog } from './battle-card-detail-dialog';
@@ -31,9 +43,7 @@ function CardSection({ title, content, cardKey, icon: Icon, onCardClick }: CardS
             {title}
           </h3>
         </div>
-        <p className="text-sm text-gray-600 line-clamp-3">
-          {summary || 'No data available'}
-        </p>
+        <p className="text-sm text-gray-600 line-clamp-3">{summary || 'No data available'}</p>
       </div>
     </button>
   );
@@ -48,7 +58,11 @@ export function BattleCardContent({ className }: BattleCardContentProps) {
   const activeBattleCard = state.activeBattleCard;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<{ title: string; content: string; icon?: LucideIcon }>({
+  const [selectedCard, setSelectedCard] = useState<{
+    title: string;
+    content: string;
+    icon?: LucideIcon;
+  }>({
     title: '',
     content: '',
   });
@@ -84,7 +98,9 @@ export function BattleCardContent({ className }: BattleCardContentProps) {
         <div className="text-center">
           <Target className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-foreground mb-2">No Battle Card Selected</h3>
-          <p className="text-muted-foreground mb-6">Create a new battle card to get competitive intelligence</p>
+          <p className="text-muted-foreground mb-6">
+            Create a new battle card to get competitive intelligence
+          </p>
         </div>
       </div>
     );
@@ -178,9 +194,7 @@ export function BattleCardContent({ className }: BattleCardContentProps) {
 
         {/* Description below cards */}
         <div className="rounded-lg border-2 border-gray-200 bg-white p-6">
-          <p className="text-lg text-gray-600">
-            {activeBattleCard.competitor_service}
-          </p>
+          <p className="text-lg text-gray-600">{activeBattleCard.competitor_service}</p>
         </div>
       </div>
 

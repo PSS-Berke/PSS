@@ -8,21 +8,22 @@ import type {
 } from './types';
 
 export class PDLApiError extends Error {
-  constructor(message: string, public status: number, public response?: any) {
+  constructor(
+    message: string,
+    public status: number,
+    public response?: any,
+  ) {
     super(message);
     this.name = 'PDLApiError';
   }
 }
 
-async function pdlRequest<T>(
-  endpoint: string,
-  params: Record<string, any> = {}
-): Promise<T> {
+async function pdlRequest<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
   if (!PDL_CONFIG.API_KEY) {
     throw new PDLApiError(
       'People Data Labs API key not configured. Please set NEXT_PUBLIC_PEOPLEDATALABS_API_KEY in your environment variables.',
       401,
-      { message: 'API key missing' }
+      { message: 'API key missing' },
     );
   }
 
@@ -55,7 +56,7 @@ async function pdlRequest<T>(
       throw new PDLApiError(
         errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -64,23 +65,17 @@ async function pdlRequest<T>(
     if (error instanceof PDLApiError) {
       throw error;
     }
-    throw new PDLApiError(
-      error instanceof Error ? error.message : 'Unknown error',
-      500
-    );
+    throw new PDLApiError(error instanceof Error ? error.message : 'Unknown error', 500);
   }
 }
 
 // Person Enrichment API
 export const pdlPersonApi = {
   async enrichByProfile(linkedinUrl: string): Promise<PDLPersonEnrichResponse> {
-    return pdlRequest<PDLPersonEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.PERSON_ENRICH,
-      {
-        profile: linkedinUrl,
-        pretty: true,
-      }
-    );
+    return pdlRequest<PDLPersonEnrichResponse>(PDL_CONFIG.ENDPOINTS.PERSON_ENRICH, {
+      profile: linkedinUrl,
+      pretty: true,
+    });
   },
 
   async enrichByName(params: {
@@ -90,89 +85,65 @@ export const pdlPersonApi = {
     company?: string;
     location?: string;
   }): Promise<PDLPersonEnrichResponse> {
-    return pdlRequest<PDLPersonEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.PERSON_ENRICH,
-      {
-        ...params,
-        pretty: true,
-        min_likelihood: 6, // Minimum confidence score
-      }
-    );
+    return pdlRequest<PDLPersonEnrichResponse>(PDL_CONFIG.ENDPOINTS.PERSON_ENRICH, {
+      ...params,
+      pretty: true,
+      min_likelihood: 6, // Minimum confidence score
+    });
   },
 
   async enrichByEmail(email: string): Promise<PDLPersonEnrichResponse> {
-    return pdlRequest<PDLPersonEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.PERSON_ENRICH,
-      {
-        email,
-        pretty: true,
-      }
-    );
+    return pdlRequest<PDLPersonEnrichResponse>(PDL_CONFIG.ENDPOINTS.PERSON_ENRICH, {
+      email,
+      pretty: true,
+    });
   },
 
   async enrichByLinkedInId(linkedinId: string): Promise<PDLPersonEnrichResponse> {
-    return pdlRequest<PDLPersonEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.PERSON_ENRICH,
-      {
-        lid: linkedinId,
-        pretty: true,
-      }
-    );
+    return pdlRequest<PDLPersonEnrichResponse>(PDL_CONFIG.ENDPOINTS.PERSON_ENRICH, {
+      lid: linkedinId,
+      pretty: true,
+    });
   },
 
   async enrich(params: PDLPersonEnrichParams): Promise<PDLPersonEnrichResponse> {
-    return pdlRequest<PDLPersonEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.PERSON_ENRICH,
-      {
-        ...params,
-        pretty: true,
-        min_likelihood: params.min_likelihood || 6,
-      }
-    );
+    return pdlRequest<PDLPersonEnrichResponse>(PDL_CONFIG.ENDPOINTS.PERSON_ENRICH, {
+      ...params,
+      pretty: true,
+      min_likelihood: params.min_likelihood || 6,
+    });
   },
 };
 
 // Company Enrichment API
 export const pdlCompanyApi = {
   async enrichByName(companyName: string): Promise<PDLCompanyEnrichResponse> {
-    return pdlRequest<PDLCompanyEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH,
-      {
-        name: companyName,
-        pretty: true,
-      }
-    );
+    return pdlRequest<PDLCompanyEnrichResponse>(PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH, {
+      name: companyName,
+      pretty: true,
+    });
   },
 
   async enrichByWebsite(website: string): Promise<PDLCompanyEnrichResponse> {
-    return pdlRequest<PDLCompanyEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH,
-      {
-        website,
-        pretty: true,
-      }
-    );
+    return pdlRequest<PDLCompanyEnrichResponse>(PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH, {
+      website,
+      pretty: true,
+    });
   },
 
   async enrichByProfile(linkedinUrl: string): Promise<PDLCompanyEnrichResponse> {
-    return pdlRequest<PDLCompanyEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH,
-      {
-        profile: linkedinUrl,
-        pretty: true,
-      }
-    );
+    return pdlRequest<PDLCompanyEnrichResponse>(PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH, {
+      profile: linkedinUrl,
+      pretty: true,
+    });
   },
 
   async enrich(params: PDLCompanyEnrichParams): Promise<PDLCompanyEnrichResponse> {
-    return pdlRequest<PDLCompanyEnrichResponse>(
-      PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH,
-      {
-        ...params,
-        pretty: true,
-        min_likelihood: params.min_likelihood || 6,
-      }
-    );
+    return pdlRequest<PDLCompanyEnrichResponse>(PDL_CONFIG.ENDPOINTS.COMPANY_ENRICH, {
+      ...params,
+      pretty: true,
+      min_likelihood: params.min_likelihood || 6,
+    });
   },
 };
 
