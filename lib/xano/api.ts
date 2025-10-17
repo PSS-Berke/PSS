@@ -952,7 +952,7 @@ export const battleCardApi = {
 export const companyApi = {
   async createCompany(
     token: string,
-    data: { company_name: string; company_code?: number },
+    data: { name: string; company_code?: number },
   ): Promise<Company> {
     const url = XANO_CONFIG.COMPANY_BASE_URL;
     const response = await fetch(`${url}/company`, {
