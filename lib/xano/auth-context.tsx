@@ -20,6 +20,7 @@ interface AuthContextType {
   switchCompany: (companyId: number) => Promise<void>;
   refreshUser: () => Promise<void>;
   authenticateWithToken: (token: string) => Promise<void>;
+  onboardCompany: (data: { company: string; company_code?: number }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -236,6 +237,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const onboardCompany = useCallback(async (data: { company: string; company_code?: number }) => {
+    const storedToken = getStoredToken();
+    if (!storedToken) throw new Error('Not authenticated');
+    try {
+      const updatedUser = await usersApi.onboardCompany(storedToken, data);
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Onboarding failed:', error);
+      throw error;
+    }
+  }, []);
+
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     const token = getStoredToken();
@@ -315,6 +328,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     switchCompany,
     refreshUser,
     authenticateWithToken,
+    onboardCompany,
   };
 
   return (

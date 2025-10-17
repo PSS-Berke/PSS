@@ -238,7 +238,7 @@ export const authApi = {
     return response.json();
   },
 
-  async continueGoogleAuth(code: string, redirectUri: string): Promise<{ name: string; email: string; token: string }> {
+  async continueGoogleAuth(code: string, redirectUri: string): Promise<{ name: string; email: string; token: string; has_company: boolean }> {
     const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`, {
       method: 'GET',
     });
@@ -278,7 +278,19 @@ export const usersApi = {
       token
     );
   },
+
+  async onboardCompany(token: string, data: { company: string; company_code?: number }): Promise<User> {
+    return apiRequest<User>(
+      '/company',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      token
+    );
+  },
 };
+
 
 
 // LinkedIn Copilot API
