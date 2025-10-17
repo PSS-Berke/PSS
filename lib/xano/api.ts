@@ -1,4 +1,11 @@
-import { getApiUrl, getLinkedInApiUrl, getSocialApiUrl, getBattleCardApiUrl, getAuthHeaders, XANO_CONFIG } from './config';
+import {
+  getApiUrl,
+  getLinkedInApiUrl,
+  getSocialApiUrl,
+  getBattleCardApiUrl,
+  getAuthHeaders,
+  XANO_CONFIG,
+} from './config';
 
 import type {
   User,
@@ -23,11 +30,15 @@ import type {
   BattleCard,
   CreateBattleCardRequest,
   BattleCardListItem,
-  Company
+  Company,
 } from './types';
 
 export class XanoApiError extends Error {
-  constructor(message: string, public status: number, public response?: any) {
+  constructor(
+    message: string,
+    public status: number,
+    public response?: any,
+  ) {
     super(message);
     this.name = 'XanoApiError';
   }
@@ -37,13 +48,13 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   token?: string,
-  skipApiKey: boolean = false
+  skipApiKey: boolean = false,
 ): Promise<T> {
   if (!skipApiKey && !XANO_CONFIG.API_KEY) {
     throw new XanoApiError(
       'Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.',
       401,
-      { message: 'API key missing' }
+      { message: 'API key missing' },
     );
   }
 
@@ -67,7 +78,7 @@ async function apiRequest<T>(
         throw new XanoApiError(
           'API endpoint not found. Please create the required authentication endpoints in your Xano workspace.',
           response.status,
-          errorData
+          errorData,
         );
       }
 
@@ -75,14 +86,14 @@ async function apiRequest<T>(
         throw new XanoApiError(
           'Invalid credentials or insufficient permissions. Please check your API key and endpoint configuration.',
           response.status,
-          errorData
+          errorData,
         );
       }
 
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -91,10 +102,7 @@ async function apiRequest<T>(
     if (error instanceof XanoApiError) {
       throw error;
     }
-    throw new XanoApiError(
-      error instanceof Error ? error.message : 'Unknown error',
-      500
-    );
+    throw new XanoApiError(error instanceof Error ? error.message : 'Unknown error', 500);
   }
 }
 
@@ -108,7 +116,7 @@ export const authApi = {
         body: JSON.stringify(credentials),
       },
       undefined,
-      true // Skip API key for public login endpoint
+      true, // Skip API key for public login endpoint
     );
 
     // For now, we'll create a minimal user object since the API only returns the token
@@ -133,7 +141,7 @@ export const authApi = {
         body: JSON.stringify(credentials),
       },
       undefined,
-      true // Skip API key for public register endpoint
+      true, // Skip API key for public register endpoint
     );
     // For now, we'll create a minimal user object since the API only returns the token
     return {
@@ -156,18 +164,15 @@ export const authApi = {
       {
         method: 'POST',
       },
-      token
+      token,
     );
   },
 
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    return apiRequest<AuthResponse>(
-      '/auth/refresh',
-      {
-        method: 'POST',
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      }
-    );
+    return apiRequest<AuthResponse>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
   },
 
   async getMe(token: string): Promise<User> {
@@ -176,7 +181,7 @@ export const authApi = {
       {
         method: 'GET',
       },
-      token
+      token,
     );
   },
 
@@ -206,7 +211,7 @@ export const authApi = {
         throw new XanoApiError(
           errorData.message || `HTTP ${response.status}: ${response.statusText}`,
           response.status,
-          errorData
+          errorData,
         );
       }
 
@@ -222,33 +227,42 @@ export const authApi = {
   },
 
   async getGoogleAuthUrl(redirectUri: string): Promise<{ authUrl: string }> {
-    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`, {
-      method: 'GET',
-    });
+    const response = await fetch(
+      `https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`,
+      {
+        method: 'GET',
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
     return response.json();
   },
 
-  async continueGoogleAuth(code: string, redirectUri: string): Promise<{ name: string; email: string; token: string; has_company: boolean }> {
-    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`, {
-      method: 'GET',
-    });
+  async continueGoogleAuth(
+    code: string,
+    redirectUri: string,
+  ): Promise<{ name: string; email: string; token: string; has_company: boolean }> {
+    const response = await fetch(
+      `https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+      {
+        method: 'GET',
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -264,7 +278,7 @@ export const usersApi = {
       {
         method: 'GET',
       },
-      token
+      token,
     );
   },
 
@@ -275,13 +289,10 @@ export const usersApi = {
         method: 'PUT',
         body: JSON.stringify(data),
       },
-      token
+      token,
     );
   },
-
-
 };
-
 
 // LinkedIn Copilot API
 export const linkedInApi = {
@@ -299,13 +310,12 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
     return response.json();
   },
-
 
   async sendMessage(token: string, data: SendMessageRequest): Promise<string> {
     const url = getLinkedInApiUrl(XANO_CONFIG.ENDPOINTS.LINKEDIN.SEND_MESSAGE);
@@ -321,7 +331,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -349,7 +359,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -379,7 +389,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -402,7 +412,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -423,7 +433,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -444,7 +454,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -465,7 +475,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -486,7 +496,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -507,7 +517,7 @@ export const linkedInApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -522,14 +532,12 @@ const decodePostContent = (post: SocialPost): SocialPost => {
   return {
     ...post,
     content: post.content?.replace(/<<NEWLINE>>/g, '\n') ?? post.content,
-    rich_content_text: post.rich_content_text?.replace(/<<NEWLINE>>/g, '\n') ?? post.rich_content_text,
+    rich_content_text:
+      post.rich_content_text?.replace(/<<NEWLINE>>/g, '\n') ?? post.rich_content_text,
   };
 };
 
-const buildSocialPostRequestBody = (
-  data: SocialPostRequestData,
-  postId?: number
-) => {
+const buildSocialPostRequestBody = (data: SocialPostRequestData, postId?: number) => {
   const normalizedScheduledDate = (() => {
     if (!data.scheduled_date) {
       return null;
@@ -539,8 +547,9 @@ const buildSocialPostRequestBody = (
   })();
 
   const fallbackDescription =
-    (data as Partial<SocialPostPayload> & { post_descrription?: string })
-      .post_descrription ?? data.post_description ?? '';
+    (data as Partial<SocialPostPayload> & { post_descrription?: string }).post_descrription ??
+    data.post_description ??
+    '';
 
   const fallbackContent =
     (data as Partial<SocialPostPayload> & { post_content?: string }).post_content ??
@@ -590,7 +599,7 @@ export const socialCopilotApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -612,7 +621,7 @@ export const socialCopilotApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -620,7 +629,11 @@ export const socialCopilotApi = {
     return decodePostContent(post);
   },
 
-  async updatePost(token: string, postId: number, data: SocialPostUpdatePayload): Promise<SocialPost> {
+  async updatePost(
+    token: string,
+    postId: number,
+    data: SocialPostUpdatePayload,
+  ): Promise<SocialPost> {
     const url = getSocialApiUrl(`${XANO_CONFIG.ENDPOINTS.SOCIAL.POSTS}/${postId}`);
     const requestBody = buildSocialPostRequestBody(data, postId);
 
@@ -637,7 +650,7 @@ export const socialCopilotApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -665,7 +678,7 @@ export const socialCopilotApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -686,7 +699,7 @@ export const socialCopilotApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
   },
@@ -698,7 +711,6 @@ export const socialCopilotApi = {
     imageData?: string | null,
     imageName?: string | null,
     url?: string | null,
-
   ): Promise<any> {
     const apiUrl = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/tweet';
 
@@ -724,25 +736,26 @@ export const socialCopilotApi = {
       return Math.floor((base64Length * 3) / 4) - paddingCount;
     };
 
-
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         content,
         company_id: company_id,
-        image: imageData ? {
-          path: imageData,
-          name: imageName || 'image.png',
-          type: getImageType(imageData),
-          mime: getImageType(imageData),
-          size: getImageSize(imageData),
-          meta: {}
-        } : null,
-        url: url ?? null
+        image: imageData
+          ? {
+              path: imageData,
+              name: imageName || 'image.png',
+              type: getImageType(imageData),
+              mime: getImageType(imageData),
+              size: getImageSize(imageData),
+              meta: {},
+            }
+          : null,
+        url: url ?? null,
       }),
     });
 
@@ -751,7 +764,7 @@ export const socialCopilotApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -773,7 +786,7 @@ export const battleCardApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -781,7 +794,9 @@ export const battleCardApi = {
   },
 
   async getBattleCardDetail(token: string, battleCardId: number): Promise<BattleCard> {
-    const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.CARD_DETAIL}?battle_card_id=${battleCardId}`);
+    const url = getBattleCardApiUrl(
+      `${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.CARD_DETAIL}?battle_card_id=${battleCardId}`,
+    );
 
     console.log('BattleCard API: getBattleCardDetail URL:', url);
     console.log('BattleCard API: getBattleCardDetail battleCardId:', battleCardId);
@@ -799,7 +814,7 @@ export const battleCardApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -841,7 +856,9 @@ export const battleCardApi = {
   },
 
   async getBattleCards(token: string, userId: number): Promise<BattleCard[]> {
-    const url = getBattleCardApiUrl(`${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CARDS}?user_id=${userId}`);
+    const url = getBattleCardApiUrl(
+      `${XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GET_CARDS}?user_id=${userId}`,
+    );
     const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(token),
@@ -852,14 +869,18 @@ export const battleCardApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
     return response.json();
   },
 
-  async generateBattleCard(token: string, data: CreateBattleCardRequest, userId: number): Promise<BattleCard> {
+  async generateBattleCard(
+    token: string,
+    data: CreateBattleCardRequest,
+    userId: number,
+  ): Promise<BattleCard> {
     const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.GENERATE_CARD);
     const response = await fetch(url, {
       method: 'POST',
@@ -875,14 +896,18 @@ export const battleCardApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
     return response.json();
   },
 
-  async updateBattleCard(token: string, cardId: number, data: Partial<BattleCard>): Promise<BattleCard> {
+  async updateBattleCard(
+    token: string,
+    cardId: number,
+    data: Partial<BattleCard>,
+  ): Promise<BattleCard> {
     const url = getBattleCardApiUrl(XANO_CONFIG.ENDPOINTS.BATTLE_CARD.UPDATE_CARD);
     const response = await fetch(url, {
       method: 'PATCH',
@@ -898,7 +923,7 @@ export const battleCardApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -917,7 +942,7 @@ export const battleCardApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
   },
@@ -925,7 +950,10 @@ export const battleCardApi = {
 
 // Company API
 export const companyApi = {
-  async createCompany(token: string, data: { company_name: string; company_code?: number }): Promise<Company> {
+  async createCompany(
+    token: string,
+    data: { company_name: string; company_code?: number },
+  ): Promise<Company> {
     const url = XANO_CONFIG.COMPANY_BASE_URL;
     const response = await fetch(`${url}/company`, {
       method: 'POST',
@@ -955,7 +983,7 @@ export const companyApi = {
       throw new XanoApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -989,45 +1017,43 @@ export const companyApi = {
     return [];
   },
 
+  async updateCompany(token: string, companyId: number, companyName: string): Promise<Company> {
+    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.UPDATE_COMPANY);
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({
+        company_id: companyId,
+        company_name: companyName,
+      }),
+    });
 
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData,
+      );
+    }
 
-    async updateCompany(token: string, companyId: number, companyName: string): Promise < Company > {
-      const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.UPDATE_COMPANY);
-      const response = await fetch(url, {
-        method: 'PATCH',
-        headers: getAuthHeaders(token),
-        body: JSON.stringify({
-          company_id: companyId,
-          company_name: companyName
-        }),
-      });
-
-      if(!response.ok) {
-  const errorData = await response.json().catch(() => ({}));
-  throw new XanoApiError(
-    errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-    response.status,
-    errorData
-  );
-}
-
-return response.json();
+    return response.json();
   },
 
-  async deleteCompany(token: string, companyId: number): Promise < void> {
-  const url = getApiUrl(`${XANO_CONFIG.ENDPOINTS.COMPANY.DELETE_COMPANY}/${companyId}`);
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: getAuthHeaders(token),
-  });
+  async deleteCompany(token: string, companyId: number): Promise<void> {
+    const url = getApiUrl(`${XANO_CONFIG.ENDPOINTS.COMPANY.DELETE_COMPANY}/${companyId}`);
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+    });
 
-  if(!response.ok) {
-  const errorData = await response.json().catch(() => ({}));
-  throw new XanoApiError(
-    errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-    response.status,
-    errorData
-  );
-}
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData,
+      );
+    }
   },
 };

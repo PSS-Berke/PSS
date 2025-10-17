@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
 import { linkedInApi } from '@/lib/xano/api';
@@ -71,11 +78,17 @@ interface CategorizedChats {
 const generateSessionId = (): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const length = 15;
-  
-  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+
+  if (
+    typeof globalThis !== 'undefined' &&
+    globalThis.crypto &&
+    typeof globalThis.crypto.getRandomValues === 'function'
+  ) {
     const randomValues = new Uint8Array(length);
     globalThis.crypto.getRandomValues(randomValues);
-    return Array.from(randomValues, (value) => characters.charAt(value % characters.length)).join('');
+    return Array.from(randomValues, (value) => characters.charAt(value % characters.length)).join(
+      '',
+    );
   }
 
   let result = '';
@@ -87,7 +100,11 @@ const generateSessionId = (): string => {
   return result;
 };
 
-export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCollapseChange }: CampaignSidebarProps) {
+export function CampaignSidebar({
+  className,
+  isCollapsed: propIsCollapsed,
+  onCollapseChange,
+}: CampaignSidebarProps) {
   const { token } = useAuth();
   const {
     state,
@@ -110,7 +127,9 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
     target_audience: '',
   });
   const [categorizedData, setCategorizedData] = useState<CategorizedChats | null>(null);
-  const [sessionPendingDeletion, setSessionPendingDeletion] = useState<LinkedInSession | null>(null);
+  const [sessionPendingDeletion, setSessionPendingDeletion] = useState<LinkedInSession | null>(
+    null,
+  );
   const [isDeletingSession, setIsDeletingSession] = useState(false);
   const [sessionBeingEdited, setSessionBeingEdited] = useState<number | null>(null);
   const [editedName, setEditedName] = useState('');
@@ -159,9 +178,9 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
       name: campaign.name || '',
       additional_notes: campaign.additional_notes || '',
       marketing_type: campaign.marketing_type || '',
-     tone: campaign.tone || '',
-     post_length: campaign.post_length || 0,
-     target_audience: campaign.target_audience || '',
+      tone: campaign.tone || '',
+      post_length: campaign.post_length || 0,
+      target_audience: campaign.target_audience || '',
     });
 
     setCampaignModalOpen(true);
@@ -182,8 +201,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
       const resolvedMarketing = details?.marketing_type ?? campaign.marketing_type ?? '';
       const resolvedTone = details?.tone ?? campaign.tone ?? '';
       const resolvedAudience = details?.target_audience ?? campaign.target_audience ?? '';
-      const resolvedPostLengthRaw =
-        details?.post_length ?? campaign.post_length ?? null;
+      const resolvedPostLengthRaw = details?.post_length ?? campaign.post_length ?? null;
       const resolvedPostLength =
         typeof resolvedPostLengthRaw === 'string'
           ? parseInt(resolvedPostLengthRaw, 10) || 0
@@ -201,7 +219,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
       });
 
       if (details) {
-        setSelectedCampaign(prev =>
+        setSelectedCampaign((prev) =>
           prev
             ? {
                 ...prev,
@@ -213,7 +231,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                 target_audience: resolvedAudience,
                 created_at: details.created_at ?? prev.created_at,
               }
-            : prev
+            : prev,
         );
       }
     } catch (error) {
@@ -274,7 +292,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
             mapCampaignRecord({
               ...item,
               sessions: item.sessions ?? item.records ?? [],
-            })
+            }),
           ),
         },
       };
@@ -315,7 +333,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
             mapCampaignRecord({
               ...item,
               sessions: sessionRecords,
-            })
+            }),
           );
         }
       }
@@ -348,13 +366,13 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
 
     try {
       setIsStartingStandaloneChat(true);
-      
+
       // Only call the API with the required parameters
       await linkedInApi.initiateSession(token, {
         session_id: generateSessionId(),
         linkedin_campaigns_id: null,
       });
-      
+
       // Fetch chats after adding the new session
       await loadPages();
     } catch (error) {
@@ -492,11 +510,11 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
 
   const formatDate = (timestamp: number | string) => {
     const date = new Date(typeof timestamp === 'number' ? timestamp : timestamp);
-    return date.toLocaleDateString([], { 
-      month: 'short', 
+    return date.toLocaleDateString([], {
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -520,8 +538,11 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
     }
   };
 
-  const handleCampaignEditChange = <Key extends keyof CampaignEditFormState>(key: Key, value: CampaignEditFormState[Key]) => {
-    setCampaignFormState(prev => ({
+  const handleCampaignEditChange = <Key extends keyof CampaignEditFormState>(
+    key: Key,
+    value: CampaignEditFormState[Key],
+  ) => {
+    setCampaignFormState((prev) => ({
       ...prev,
       [key]: key === 'post_length' ? Number(value) || 0 : value,
     }));
@@ -555,7 +576,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   };
 
   const toggleCampaignExpanded = (campaignId: number) => {
-    setExpandedCampaigns(prev => {
+    setExpandedCampaigns((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(campaignId)) {
         newSet.delete(campaignId);
@@ -586,7 +607,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   const getActiveCampaign = () => {
     if (!categorizedData || !state.currentSession) return null;
     return categorizedData.campaigns.records.find(
-      (campaign) => campaign.linkedin_campaigns_id === state.currentSession?.linkedin_campaigns_id
+      (campaign) => campaign.linkedin_campaigns_id === state.currentSession?.linkedin_campaigns_id,
     );
   };
 
@@ -617,13 +638,14 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   // Get all chats and campaigns combined for mobile display
   const getAllItems = () => {
     if (!categorizedData) return [];
-    const items: Array<{ type: 'chat' | 'campaign', data: LinkedInSession | CampaignListItem }> = [];
+    const items: Array<{ type: 'chat' | 'campaign'; data: LinkedInSession | CampaignListItem }> =
+      [];
 
-    categorizedData.chats.records.forEach(chat => {
+    categorizedData.chats.records.forEach((chat) => {
       items.push({ type: 'chat', data: chat });
     });
 
-    categorizedData.campaigns.records.forEach(campaign => {
+    categorizedData.campaigns.records.forEach((campaign) => {
       items.push({ type: 'campaign', data: campaign });
     });
 
@@ -631,12 +653,14 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
   };
 
   return (
-    <div className={cn(
-      'bg-muted/30 flex flex-col w-full transition-all duration-300',
-      isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-80 h-auto md:h-full',
-      'md:border-r border-b md:border-b-0',
-      className
-    )}>
+    <div
+      className={cn(
+        'bg-muted/30 flex flex-col w-full transition-all duration-300',
+        isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-80 h-auto md:h-full',
+        'md:border-r border-b md:border-b-0',
+        className,
+      )}
+    >
       {/* Collapsed Toggle Button */}
       {isCollapsed && (
         <div className="flex items-center justify-center p-4 h-14 md:h-auto">
@@ -658,7 +682,8 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
         <div className="px-4 py-3 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">
-              Campaigns & Chats ({categorizedData?.campaigns.records.length || 0} / {categorizedData?.chats.records.length || 0})
+              Campaigns & Chats ({categorizedData?.campaigns.records.length || 0} /{' '}
+              {categorizedData?.chats.records.length || 0})
             </h3>
             <div className="flex items-center gap-2">
               <Button
@@ -736,7 +761,9 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                                   Chat • {formatDate(session.created_at)}
                                 </p>
                                 {isSelected && (
-                                  <Badge variant="default" className="text-xs">Active</Badge>
+                                  <Badge variant="default" className="text-xs">
+                                    Active
+                                  </Badge>
                                 )}
                               </div>
                             </div>
@@ -744,20 +771,29 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                         );
                       } else {
                         const campaign = item.data as CampaignListItem;
-                        const isAnyChatActive = campaign.sessions.some(s => s.id === state.currentSession?.id);
-                        const isExpanded = expandedMobileCampaign === campaign.linkedin_campaigns_id;
+                        const isAnyChatActive = campaign.sessions.some(
+                          (s) => s.id === state.currentSession?.id,
+                        );
+                        const isExpanded =
+                          expandedMobileCampaign === campaign.linkedin_campaigns_id;
                         return (
                           <Card
                             key={`campaign-${campaign.linkedin_campaigns_id}`}
                             className={`flex-shrink-0 w-64 p-4 transition-all hover:shadow-md ${
-                              isAnyChatActive || isExpanded ? 'bg-accent border-primary shadow-sm' : ''
+                              isAnyChatActive || isExpanded
+                                ? 'bg-accent border-primary shadow-sm'
+                                : ''
                             }`}
                           >
                             <div className="flex items-start gap-3">
                               <Megaphone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                               <div
                                 className="flex-1 min-w-0 cursor-pointer"
-                                onClick={() => setExpandedMobileCampaign(isExpanded ? null : (campaign.linkedin_campaigns_id || null))}
+                                onClick={() =>
+                                  setExpandedMobileCampaign(
+                                    isExpanded ? null : campaign.linkedin_campaigns_id || null,
+                                  )
+                                }
                               >
                                 <p className="font-semibold text-sm truncate mb-1">
                                   {campaign.name}
@@ -766,7 +802,9 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                                   Campaign • {campaign.sessions.length} chats
                                 </p>
                                 {isAnyChatActive && (
-                                  <Badge variant="default" className="text-xs">Active</Badge>
+                                  <Badge variant="default" className="text-xs">
+                                    Active
+                                  </Badge>
                                 )}
                               </div>
                               <Button
@@ -792,7 +830,12 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                     <div className="border-t bg-muted/20">
                       <div className="px-4 py-2 flex items-center justify-between">
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {categorizedData.campaigns.records.find(c => c.linkedin_campaigns_id === expandedMobileCampaign)?.name} - Chats
+                          {
+                            categorizedData.campaigns.records.find(
+                              (c) => c.linkedin_campaigns_id === expandedMobileCampaign,
+                            )?.name
+                          }{' '}
+                          - Chats
                         </h4>
                         <Button
                           variant="ghost"
@@ -812,7 +855,7 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                         }}
                       >
                         {categorizedData.campaigns.records
-                          .find(c => c.linkedin_campaigns_id === expandedMobileCampaign)
+                          .find((c) => c.linkedin_campaigns_id === expandedMobileCampaign)
                           ?.sessions.map((session) => {
                             const isSelected = state.currentSession?.id === session.id;
                             return (
@@ -833,7 +876,9 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
                                       {formatDate(session.created_at)}
                                     </p>
                                     {isSelected && (
-                                      <Badge variant="default" className="text-xs">Active</Badge>
+                                      <Badge variant="default" className="text-xs">
+                                        Active
+                                      </Badge>
                                     )}
                                   </div>
                                 </div>
@@ -850,588 +895,624 @@ export function CampaignSidebar({ className, isCollapsed: propIsCollapsed, onCol
 
           {/* Desktop: Vertical Scrollable List */}
           <div className="hidden md:block flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
-        {!categorizedData && !state.isLoading ? (
-          <div className="text-center text-muted-foreground">
-            <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No chats or campaigns yet</p>
-            <p className="text-xs">Create your first campaign to get started</p>
-          </div>
-        ) : (
-          categorizedData && (
-            <>
-              {/* Standalone Chats Section */}
-              {categorizedData.chats.records.length > 0 && (
-                <div className="space-y-3">
-                  <div
-                    className="font-semibold text-sm text-foreground border-b pb-2 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors flex items-center justify-between"
-                    onClick={() => setIsChatsExpanded(!isChatsExpanded)}
-                  >
-                    <div className="flex items-center gap-1">
-                      {isChatsExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <h3>{categorizedData.chats.heading}</h3>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      ({categorizedData.chats.records.length})
-                    </span>
-                  </div>
-                  {isChatsExpanded && (
-                  <div className="space-y-1">
-                    {categorizedData.chats.records.map((session) => (
-                      <Card
-                        key={session.id}
-                        className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
-                          state.currentSession?.id === session.id
-                            ? 'bg-accent border-primary'
-                            : ''
-                        }`}
-                        onClick={() => handleSessionClick(session.session_id)}
+            {!categorizedData && !state.isLoading ? (
+              <div className="text-center text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No chats or campaigns yet</p>
+                <p className="text-xs">Create your first campaign to get started</p>
+              </div>
+            ) : (
+              categorizedData && (
+                <>
+                  {/* Standalone Chats Section */}
+                  {categorizedData.chats.records.length > 0 && (
+                    <div className="space-y-3">
+                      <div
+                        className="font-semibold text-sm text-foreground border-b pb-2 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors flex items-center justify-between"
+                        onClick={() => setIsChatsExpanded(!isChatsExpanded)}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              {sessionBeingEdited === session.id ? (
-                                <Input
-                                  autoFocus
-                                  value={editedName}
-                                  onChange={(e) => setEditedName(e.target.value)}
-                                  onBlur={handleEditBlur}
-                                  onKeyDown={handleEditKeyDown}
-                                  disabled={isUpdatingName}
-                                  className="h-7 px-2 py-0 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                                />
-                              ) : (
-                                <p className="text-sm font-medium truncate">
-                                  {session.session_name}
-                                </p>
-                              )}
-                              <p className="text-xs text-muted-foreground">
-                                {formatDate(session.created_at)}
-                              </p>
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          {isChatsExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <h3>{categorizedData.chats.heading}</h3>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          ({categorizedData.chats.records.length})
+                        </span>
+                      </div>
+                      {isChatsExpanded && (
+                        <div className="space-y-1">
+                          {categorizedData.chats.records.map((session) => (
+                            <Card
+                              key={session.id}
+                              className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
+                                state.currentSession?.id === session.id
+                                  ? 'bg-accent border-primary'
+                                  : ''
+                              }`}
+                              onClick={() => handleSessionClick(session.session_id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    {sessionBeingEdited === session.id ? (
+                                      <Input
+                                        autoFocus
+                                        value={editedName}
+                                        onChange={(e) => setEditedName(e.target.value)}
+                                        onBlur={handleEditBlur}
+                                        onKeyDown={handleEditKeyDown}
+                                        disabled={isUpdatingName}
+                                        className="h-7 px-2 py-0 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                                      />
+                                    ) : (
+                                      <p className="text-sm font-medium truncate">
+                                        {session.session_name}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDate(session.created_at)}
+                                    </p>
+                                  </div>
+                                </div>
 
-                          <div className="flex items-center gap-1">
-                            {state.currentSession?.id === session.id && (
-                              <div className="w-2 h-2 bg-primary rounded-full" />
-                            )}
-                            <div className="relative" onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={(e) => handleMenuToggle(session.id, e)}
-                                aria-label="Open chat actions"
-                              >
-                                <MoreVertical className="h-3 w-3" />
-                              </Button>
-                              {menuOpenForSession === session.id && (
-                                <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
-                                  <button
+                                <div className="flex items-center gap-1">
+                                  {state.currentSession?.id === session.id && (
+                                    <div className="w-2 h-2 bg-primary rounded-full" />
+                                  )}
+                                  <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={(e) => handleMenuToggle(session.id, e)}
+                                      aria-label="Open chat actions"
+                                    >
+                                      <MoreVertical className="h-3 w-3" />
+                                    </Button>
+                                    {menuOpenForSession === session.id && (
+                                      <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
+                                        <button
+                                          type="button"
+                                          className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                                          onClick={(e) => handleEditOption(session, e)}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                                          onClick={(e) => handleDeleteOption(session, e)}
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Campaigns Section */}
+                  {categorizedData.campaigns.records.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm text-foreground border-b pb-2">
+                        {categorizedData.campaigns.heading}
+                      </h3>
+                      <div className="space-y-4">
+                        {categorizedData.campaigns.records.map((campaign) => {
+                          if (campaign.linkedin_campaigns_id === null) return null;
+                          const isExpanded = expandedCampaigns.has(campaign.linkedin_campaigns_id);
+                          return (
+                            <div key={campaign.linkedin_campaigns_id} className="space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div
+                                  className="flex items-start gap-1 flex-1 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors"
+                                  onClick={() =>
+                                    toggleCampaignExpanded(campaign.linkedin_campaigns_id as number)
+                                  }
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                  )}
+                                  <h4 className="font-medium text-sm text-foreground break-words flex-1 min-w-0">
+                                    {campaign.name}
+                                  </h4>
+                                  <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                                    ({campaign.sessions.length})
+                                  </span>
+                                </div>
+                                <div className="flex flex-col gap-1 flex-shrink-0">
+                                  <Button
                                     type="button"
-                                    className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                                    onClick={(e) => handleEditOption(session, e)}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground"
+                                    onClick={() => openCampaignModal(campaign)}
+                                    aria-label={`Manage campaign ${campaign.name}`}
                                   >
-                                    Edit
-                                  </button>
-                                  <button
+                                    <Settings className="h-4 w-4" />
+                                  </Button>
+                                  <Button
                                     type="button"
-                                    className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                                    onClick={(e) => handleDeleteOption(session, e)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={() =>
+                                      handleAddChatClick(campaign.linkedin_campaigns_id as number)
+                                    }
+                                    disabled={
+                                      isAddingChat &&
+                                      campaignIdForNewChat === campaign.linkedin_campaigns_id
+                                    }
                                   >
-                                    Delete
-                                  </button>
+                                    {isAddingChat &&
+                                    campaignIdForNewChat === campaign.linkedin_campaigns_id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Link2 className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {isExpanded && (
+                                <div className="space-y-1 ml-2 pl-3 border-l-2 border-muted">
+                                  {campaign.sessions.map((session) => (
+                                    <Card
+                                      key={session.id}
+                                      className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
+                                        state.currentSession?.id === session.id
+                                          ? 'bg-accent border-primary'
+                                          : ''
+                                      }`}
+                                      onClick={() => handleSessionClick(session.session_id)}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                          <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                          <div className="min-w-0 flex-1">
+                                            {sessionBeingEdited === session.id ? (
+                                              <Input
+                                                autoFocus
+                                                value={editedName}
+                                                onChange={(e) => setEditedName(e.target.value)}
+                                                onBlur={handleEditBlur}
+                                                onKeyDown={handleEditKeyDown}
+                                                disabled={isUpdatingName}
+                                                className="h-7 px-2 py-0 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                                              />
+                                            ) : (
+                                              <p className="text-sm font-medium truncate">
+                                                {session.session_name}
+                                              </p>
+                                            )}
+                                            <p className="text-xs text-muted-foreground">
+                                              {formatDate(session.created_at)}
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1">
+                                          {state.currentSession?.id === session.id && (
+                                            <div className="w-2 h-2 bg-primary rounded-full" />
+                                          )}
+                                          <div
+                                            className="relative"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={(e) => handleMenuToggle(session.id, e)}
+                                              aria-label="Open chat actions"
+                                            >
+                                              <MoreVertical className="h-3 w-3" />
+                                            </Button>
+                                            {menuOpenForSession === session.id && (
+                                              <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
+                                                <button
+                                                  type="button"
+                                                  className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                                                  onClick={(e) => handleEditOption(session, e)}
+                                                >
+                                                  Edit
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                                                  onClick={(e) => handleDeleteOption(session, e)}
+                                                >
+                                                  Delete
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </Card>
+                                  ))}
                                 </div>
                               )}
                             </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
-                </div>
-              )}
-              {/* Campaigns Section */}
-              {categorizedData.campaigns.records.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-sm text-foreground border-b pb-2">
-                    {categorizedData.campaigns.heading}
-                  </h3>
-                  <div className="space-y-4">
-                    {categorizedData.campaigns.records.map((campaign) => {
-                      if (campaign.linkedin_campaigns_id === null) return null;
-                      const isExpanded = expandedCampaigns.has(campaign.linkedin_campaigns_id);
-                      return (
-                        <div key={campaign.linkedin_campaigns_id} className="space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <div 
-                              className="flex items-start gap-1 flex-1 cursor-pointer hover:bg-accent/50 rounded px-2 py-1 transition-colors"
-                              onClick={() => toggleCampaignExpanded(campaign.linkedin_campaigns_id as number)}
-                            >
-                              {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                              )}
-                              <h4 className="font-medium text-sm text-foreground break-words flex-1 min-w-0">
-                                {campaign.name}
-                              </h4>
-                              <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
-                                ({campaign.sessions.length})
-                              </span>
-                            </div>
-                            <div className="flex flex-col gap-1 flex-shrink-0">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground"
-                                onClick={() => openCampaignModal(campaign)}
-                                aria-label={`Manage campaign ${campaign.name}`}
-                              >
-                                <Settings className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => handleAddChatClick(campaign.linkedin_campaigns_id as number)}
-                                disabled={isAddingChat && campaignIdForNewChat === campaign.linkedin_campaigns_id}
-                              >
-                                {isAddingChat && campaignIdForNewChat === campaign.linkedin_campaigns_id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <Link2 className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          {isExpanded && (
-                            <div className="space-y-1 ml-2 pl-3 border-l-2 border-muted">
-                              {campaign.sessions.map((session) => (
-                                <Card
-                                  key={session.id}
-                                  className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
-                                    state.currentSession?.id === session.id
-                                      ? 'bg-accent border-primary'
-                                      : ''
-                                  }`}
-                                  onClick={() => handleSessionClick(session.session_id)}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                                      <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                      <div className="min-w-0 flex-1">
-                                        {sessionBeingEdited === session.id ? (
-                                          <Input
-                                            autoFocus
-                                            value={editedName}
-                                            onChange={(e) => setEditedName(e.target.value)}
-                                            onBlur={handleEditBlur}
-                                            onKeyDown={handleEditKeyDown}
-                                            disabled={isUpdatingName}
-                                            className="h-7 px-2 py-0 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                                          />
-                                        ) : (
-                                          <p className="text-sm font-medium truncate">
-                                            {session.session_name}
-                                          </p>
-                                        )}
-                                        <p className="text-xs text-muted-foreground">
-                                          {formatDate(session.created_at)}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-1">
-                                      {state.currentSession?.id === session.id && (
-                                        <div className="w-2 h-2 bg-primary rounded-full" />
-                                      )}
-                                      <div className="relative" onClick={(e) => e.stopPropagation()}>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0"
-                                          onClick={(e) => handleMenuToggle(session.id, e)}
-                                          aria-label="Open chat actions"
-                                        >
-                                          <MoreVertical className="h-3 w-3" />
-                                        </Button>
-                                        {menuOpenForSession === session.id && (
-                                          <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
-                                            <button
-                                              type="button"
-                                              className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                                              onClick={(e) => handleEditOption(session, e)}
-                                            >
-                                              Edit
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                                              onClick={(e) => handleDeleteOption(session, e)}
-                                            >
-                                              Delete
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </Card>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
-              {/* Empty state when no data */}
-              {categorizedData.chats.records.length === 0 && categorizedData.campaigns.records.length === 0 && (
-                <div className="text-center text-muted-foreground">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No chats or campaigns yet</p>
-                  <p className="text-xs">Create your first campaign to get started</p>
-                </div>
-              )}
-            </>
-          )
-        )}
-        </div>
+                  {/* Empty state when no data */}
+                  {categorizedData.chats.records.length === 0 &&
+                    categorizedData.campaigns.records.length === 0 && (
+                      <div className="text-center text-muted-foreground">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No chats or campaigns yet</p>
+                        <p className="text-xs">Create your first campaign to get started</p>
+                      </div>
+                    )}
+                </>
+              )
+            )}
+          </div>
         </>
       )}
 
       {/* Create Campaign Dialog */}
       {!isCollapsed && (
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto z-[10001]">
-          <DialogHeader className="space-y-1">
-            <DialogTitle>Create New Campaign</DialogTitle>
-            <DialogDescription>
-              Enter the campaign details to start generating LinkedIn content.
-            </DialogDescription>
-          </DialogHeader>
+          <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto z-[10001]">
+            <DialogHeader className="space-y-1">
+              <DialogTitle>Create New Campaign</DialogTitle>
+              <DialogDescription>
+                Enter the campaign details to start generating LinkedIn content.
+              </DialogDescription>
+            </DialogHeader>
 
-          <form onSubmit={handleCreateCampaign} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Campaign Name *</label>
-              <Input
-                value={campaignForm.name}
-                onChange={(e) => setCampaignForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Q4 Product Launch"
-                required
-              />
-            </div>
+            <form onSubmit={handleCreateCampaign} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Campaign Name *</label>
+                <Input
+                  value={campaignForm.name}
+                  onChange={(e) => setCampaignForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Q4 Product Launch"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tone</label>
-              <Input
-                value={campaignForm.tone}
-                onChange={(e) => setCampaignForm(prev => ({ ...prev, tone: e.target.value }))}
-                placeholder="e.g., professional, casual, friendly"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tone</label>
+                <Input
+                  value={campaignForm.tone}
+                  onChange={(e) => setCampaignForm((prev) => ({ ...prev, tone: e.target.value }))}
+                  placeholder="e.g., professional, casual, friendly"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Content Length</label>
-              <Input
-                type="number"
-                value={campaignForm.content_length}
-                onChange={(e) => setCampaignForm(prev => ({ 
-                  ...prev, 
-                  content_length: parseInt(e.target.value) || 300 
-                }))}
-                placeholder="300"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Content Length</label>
+                <Input
+                  type="number"
+                  value={campaignForm.content_length}
+                  onChange={(e) =>
+                    setCampaignForm((prev) => ({
+                      ...prev,
+                      content_length: parseInt(e.target.value) || 300,
+                    }))
+                  }
+                  placeholder="300"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Marketing Type</label>
-              <Input
-                value={campaignForm.marketing_type}
-                onChange={(e) => setCampaignForm(prev => ({ ...prev, marketing_type: e.target.value }))}
-                placeholder="e.g., product_announcement, promotional"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Marketing Type</label>
+                <Input
+                  value={campaignForm.marketing_type}
+                  onChange={(e) =>
+                    setCampaignForm((prev) => ({ ...prev, marketing_type: e.target.value }))
+                  }
+                  placeholder="e.g., product_announcement, promotional"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Target Audience</label>
-              <Input
-                value={campaignForm.target_audience}
-                onChange={(e) => setCampaignForm(prev => ({ ...prev, target_audience: e.target.value }))}
-                placeholder="Who is this campaign for?"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Target Audience</label>
+                <Input
+                  value={campaignForm.target_audience}
+                  onChange={(e) =>
+                    setCampaignForm((prev) => ({ ...prev, target_audience: e.target.value }))
+                  }
+                  placeholder="Who is this campaign for?"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Additional Notes</label>
-              <textarea
-                value={campaignForm.additional_notes}
-                onChange={(e) => setCampaignForm(prev => ({ ...prev, additional_notes: e.target.value }))}
-                placeholder="Any specific requirements or context..."
-                className="w-full min-h-[80px] px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Additional Notes</label>
+                <textarea
+                  value={campaignForm.additional_notes}
+                  onChange={(e) =>
+                    setCampaignForm((prev) => ({ ...prev, additional_notes: e.target.value }))
+                  }
+                  placeholder="Any specific requirements or context..."
+                  className="w-full min-h-[80px] px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
 
-            <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateForm(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!campaignForm.name?.trim() || state.isCreatingCampaign}
+                  className="flex-1"
+                >
+                  {state.isCreatingCampaign ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Create Campaign'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {!isCollapsed && (
+        <Dialog
+          open={campaignModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeCampaignModal();
+            }
+          }}
+        >
+          <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto">
+            <DialogHeader className="space-y-1">
+              <DialogTitle>Manage Campaign</DialogTitle>
+              <DialogDescription>
+                View and update campaign details, or delete the campaign.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedCampaign ? (
+              <div className="space-y-6">
+                {isCampaignDetailsLoading && (
+                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading campaign details...
+                  </div>
+                )}
+
+                {campaignDetailError && !isCampaignDetailsLoading && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {campaignDetailError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <p className="text-xs uppercase text-muted-foreground">Campaign ID</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {selectedCampaign.linkedin_campaigns_id}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-xs uppercase text-muted-foreground">Created</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {selectedCampaign.created_at
+                        ? formatDate(selectedCampaign.created_at)
+                        : 'Unknown'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium" htmlFor="campaign-name">
+                      Campaign Name
+                    </label>
+                    <Input
+                      id="campaign-name"
+                      value={campaignFormState.name}
+                      onChange={(event) => handleCampaignEditChange('name', event.target.value)}
+                      placeholder="Campaign name"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="campaign-tone">
+                        Tone
+                      </label>
+                      <Input
+                        id="campaign-tone"
+                        value={campaignFormState.tone}
+                        onChange={(event) => handleCampaignEditChange('tone', event.target.value)}
+                        placeholder="e.g., professional, casual, friendly"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="campaign-post-length">
+                        Post Length
+                      </label>
+                      <Input
+                        id="campaign-post-length"
+                        type="number"
+                        value={
+                          Number.isFinite(campaignFormState.post_length)
+                            ? campaignFormState.post_length
+                            : ''
+                        }
+                        onChange={(event) =>
+                          handleCampaignEditChange('post_length', Number(event.target.value) || 0)
+                        }
+                        placeholder="0"
+                        min={0}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="campaign-marketing-type">
+                        Marketing Type
+                      </label>
+                      <Input
+                        id="campaign-marketing-type"
+                        value={campaignFormState.marketing_type}
+                        onChange={(event) =>
+                          handleCampaignEditChange('marketing_type', event.target.value)
+                        }
+                        placeholder="e.g., product_announcement, promotional"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="campaign-target-audience">
+                        Target Audience
+                      </label>
+                      <Input
+                        id="campaign-target-audience"
+                        value={campaignFormState.target_audience}
+                        onChange={(event) =>
+                          handleCampaignEditChange('target_audience', event.target.value)
+                        }
+                        placeholder="Who is this campaign for?"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium" htmlFor="campaign-notes">
+                      Additional Notes
+                    </label>
+                    <Textarea
+                      id="campaign-notes"
+                      value={campaignFormState.additional_notes}
+                      onChange={(event) =>
+                        handleCampaignEditChange('additional_notes', event.target.value)
+                      }
+                      placeholder="Add any additional context or instructions for this campaign"
+                      className="min-h-[120px]"
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter className="sm:justify-between sm:items-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive flex items-center gap-2"
+                    onClick={() => console.log('Campaign delete requested')}
+                    disabled={isSavingCampaign || isCampaignDetailsLoading}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Campaign
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={closeCampaignModal}
+                      disabled={isSavingCampaign || isCampaignDetailsLoading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveCampaign}
+                      disabled={
+                        isSavingCampaign ||
+                        isCampaignDetailsLoading ||
+                        !campaignFormState.name.trim()
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      {isSavingCampaign ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No campaign selected.</p>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {!isCollapsed && (
+        <Dialog
+          open={!!sessionPendingDeletion}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeDeleteDialog();
+            }
+          }}
+        >
+          <DialogContent className="max-w-md space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5">
+            <DialogHeader className="space-y-2">
+              <DialogTitle>Delete chat?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. The conversation
+                {sessionPendingDeletion?.session_name
+                  ? ` "${sessionPendingDeletion.session_name}"`
+                  : ''}{' '}
+                will be permanently removed.
+              </DialogDescription>
+            </DialogHeader>
+
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this chat? All generated content and history
+              associated with this conversation will be lost.
+            </p>
+
+            <DialogFooter className="sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowCreateForm(false)}
-                className="flex-1"
+                onClick={closeDeleteDialog}
+                disabled={isDeletingSession}
               >
                 Cancel
               </Button>
               <Button
-                type="submit"
-                disabled={!campaignForm.name?.trim() || state.isCreatingCampaign}
-                className="flex-1"
+                type="button"
+                variant="destructive"
+                onClick={handleConfirmDeleteSession}
+                disabled={isDeletingSession}
               >
-                {state.isCreatingCampaign ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Create Campaign'
-                )}
+                {isDeletingSession ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete'}
               </Button>
-            </div>
-          </form>
-        </DialogContent>
-        </Dialog>
-      )}
-
-      {!isCollapsed && (
-        <Dialog
-        open={campaignModalOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeCampaignModal();
-          }
-        }}
-        >
-        <DialogContent className="w-[80vw] max-w-[560px] max-h-[80vh] space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5 overflow-y-auto">
-          <DialogHeader className="space-y-1">
-            <DialogTitle>Manage Campaign</DialogTitle>
-            <DialogDescription>
-              View and update campaign details, or delete the campaign.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedCampaign ? (
-            <div className="space-y-6">
-              {isCampaignDetailsLoading && (
-                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading campaign details...
-                </div>
-              )}
-
-              {campaignDetailError && !isCampaignDetailsLoading && (
-                <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {campaignDetailError}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <p className="text-xs uppercase text-muted-foreground">Campaign ID</p>
-                  <p className="text-sm font-medium text-foreground">{selectedCampaign.linkedin_campaigns_id}</p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-xs uppercase text-muted-foreground">Created</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {selectedCampaign.created_at ? formatDate(selectedCampaign.created_at) : 'Unknown'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" htmlFor="campaign-name">
-                    Campaign Name
-                  </label>
-                  <Input
-                    id="campaign-name"
-                    value={campaignFormState.name}
-                    onChange={(event) => handleCampaignEditChange('name', event.target.value)}
-                    placeholder="Campaign name"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="campaign-tone">
-                      Tone
-                    </label>
-                    <Input
-                      id="campaign-tone"
-                      value={campaignFormState.tone}
-                      onChange={(event) => handleCampaignEditChange('tone', event.target.value)}
-                      placeholder="e.g., professional, casual, friendly"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="campaign-post-length">
-                      Post Length
-                    </label>
-                    <Input
-                      id="campaign-post-length"
-                      type="number"
-                      value={Number.isFinite(campaignFormState.post_length) ? campaignFormState.post_length : ''}
-                      onChange={(event) => handleCampaignEditChange('post_length', Number(event.target.value) || 0)}
-                      placeholder="0"
-                      min={0}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="campaign-marketing-type">
-                      Marketing Type
-                    </label>
-                    <Input
-                      id="campaign-marketing-type"
-                      value={campaignFormState.marketing_type}
-                      onChange={(event) => handleCampaignEditChange('marketing_type', event.target.value)}
-                      placeholder="e.g., product_announcement, promotional"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="campaign-target-audience">
-                      Target Audience
-                    </label>
-                    <Input
-                      id="campaign-target-audience"
-                      value={campaignFormState.target_audience}
-                      onChange={(event) => handleCampaignEditChange('target_audience', event.target.value)}
-                      placeholder="Who is this campaign for?"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" htmlFor="campaign-notes">
-                    Additional Notes
-                  </label>
-                  <Textarea
-                    id="campaign-notes"
-                    value={campaignFormState.additional_notes}
-                    onChange={(event) => handleCampaignEditChange('additional_notes', event.target.value)}
-                    placeholder="Add any additional context or instructions for this campaign"
-                    className="min-h-[120px]"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter className="sm:justify-between sm:items-center">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-destructive flex items-center gap-2"
-                  onClick={() => console.log('Campaign delete requested')}
-                  disabled={isSavingCampaign || isCampaignDetailsLoading}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Campaign
-                </Button>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeCampaignModal}
-                    disabled={isSavingCampaign || isCampaignDetailsLoading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSaveCampaign}
-                    disabled={
-                      isSavingCampaign ||
-                      isCampaignDetailsLoading ||
-                      !campaignFormState.name.trim()
-                    }
-                    className="flex items-center gap-2"
-                  >
-                    {isSavingCampaign ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </DialogFooter>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No campaign selected.</p>
-          )}
-        </DialogContent>
-        </Dialog>
-      )}
-
-      {!isCollapsed && (
-        <Dialog
-        open={!!sessionPendingDeletion}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeDeleteDialog();
-          }
-        }}
-        >
-        <DialogContent className="max-w-md space-y-4 rounded-2xl border border-border/60 bg-background px-6 py-5">
-          <DialogHeader className="space-y-2">
-            <DialogTitle>Delete chat?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. The conversation
-              {sessionPendingDeletion?.session_name ? ` "${sessionPendingDeletion.session_name}"` : ''} will be permanently removed.
-            </DialogDescription>
-          </DialogHeader>
-
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this chat? All generated content and history associated with this conversation will be lost.
-          </p>
-
-          <DialogFooter className="sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeDeleteDialog}
-              disabled={isDeletingSession}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleConfirmDeleteSession}
-              disabled={isDeletingSession}
-            >
-              {isDeletingSession ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Delete'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
       )}
     </div>

@@ -30,6 +30,7 @@ This interactive demo is a **fully functional prototype** of the Phone Module de
 - Settings modal for phone configuration
 
 **Tech Stack Alignment:**
+
 - Built with React 18 + TypeScript
 - Uses Tailwind CSS utility classes
 - Follows your existing module pattern
@@ -43,13 +44,15 @@ This interactive demo is a **fully functional prototype** of the Phone Module de
 ### ✅ Implemented Features
 
 #### 1. **Dial Pad View**
-- Numeric keypad (0-9, *, #) with letter mappings
+
+- Numeric keypad (0-9, \*, #) with letter mappings
 - Phone number input field
 - Click-to-call functionality
 - Delete button to clear input
 - Visual feedback on button presses
 
 #### 2. **Contacts Management**
+
 - Search contacts by name, company, or phone number
 - **Add new contacts** with modal form:
   - Name (required)
@@ -64,6 +67,7 @@ This interactive demo is a **fully functional prototype** of the Phone Module de
 - Click-to-call from any contact card
 
 #### 3. **Recent Calls View**
+
 - Call history list with details:
   - Contact name or phone number
   - Call direction (inbound/outbound)
@@ -79,6 +83,7 @@ This interactive demo is a **fully functional prototype** of the Phone Module de
 - Icons for call direction
 
 #### 4. **Active Call Interface**
+
 - Full-screen overlay during calls
 - Contact avatar with initial
 - Call status indicator (Ringing/In Progress)
@@ -91,26 +96,25 @@ This interactive demo is a **fully functional prototype** of the Phone Module de
 - Visual animations (ringing pulse)
 
 #### 5. **Settings Modal**
+
 - **Phone Number Management:**
   - Display your Twilio number
   - Copy to clipboard with feedback
   - Edit number field
-  
 - **Voicemail Configuration:**
   - Enable/disable toggle
   - Greeting type selection (Default/Custom/Name Only)
   - Conditional UI (greeting picker appears when enabled)
-  
 - **Call Forwarding:**
   - Enable/disable toggle
   - Forward number input (appears when enabled)
-  
 - **Additional Options:**
   - Do Not Disturb mode
   - Call Recording toggle
   - Notification Sounds toggle
 
 #### 6. **UI/UX Features**
+
 - Click outside modals to close
 - Animated toggle switches
 - Status indicators (online, active call)
@@ -208,12 +212,14 @@ Xano Backend
 ### Phase 1: Prepare Your Environment (1-2 hours)
 
 1. **Review Reference Files**
+
    - `phone-module-reference.tsx` - Component structure
    - `phone-api-reference.ts` - API methods to add
    - `xano-setup-guide.md` - Backend configuration
    - `IMPLEMENTATION-GUIDE.md` - Step-by-step instructions
 
 2. **Set Up Twilio**
+
    - Create Twilio account: https://www.twilio.com/
    - Purchase phone number (~$1/month)
    - Copy Account SID and Auth Token
@@ -226,6 +232,7 @@ Xano Backend
 ### Phase 2: Extract Component Code (2-3 hours)
 
 #### Option A: Single File Approach (Simpler)
+
 Copy the entire demo artifact into `components/phone/phone-module.tsx`
 
 #### Option B: Multi-File Approach (Cleaner, Recommended)
@@ -242,6 +249,7 @@ Copy the entire demo artifact into `components/phone/phone-module.tsx`
 8. **phone-settings.tsx** (Settings modal)
 
 **Why multi-file?**
+
 - Matches your existing module patterns (LinkedIn, Social Media modules)
 - Easier to maintain and test
 - Better code organization
@@ -298,11 +306,11 @@ import { PhoneProvider } from '@/lib/xano/phone-context';
 
 const ALL_MODULES: ModuleConfig[] = [
   // ... existing modules ...
-  { 
-    id: 8, 
-    sortId: 'phone', 
-    Component: PhoneModule, 
-    Provider: PhoneProvider 
+  {
+    id: 8,
+    sortId: 'phone',
+    Component: PhoneModule,
+    Provider: PhoneProvider,
   },
 ];
 ```
@@ -319,11 +327,13 @@ Follow **xano-setup-guide.md** to:
 ### Phase 7: Integration & Testing (4-6 hours)
 
 1. **Connect frontend to backend:**
+
    - Update all `phoneApi` calls in context
    - Test authentication flow
    - Verify data persistence
 
 2. **Test user flows:**
+
    - Make an outbound call
    - Add a new contact
    - Filter call logs
@@ -390,21 +400,22 @@ your-app/
 
 ### What Changes 🔄
 
-| Demo | Production |
-|------|-----------|
+| Demo                                                 | Production                                    |
+| ---------------------------------------------------- | --------------------------------------------- |
 | `const [contacts, setContacts] = useState(mockData)` | Data comes from `phoneApi.getContacts(token)` |
-| Mock call simulation with `setTimeout` | Real Twilio API calls |
-| Local state only | State + Xano database persistence |
-| No authentication | Requires bearer token for all API calls |
-| Simulated call timer | Real call duration from Twilio |
-| Alert boxes for feedback | Toast notifications (use your toast system) |
-| Static modal behavior | Modal state may need Zustand/Context |
+| Mock call simulation with `setTimeout`               | Real Twilio API calls                         |
+| Local state only                                     | State + Xano database persistence             |
+| No authentication                                    | Requires bearer token for all API calls       |
+| Simulated call timer                                 | Real call duration from Twilio                |
+| Alert boxes for feedback                             | Toast notifications (use your toast system)   |
+| Static modal behavior                                | Modal state may need Zustand/Context          |
 
 ### Critical Changes Needed
 
 #### 1. **Replace Mock Data**
 
 **Demo:**
+
 ```typescript
 const mockContacts = [
   { id: 1, name: 'John Doe', ... }
@@ -412,6 +423,7 @@ const mockContacts = [
 ```
 
 **Production:**
+
 ```typescript
 const fetchContacts = async () => {
   const token = await getAuthToken();
@@ -427,21 +439,25 @@ useEffect(() => {
 #### 2. **Add Real API Calls**
 
 **Demo:**
+
 ```typescript
 const makeCall = (number) => {
   setActiveCall({ phone_number: number, status: 'ringing' });
-  setTimeout(() => { /* simulate */ }, 2000);
+  setTimeout(() => {
+    /* simulate */
+  }, 2000);
 };
 ```
 
 **Production:**
+
 ```typescript
 const makeCall = async (number) => {
   try {
     const token = await getAuthToken();
     const call = await phoneApi.makeCall(token, number);
     setActiveCall(call);
-    
+
     // Start polling for status updates
     startCallStatusPolling(call.id);
   } catch (error) {
@@ -462,13 +478,17 @@ useEffect(() => {
     try {
       const token = await getAuthToken();
       const status = await phoneApi.getCallStatus(token, activeCall.id);
-      
-      setActiveCall(prev => prev ? {
-        ...prev,
-        status: status.status,
-        duration: status.duration
-      } : null);
-      
+
+      setActiveCall((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: status.status,
+              duration: status.duration,
+            }
+          : null,
+      );
+
       // Stop polling if call ended
       if (status.status === 'completed') {
         clearInterval(pollInterval);
@@ -492,9 +512,9 @@ try {
 } catch (error) {
   if (error instanceof XanoApiError) {
     // Your existing error handling pattern
-    setState(prev => ({ 
-      ...prev, 
-      error: error.message 
+    setState((prev) => ({
+      ...prev,
+      error: error.message,
     }));
   }
 }
@@ -503,19 +523,21 @@ try {
 #### 5. **Replace Alerts with Toast Notifications**
 
 **Demo:**
+
 ```typescript
 alert('Contact added successfully!');
 ```
 
 **Production (use your existing toast system):**
+
 ```typescript
 import { useToast } from '@/components/ui/use-toast';
 
 const { toast } = useToast();
 
 toast({
-  title: "Success",
-  description: "Contact added successfully",
+  title: 'Success',
+  description: 'Contact added successfully',
 });
 ```
 
@@ -615,6 +637,7 @@ toast({
 See **xano-setup-guide.md** for detailed schemas. Summary:
 
 #### 1. `calls` table
+
 ```
 - id (int, primary key)
 - user_id (int, foreign key)
@@ -631,6 +654,7 @@ See **xano-setup-guide.md** for detailed schemas. Summary:
 ```
 
 #### 2. `phone_numbers` table
+
 ```
 - id (int, primary key)
 - user_id (int, foreign key)
@@ -641,6 +665,7 @@ See **xano-setup-guide.md** for detailed schemas. Summary:
 ```
 
 #### 3. `contacts` table (may already exist)
+
 ```
 - id (int, primary key)
 - user_id (int, foreign key)
@@ -675,6 +700,7 @@ See **xano-setup-guide.md** for function stack details. Summary:
 ### Twilio Configuration
 
 1. **Environment Variables in Xano:**
+
    ```
    TWILIO_ACCOUNT_SID = "ACxxxxxxxxxxxxxxxxxx"
    TWILIO_AUTH_TOKEN = "your-auth-token-here"
@@ -716,6 +742,7 @@ Test the full flow:
 ### E2E Testing (Full User Flow)
 
 **Test Scenario 1: Make a Call**
+
 ```
 1. Navigate to Dial Pad
 2. Enter phone number
@@ -729,6 +756,7 @@ Test the full flow:
 ```
 
 **Test Scenario 2: Add Contact**
+
 ```
 1. Navigate to Contacts
 2. Click Add Contact button
@@ -742,6 +770,7 @@ Test the full flow:
 ```
 
 **Test Scenario 3: Settings**
+
 ```
 1. Click settings gear
 2. Toggle voicemail on
@@ -774,7 +803,9 @@ Test the full flow:
 ### Common Issues & Solutions
 
 #### Issue: Module doesn't appear on dashboard
+
 **Solutions:**
+
 1. Check `ALL_MODULES` array has correct entry
 2. Verify import paths are correct
 3. Check console for errors
@@ -782,7 +813,9 @@ Test the full flow:
 5. Clear Next.js cache: `rm -rf .next && npm run dev`
 
 #### Issue: API calls fail with 401 Unauthorized
+
 **Solutions:**
+
 1. Verify `getAuthToken()` returns valid token
 2. Check token is passed to all phoneApi methods
 3. Verify Xano endpoint has authentication enabled
@@ -790,7 +823,9 @@ Test the full flow:
 5. Test API endpoint directly with Postman
 
 #### Issue: Twilio call fails
+
 **Solutions:**
+
 1. Verify phone number format: `+1234567890` (E.164)
 2. Check Twilio credentials in Xano are correct
 3. Ensure user has phone number in `phone_numbers` table
@@ -799,7 +834,9 @@ Test the full flow:
 6. Check trial account limitations (can only call verified numbers)
 
 #### Issue: Webhooks not receiving updates
+
 **Solutions:**
+
 1. Verify webhook URL is publicly accessible (not localhost)
 2. Check URL is configured in Twilio phone number settings
 3. Test webhook manually with Postman (POST request)
@@ -807,7 +844,9 @@ Test the full flow:
 5. Verify Content-Type in webhook is `application/x-www-form-urlencoded`
 
 #### Issue: Call status doesn't update during call
+
 **Solutions:**
+
 1. Verify polling is implemented in context
 2. Check `getCallStatus` API endpoint works
 3. Verify polling interval is not too long (2-3 seconds recommended)
@@ -815,7 +854,9 @@ Test the full flow:
 5. Test webhook is updating database correctly
 
 #### Issue: Contacts don't persist after refresh
+
 **Solutions:**
+
 1. Verify `addContact` API endpoint saves to database
 2. Check `getContacts` fetches from database (not state)
 3. Verify user_id is correct in database queries
@@ -823,7 +864,9 @@ Test the full flow:
 5. Check authentication is working (correct user)
 
 #### Issue: UI looks broken/misaligned
+
 **Solutions:**
+
 1. Verify all shadcn/ui components are installed
 2. Check Tailwind CSS is configured correctly
 3. Ensure lucide-react is installed for icons
@@ -832,14 +875,18 @@ Test the full flow:
 6. Verify all imports are correct
 
 #### Issue: Modal doesn't close on outside click
+
 **Solutions:**
+
 1. Check `onClick` handler on backdrop div
 2. Verify `stopPropagation()` on modal content div
 3. Test in different browsers (may be browser-specific)
 4. Check z-index of modal (should be high, like 50)
 
 #### Issue: Performance issues with large contact lists
+
 **Solutions:**
+
 1. Implement virtualization (react-window or react-virtual)
 2. Add pagination to contact list
 3. Lazy load contact avatars

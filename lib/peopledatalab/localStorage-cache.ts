@@ -19,7 +19,7 @@ function getCacheKey(type: 'person' | 'company', identifier: string, companyId: 
 function isExpired(timestamp: number): boolean {
   const now = Date.now();
   const expiryMs = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-  return (now - timestamp) > expiryMs;
+  return now - timestamp > expiryMs;
 }
 
 // Person Cache Functions
@@ -27,7 +27,7 @@ export function getPersonFromLocalStorage(
   firstName: string,
   lastName: string,
   companyId: number,
-  searchCompany?: string
+  searchCompany?: string,
 ): PDLPersonProfile | null {
   if (typeof window === 'undefined') return null; // Server-side rendering check
 
@@ -73,7 +73,7 @@ export function savePersonToLocalStorage(
   lastName: string,
   companyId: number,
   data: PDLPersonProfile,
-  searchCompany?: string
+  searchCompany?: string,
 ): void {
   if (typeof window === 'undefined') return; // Server-side rendering check
 
@@ -104,7 +104,7 @@ export function savePersonToLocalStorage(
 // Company Cache Functions
 export function getCompanyFromLocalStorage(
   companyName: string,
-  companyId: number
+  companyId: number,
 ): PDLCompanyProfile | null {
   if (typeof window === 'undefined') return null;
 
@@ -144,7 +144,7 @@ export function getCompanyFromLocalStorage(
 export function saveCompanyToLocalStorage(
   companyName: string,
   companyId: number,
-  data: PDLCompanyProfile
+  data: PDLCompanyProfile,
 ): void {
   if (typeof window === 'undefined') return;
 
@@ -173,19 +173,21 @@ function clearOldLocalStorageEntries(): void {
 
   try {
     const keys = Object.keys(localStorage);
-    const pdlKeys = keys.filter(key => key.startsWith(CACHE_PREFIX));
+    const pdlKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX));
 
     // Get entries with timestamps
-    const entries = pdlKeys.map(key => {
-      try {
-        const data = localStorage.getItem(key);
-        if (!data) return null;
-        const entry = JSON.parse(data);
-        return { key, timestamp: entry.timestamp || 0 };
-      } catch {
-        return null;
-      }
-    }).filter((e): e is { key: string; timestamp: number } => e !== null);
+    const entries = pdlKeys
+      .map((key) => {
+        try {
+          const data = localStorage.getItem(key);
+          if (!data) return null;
+          const entry = JSON.parse(data);
+          return { key, timestamp: entry.timestamp || 0 };
+        } catch {
+          return null;
+        }
+      })
+      .filter((e): e is { key: string; timestamp: number } => e !== null);
 
     // Sort by timestamp (oldest first)
     entries.sort((a, b) => a.timestamp - b.timestamp);
@@ -208,9 +210,9 @@ export function clearAllPDLCache(): void {
 
   try {
     const keys = Object.keys(localStorage);
-    const pdlKeys = keys.filter(key => key.startsWith(CACHE_PREFIX));
+    const pdlKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX));
 
-    pdlKeys.forEach(key => localStorage.removeItem(key));
+    pdlKeys.forEach((key) => localStorage.removeItem(key));
     console.log(`🧹 Cleared all PDL cache (${pdlKeys.length} entries)`);
   } catch (error) {
     console.error('Error clearing PDL cache:', error);

@@ -86,7 +86,8 @@ export function CallPrepSettingsDialog({
 
           <div className="bg-muted/50 p-3 rounded-md">
             <p className="text-sm text-muted-foreground">
-              Clicking &ldquo;Refresh Call Prep&rdquo; will regenerate all sections with updated information based on the company or prompt you specify.
+              Clicking &ldquo;Refresh Call Prep&rdquo; will regenerate all sections with updated
+              information based on the company or prompt you specify.
             </p>
           </div>
         </div>

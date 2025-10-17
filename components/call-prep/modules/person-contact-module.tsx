@@ -69,18 +69,20 @@ export function PersonContactModule({ person }: PersonContactModuleProps) {
 
           {(() => {
             const sanitizedLinkedInUrl = sanitizeLinkedInUrl(person.linkedin_url);
-            return sanitizedLinkedInUrl && (
-              <div className="flex items-center gap-3">
-                <Linkedin className="h-4 w-4 text-[#C33527] flex-shrink-0" />
-                <a
-                  href={sanitizedLinkedInUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  View LinkedIn Profile
-                </a>
-              </div>
+            return (
+              sanitizedLinkedInUrl && (
+                <div className="flex items-center gap-3">
+                  <Linkedin className="h-4 w-4 text-[#C33527] flex-shrink-0" />
+                  <a
+                    href={sanitizedLinkedInUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    View LinkedIn Profile
+                  </a>
+                </div>
+              )
             );
           })()}
         </div>

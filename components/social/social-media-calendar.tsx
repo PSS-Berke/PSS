@@ -22,7 +22,7 @@ const TikTokIcon = ({ className, ...props }: LucideProps) => (
     className={className}
     {...props}
   >
-    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
   </svg>
 );
 
@@ -58,7 +58,11 @@ interface CalendarEvent {
   };
 }
 
-export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: SocialMediaCalendarProps) {
+export function SocialMediaCalendar({
+  posts,
+  onSelectPost,
+  onReschedulePost,
+}: SocialMediaCalendarProps) {
   const [detailsDialog, setDetailsDialog] = useState<{
     open: boolean;
     posts: SocialPost[];
@@ -67,7 +71,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
   } | null>(null);
 
   const getPlatformIcon = (contentType: SocialPost['content_type'], size: 'sm' | 'md' = 'sm') => {
-    const iconProps = { className: size === 'sm' ? "h-2.5 w-2.5" : "h-3.5 w-3.5" };
+    const iconProps = { className: size === 'sm' ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5' };
     switch (contentType) {
       case 'linkedin':
         return <Linkedin {...iconProps} />;
@@ -136,7 +140,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
             <span
               className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize text-white truncate max-w-[80%]',
-                CONTENT_COLORS[contentType]
+                CONTENT_COLORS[contentType],
               )}
             >
               {getPlatformIcon(contentType)}
@@ -145,9 +149,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
             <span
               className={cn(
                 'flex h-3 w-3 items-center justify-center rounded-full border flex-shrink-0',
-                post.published
-                  ? 'border-[#C33527] bg-[#C33527]'
-                  : 'border-border bg-transparent'
+                post.published ? 'border-[#C33527] bg-[#C33527]' : 'border-border bg-transparent',
               )}
             />
           </div>
@@ -171,10 +173,12 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
     // Multiple posts - show grouped mini box with count
     return (
       <div className="flex h-full w-full items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm cursor-pointer hover:bg-accent transition-colors">
-        <div className={cn(
-          'flex items-center justify-center rounded-full p-1.5 flex-shrink-0',
-          CONTENT_COLORS[contentType]
-        )}>
+        <div
+          className={cn(
+            'flex items-center justify-center rounded-full p-1.5 flex-shrink-0',
+            CONTENT_COLORS[contentType],
+          )}
+        >
           {getPlatformIcon(contentType, 'md')}
         </div>
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -186,9 +190,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
           </span>
         </div>
         {published && (
-          <span
-            className="flex h-3 w-3 items-center justify-center rounded-full border border-[#C33527] bg-[#C33527] flex-shrink-0"
-          />
+          <span className="flex h-3 w-3 items-center justify-center rounded-full border border-[#C33527] bg-[#C33527] flex-shrink-0" />
         )}
       </div>
     );
@@ -219,7 +221,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
         });
       }
     },
-    [onSelectPost]
+    [onSelectPost],
   );
 
   const handleEventDrop = useCallback(
@@ -241,7 +243,8 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
 
       // Single post - allow rescheduling
       const post = eventPosts[0];
-      const nextStart = arg.event.start ?? (arg.event.startStr ? new Date(arg.event.startStr) : null);
+      const nextStart =
+        arg.event.start ?? (arg.event.startStr ? new Date(arg.event.startStr) : null);
       if (!nextStart || Number.isNaN(nextStart.getTime())) {
         arg.revert();
         return;
@@ -261,7 +264,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
         arg.revert();
       }
     },
-    [onReschedulePost]
+    [onReschedulePost],
   );
 
   return (
@@ -300,10 +303,7 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
 
       {/* Mobile View: Next 3 Days Tiles (<768px) */}
       <div className="block md:hidden bg-card overflow-hidden">
-        <SocialMediaMobileTiles
-          posts={posts}
-          onSelectPost={onSelectPost}
-        />
+        <SocialMediaMobileTiles posts={posts} onSelectPost={onSelectPost} />
       </div>
 
       {detailsDialog && (
@@ -323,4 +323,3 @@ export function SocialMediaCalendar({ posts, onSelectPost, onReschedulePost }: S
     </>
   );
 }
-

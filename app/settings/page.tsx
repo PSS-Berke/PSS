@@ -49,9 +49,7 @@ export default function SettingsPage() {
         <Card className="border-border/70">
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
-              Your account details
-            </CardDescription>
+            <CardDescription>Your account details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
@@ -73,7 +71,7 @@ export default function SettingsPage() {
             <div>
               <Label className="text-sm text-muted-foreground">Role</Label>
               <div className="mt-1">
-                <Badge className={isAdmin ? "bg-[#C33527] hover:bg-[#DA857C] text-white" : ""}>
+                <Badge className={isAdmin ? 'bg-[#C33527] hover:bg-[#DA857C] text-white' : ''}>
                   {isAdmin ? 'Admin' : 'User'}
                 </Badge>
               </div>
@@ -85,9 +83,7 @@ export default function SettingsPage() {
         <Card className="border-border/70">
           <CardHeader>
             <CardTitle>Preferences</CardTitle>
-            <CardDescription>
-              Customize your experience
-            </CardDescription>
+            <CardDescription>Customize your experience</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">

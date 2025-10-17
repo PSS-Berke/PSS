@@ -63,9 +63,13 @@ export default function CompanyManagementPage() {
         // Fallback to user's available_companies if API endpoint doesn't exist
         if (user?.available_companies && user.available_companies.length > 0) {
           setCompanies(user.available_companies);
-          setError('Using companies from your user profile. The full admin API endpoint is not yet created in Xano.');
+          setError(
+            'Using companies from your user profile. The full admin API endpoint is not yet created in Xano.',
+          );
         } else {
-          setError('The companies API endpoint has not been created yet in Xano. Please create this endpoint or contact your administrator.');
+          setError(
+            'The companies API endpoint has not been created yet in Xano. Please create this endpoint or contact your administrator.',
+          );
           setCompanies([]);
         }
       } else {
@@ -96,7 +100,10 @@ export default function CompanyManagementPage() {
     setError(null);
 
     try {
-      await companyApi.createCompany(token, newCompanyName.trim());
+      await companyApi.createCompany(token, {
+        company_name: newCompanyName.trim(),
+        company_code: undefined,
+      });
       setIsAddCompanyDialogOpen(false);
       setNewCompanyName('');
       fetchCompanies();
@@ -192,9 +199,7 @@ export default function CompanyManagementPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold">Company Management</h1>
-              <p className="mt-2 text-muted-foreground">
-                Manage all companies in the system
-              </p>
+              <p className="mt-2 text-muted-foreground">Manage all companies in the system</p>
             </div>
           </div>
           <Button
@@ -221,9 +226,7 @@ export default function CompanyManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Companies ({companies.length})</CardTitle>
-                <CardDescription>
-                  All companies registered in the system
-                </CardDescription>
+                <CardDescription>All companies registered in the system</CardDescription>
               </div>
               <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
                 {companies.length}
@@ -284,9 +287,7 @@ export default function CompanyManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Company</DialogTitle>
-              <DialogDescription>
-                Create a new company in the system
-              </DialogDescription>
+              <DialogDescription>Create a new company in the system</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               {error && (
@@ -350,9 +351,7 @@ export default function CompanyManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Company</DialogTitle>
-              <DialogDescription>
-                Update the company name
-              </DialogDescription>
+              <DialogDescription>Update the company name</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               {error && (

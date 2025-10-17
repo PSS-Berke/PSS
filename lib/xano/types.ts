@@ -39,7 +39,6 @@ export interface User {
   updated_at: string;
 }
 
-
 export interface AuthResponse {
   user: User;
   token: string;
@@ -58,7 +57,6 @@ export interface RegisterCredentials {
   company?: string;
   company_code?: number;
 }
-
 
 export interface XanoApiResponse<T> {
   data: T;
@@ -169,7 +167,16 @@ export interface SocialPost {
   url_1?: string;
   url_2?: string;
   image?: string | null;
-  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all' | 'x' | 'pinterest' | 'snapchat' | 'youtube-video' | 'youtube-short';
+  content_type:
+    | 'linkedin'
+    | 'instagram'
+    | 'tiktok'
+    | 'all'
+    | 'x'
+    | 'pinterest'
+    | 'snapchat'
+    | 'youtube-video'
+    | 'youtube-short';
   scheduled_date: string;
   published: boolean;
   status?: 'draft' | 'approved' | 'published';
@@ -186,7 +193,16 @@ export interface SocialPostPayload {
   url_1?: string;
   url_2?: string;
   image?: string | null;
-  content_type: 'linkedin' | 'instagram' | 'tiktok' | 'all' | 'x' | 'pinterest' | 'snapchat' | 'youtube-video' | 'youtube-short';
+  content_type:
+    | 'linkedin'
+    | 'instagram'
+    | 'tiktok'
+    | 'all'
+    | 'x'
+    | 'pinterest'
+    | 'snapchat'
+    | 'youtube-video'
+    | 'youtube-short';
   scheduled_date: string;
   published?: boolean;
   status?: 'draft' | 'approved' | 'published';
@@ -290,4 +306,3 @@ export interface ConnectSitePayload {
 export interface AnalyticsMetrics {
   [key: string]: unknown;
 }
-

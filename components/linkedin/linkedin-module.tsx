@@ -4,7 +4,14 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, ChevronDown, ChevronUp, Megaphone, MessagesSquare, Radio } from 'lucide-react';
+import {
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
+  Megaphone,
+  MessagesSquare,
+  Radio,
+} from 'lucide-react';
 import { useLinkedIn } from '@/lib/xano/linkedin-context';
 import { ChatInterface } from './chat-interface';
 import { CampaignSidebar } from './campaign-sidebar';
@@ -40,7 +47,7 @@ export function LinkedInModule({ className, onExpandedChange }: LinkedInModulePr
   };
 
   const getCampaignCount = () => {
-    return pages.filter(page => page.linkedin_campaigns_id !== null).length;
+    return pages.filter((page) => page.linkedin_campaigns_id !== null).length;
   };
 
   const getSessionCount = () => {
@@ -51,7 +58,6 @@ export function LinkedInModule({ className, onExpandedChange }: LinkedInModulePr
       return total;
     }, 0);
   };
-
 
   return (
     <Card className={`w-full ${className}`}>
@@ -126,8 +132,14 @@ export function LinkedInModule({ className, onExpandedChange }: LinkedInModulePr
 
           {/* Desktop Layout: Side by side */}
           <div className="hidden md:flex h-[600px]">
-            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}>
-              <CampaignSidebar className="h-full" isCollapsed={isSidebarCollapsed} onCollapseChange={setIsSidebarCollapsed} />
+            <div
+              className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}
+            >
+              <CampaignSidebar
+                className="h-full"
+                isCollapsed={isSidebarCollapsed}
+                onCollapseChange={setIsSidebarCollapsed}
+              />
             </div>
             <div className="flex-1 min-w-0 overflow-hidden p-6">
               <ChatInterface className="h-full" sidebarCollapsed={isSidebarCollapsed} />

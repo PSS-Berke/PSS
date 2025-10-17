@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, Users, AlertCircle, MessageSquare, Zap, ArrowRight, CheckSquare, Plus, Settings, Repeat, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import {
+  Target,
+  TrendingUp,
+  Users,
+  AlertCircle,
+  MessageSquare,
+  Zap,
+  ArrowRight,
+  CheckSquare,
+  Plus,
+  Settings,
+  Repeat,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+} from 'lucide-react';
 
 // Xano Configuration
 const XANO_BASE_URL = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:qHvoMa2z';
@@ -14,7 +29,7 @@ export default function BattleCardApp() {
   const [loading, setLoading] = useState(false);
   const [expandedCards, setExpandedCards] = useState({});
 
-  const activeBattleCard = battleCards.find(card => card.id === activeBattleCardId);
+  const activeBattleCard = battleCards.find((card) => card.id === activeBattleCardId);
 
   // Load battle cards on mount
   useEffect(() => {
@@ -26,7 +41,7 @@ export default function BattleCardApp() {
       const response = await fetch(`${XANO_BASE_URL}/battle_card_main?user_id=${USER_ID}`);
       const data = await response.json();
       setBattleCards(data);
-      
+
       // Set first card as active if available
       if (data.length > 0 && !activeBattleCardId) {
         setActiveBattleCardId(data[0].id);
@@ -37,9 +52,9 @@ export default function BattleCardApp() {
   };
 
   const toggleCard = (cardName) => {
-    setExpandedCards(prev => ({
+    setExpandedCards((prev) => ({
       ...prev,
-      [cardName]: !prev[cardName]
+      [cardName]: !prev[cardName],
     }));
   };
 
@@ -59,8 +74,8 @@ export default function BattleCardApp() {
         body: JSON.stringify({
           competitor_name: companyName,
           service_name: serviceName,
-          user_id: USER_ID
-        })
+          user_id: USER_ID,
+        }),
       });
 
       if (!response.ok) {
@@ -68,10 +83,10 @@ export default function BattleCardApp() {
       }
 
       const newCard = await response.json();
-      
+
       // Reload all battle cards to get the fresh data
       await loadBattleCards();
-      
+
       // Set the new card as active
       setActiveBattleCardId(newCard.id);
       setShowNewCardModal(false);
@@ -87,22 +102,22 @@ export default function BattleCardApp() {
 
   const deleteBattleCard = async (cardId, event) => {
     event.stopPropagation(); // Prevent selecting the card when clicking delete
-    
+
     if (!confirm('Are you sure you want to delete this battle card?')) {
       return;
     }
 
     try {
       await fetch(`${XANO_BASE_URL}/battle_card_main/${cardId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       });
-      
+
       // Remove from local state
-      setBattleCards(prev => prev.filter(card => card.id !== cardId));
-      
+      setBattleCards((prev) => prev.filter((card) => card.id !== cardId));
+
       // If deleted card was active, select another
       if (activeBattleCardId === cardId) {
-        const remaining = battleCards.filter(card => card.id !== cardId);
+        const remaining = battleCards.filter((card) => card.id !== cardId);
         setActiveBattleCardId(remaining.length > 0 ? remaining[0].id : null);
       }
     } catch (error) {
@@ -114,9 +129,9 @@ export default function BattleCardApp() {
   const CardSection = ({ title, content, cardKey }) => {
     const isExpanded = expandedCards[cardKey];
     const summary = content && content.length > 100 ? content.substring(0, 100) + '...' : content;
-    
+
     return (
-      <div 
+      <div
         onClick={() => toggleCard(cardKey)}
         className="bg-white rounded-2xl p-5 border-2 border-gray-900 cursor-pointer hover:shadow-lg transition-all h-full flex flex-col"
       >
@@ -131,7 +146,7 @@ export default function BattleCardApp() {
         <div className="text-xs text-gray-600 flex-1">
           <p className="font-medium mb-2">Summary:</p>
           <p className="leading-relaxed">
-            {isExpanded ? (content || 'No data available') : (summary || 'No data available')}
+            {isExpanded ? content || 'No data available' : summary || 'No data available'}
           </p>
         </div>
       </div>
@@ -170,7 +185,7 @@ export default function BattleCardApp() {
 
             {/* Battle Card List */}
             <div className="space-y-2">
-              {battleCards.map(card => (
+              {battleCards.map((card) => (
                 <div
                   key={card.id}
                   onClick={() => setActiveBattleCardId(card.id)}
@@ -188,7 +203,7 @@ export default function BattleCardApp() {
                       <p className="text-xs text-gray-500 truncate">{card.competitor_service}</p>
                     </div>
                     <div className="flex items-center gap-1 ml-2">
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           // TODO: Implement regenerate
@@ -197,7 +212,7 @@ export default function BattleCardApp() {
                       >
                         <Repeat className="w-3.5 h-3.5 text-gray-400" />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => deleteBattleCard(card.id, e)}
                         className="p-1 hover:bg-red-100 rounded"
                       >
@@ -227,7 +242,9 @@ export default function BattleCardApp() {
           {activeBattleCard ? (
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-xl font-bold text-gray-900">{activeBattleCard.competitor_name}</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {activeBattleCard.competitor_name}
+                </h2>
                 <span className="px-3 py-1 bg-black text-white text-xs font-medium rounded-md">
                   Active Session
                 </span>
@@ -304,8 +321,12 @@ export default function BattleCardApp() {
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <Target className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Battle Card Selected</h3>
-                <p className="text-gray-500 mb-6">Create a new battle card to get competitive intelligence</p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  No Battle Card Selected
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  Create a new battle card to get competitive intelligence
+                </p>
                 <button
                   onClick={() => setShowNewCardModal(true)}
                   className="bg-black text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-800 transition-all shadow-sm inline-flex items-center gap-2"
@@ -324,7 +345,7 @@ export default function BattleCardApp() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Create Battle Card</h2>
-            
+
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

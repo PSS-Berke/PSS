@@ -1,12 +1,20 @@
-"use client";
+'use client';
 
-import React from "react";
-import { PlusCircle, X, Zap, BarChart4, Trash2, Loader2 } from "lucide-react";
+import React from 'react';
+import { PlusCircle, X, Zap, BarChart4, Trash2, Loader2 } from 'lucide-react';
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/xano/auth-context";
-import { getAuthHeaders } from "@/lib/xano/config";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/xano/auth-context';
+import { getAuthHeaders } from '@/lib/xano/config';
 
 type ModuleOption = {
   label: string;
@@ -29,7 +37,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
   // Get user's current modules - memoized to prevent recreation on every render
   const userModules = React.useMemo(() => user?.modules || [], [user?.modules]);
-  const userModuleIds = React.useMemo(() => userModules.map(m => m.id), [userModules]);
+  const userModuleIds = React.useMemo(() => userModules.map((m) => m.id), [userModules]);
 
   React.useEffect(() => {
     if (!open) {
@@ -44,7 +52,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
     }
 
     if (!token) {
-      setError("You must be signed in to manage modules.");
+      setError('You must be signed in to manage modules.');
       return;
     }
 
@@ -56,16 +64,16 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
         setError(null);
 
         const response = await fetch(
-          "https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/get_list_of_modules",
+          'https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/get_list_of_modules',
           {
-            method: "GET",
+            method: 'GET',
             headers: getAuthHeaders(token),
-          }
+          },
         );
 
         if (!response.ok) {
           const message = await response.text();
-          throw new Error(message || "Failed to fetch modules.");
+          throw new Error(message || 'Failed to fetch modules.');
         }
 
         const data: ModuleOption[] = await response.json();
@@ -79,9 +87,9 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
         let modulesToSet = data;
         if ((!data || data.length === 0) && userModules.length > 0) {
           console.log('API returned empty, creating modules from user data');
-          modulesToSet = userModules.map(m => ({
+          modulesToSet = userModules.map((m) => ({
             label: m.name,
-            value: m.id
+            value: m.id,
           }));
         }
 
@@ -90,9 +98,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
         }
       } catch (err) {
         if (!isMounted) return;
-        setError(
-          err instanceof Error ? err.message : "Something went wrong loading modules."
-        );
+        setError(err instanceof Error ? err.message : 'Something went wrong loading modules.');
       } finally {
         if (isMounted) {
           setIsFetching(false);
@@ -113,7 +119,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
   const addModule = async (moduleId: number) => {
     if (!token) {
-      setError("Missing authentication token.");
+      setError('Missing authentication token.');
       return;
     }
 
@@ -123,24 +129,24 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       setSuccessMessage(null);
 
       const response = await fetch(
-        "https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/save_module_selection",
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/save_module_selection',
         {
-          method: "POST",
+          method: 'POST',
           headers: getAuthHeaders(token),
           body: JSON.stringify({ module_id: moduleId }),
-        }
+        },
       );
 
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(message || "Failed to add module.");
+        throw new Error(message || 'Failed to add module.');
       }
 
-      setSuccessMessage("Module added successfully.");
+      setSuccessMessage('Module added successfully.');
       await refreshUser();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Something went wrong while adding the module."
+        err instanceof Error ? err.message : 'Something went wrong while adding the module.',
       );
     } finally {
       setIsSaving(false);
@@ -149,7 +155,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
   const removeModule = async (moduleId: number) => {
     if (!token) {
-      setError("Missing authentication token.");
+      setError('Missing authentication token.');
       return;
     }
 
@@ -159,24 +165,24 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       setSuccessMessage(null);
 
       const response = await fetch(
-        "https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/remove_module",
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/remove_module',
         {
-          method: "POST",
+          method: 'POST',
           headers: getAuthHeaders(token),
           body: JSON.stringify({ module_id: moduleId }),
-        }
+        },
       );
 
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(message || "Failed to remove module.");
+        throw new Error(message || 'Failed to remove module.');
       }
 
-      setSuccessMessage("Module removed successfully.");
+      setSuccessMessage('Module removed successfully.');
       await refreshUser();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Something went wrong while removing the module."
+        err instanceof Error ? err.message : 'Something went wrong while removing the module.',
       );
     } finally {
       setRemovingModuleId(null);
@@ -185,21 +191,21 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
   const getModuleIcon = (label: string) => {
     const l = label.toLowerCase();
-    if (l.includes("automatio")) return <Zap className="h-6 w-6 text-[#C33527]" />;
-    if (l.includes("analytic")) return <BarChart4 className="h-6 w-6 text-muted-foreground" />;
+    if (l.includes('automatio')) return <Zap className="h-6 w-6 text-[#C33527]" />;
+    if (l.includes('analytic')) return <BarChart4 className="h-6 w-6 text-muted-foreground" />;
     return <PlusCircle className="h-6 w-6 text-muted-foreground" />;
   };
 
   const getModuleDescription = (label: string) => {
     const l = label.toLowerCase();
-    if (l.includes("automatio")) return "Set up automated workflows";
-    if (l.includes("analytic")) return "View insights and metrics";
-    return "Module for your workspace";
+    if (l.includes('automatio')) return 'Set up automated workflows';
+    if (l.includes('analytic')) return 'View insights and metrics';
+    return 'Module for your workspace';
   };
 
   // Split modules into active and available
-  const activeModules = allModules.filter(m => userModuleIds.includes(m.value));
-  const availableModules = allModules.filter(m => !userModuleIds.includes(m.value));
+  const activeModules = allModules.filter((m) => userModuleIds.includes(m.value));
+  const availableModules = allModules.filter((m) => !userModuleIds.includes(m.value));
 
   // Debug logging
   console.log('Module Manager Debug:');
@@ -319,8 +325,12 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
                       </span>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-semibold text-gray-800 group-hover:text-blue-600">{label}</h4>
-                          <span className="text-sm text-muted-foreground">{isSaving ? "Adding…" : ""}</span>
+                          <h4 className="font-semibold text-gray-800 group-hover:text-blue-600">
+                            {label}
+                          </h4>
+                          <span className="text-sm text-muted-foreground">
+                            {isSaving ? 'Adding…' : ''}
+                          </span>
                         </div>
                         <p className="text-sm text-gray-500">{description}</p>
                       </div>
@@ -333,7 +343,12 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSaving || removingModuleId !== null}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isSaving || removingModuleId !== null}
+          >
             Close
           </Button>
         </DialogFooter>

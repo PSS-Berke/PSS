@@ -32,25 +32,32 @@ export function KeyDecisionMakersModal({
   onEnrich,
   isSubmitting,
 }: KeyDecisionMakersModalProps) {
-  const [selectedPerson, setSelectedPerson] = useState<KeyDecisionMaker | KeyDecisionMakerWithEnrichment | null>(null);
-  const [enrichmentResult, setEnrichmentResult] = useState<{ status: number; data?: any } | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<
+    KeyDecisionMaker | KeyDecisionMakerWithEnrichment | null
+  >(null);
+  const [enrichmentResult, setEnrichmentResult] = useState<{ status: number; data?: any } | null>(
+    null,
+  );
   const [bulkEnriching, setBulkEnriching] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const contentRef = React.useRef<HTMLDivElement>(null);
 
   // Helper to check if a person has enrichment data
   const hasEnrichment = (person: KeyDecisionMaker | KeyDecisionMakerWithEnrichment): boolean => {
-    return 'enrichment' in person && person.enrichment !== undefined && person.enrichment.length > 0;
+    return (
+      'enrichment' in person && person.enrichment !== undefined && person.enrichment.length > 0
+    );
   };
 
   // Filter out malformed decision makers (must have at least name and title)
   const validDecisionMakers = React.useMemo(() => {
-    return decisionMakers.filter(person =>
-      person &&
-      typeof person === 'object' &&
-      typeof person.name === 'string' &&
-      person.name.trim().length > 0 &&
-      typeof person.title === 'string'
+    return decisionMakers.filter(
+      (person) =>
+        person &&
+        typeof person === 'object' &&
+        typeof person.name === 'string' &&
+        person.name.trim().length > 0 &&
+        typeof person.title === 'string',
     );
   }, [decisionMakers]);
 
@@ -63,7 +70,7 @@ export function KeyDecisionMakersModal({
       if (contentRef.current) {
         contentRef.current.scrollTo({
           top: contentRef.current.scrollHeight,
-          behavior: 'smooth'
+          behavior: 'smooth',
         });
       }
     }, 100);
@@ -89,7 +96,7 @@ export function KeyDecisionMakersModal({
       if (contentRef.current) {
         contentRef.current.scrollTo({
           top: contentRef.current.scrollHeight,
-          behavior: 'smooth'
+          behavior: 'smooth',
         });
       }
     }, 100);
@@ -104,7 +111,7 @@ export function KeyDecisionMakersModal({
   };
 
   const handleEnrichAll = async () => {
-    const unenrichedPeople = validDecisionMakers.filter(person => !hasEnrichment(person));
+    const unenrichedPeople = validDecisionMakers.filter((person) => !hasEnrichment(person));
 
     if (unenrichedPeople.length === 0) {
       return;
@@ -128,7 +135,7 @@ export function KeyDecisionMakersModal({
 
       // Small delay between requests to avoid rate limiting
       if (i < unenrichedPeople.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
 
@@ -139,7 +146,7 @@ export function KeyDecisionMakersModal({
   };
 
   const canSubmit = selectedPerson && !enrichmentResult;
-  const unenrichedCount = validDecisionMakers.filter(person => !hasEnrichment(person)).length;
+  const unenrichedCount = validDecisionMakers.filter((person) => !hasEnrichment(person)).length;
 
   const renderEnrichmentResult = () => {
     if (!enrichmentResult) return null;
@@ -194,13 +201,17 @@ export function KeyDecisionMakersModal({
               {freeData.experience && freeData.experience.length > 0 && (
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
-                  <span className="text-gray-700">{freeData.experience.length} work experiences</span>
+                  <span className="text-gray-700">
+                    {freeData.experience.length} work experiences
+                  </span>
                 </div>
               )}
               {freeData.education && freeData.education.length > 0 && (
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
-                  <span className="text-gray-700">{freeData.education.length} education records</span>
+                  <span className="text-gray-700">
+                    {freeData.education.length} education records
+                  </span>
                 </div>
               )}
               {payedData.work_email && (
@@ -241,7 +252,9 @@ export function KeyDecisionMakersModal({
         <div ref={contentRef} className="space-y-6 py-4 overflow-y-auto flex-1">
           {/* Decision Makers List */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Select a person ({validDecisionMakers.length})</Label>
+            <Label className="text-sm font-medium">
+              Select a person ({validDecisionMakers.length})
+            </Label>
             {validDecisionMakers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p className="text-sm">No valid decision makers found</p>
@@ -259,8 +272,8 @@ export function KeyDecisionMakersModal({
                         selectedPerson === person
                           ? 'border-primary bg-primary/5'
                           : isEnriched
-                          ? 'border-green-200 bg-green-50/30'
-                          : 'border-gray-200'
+                            ? 'border-green-200 bg-green-50/30'
+                            : 'border-gray-200'
                       } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {isEnriched && (
@@ -272,14 +285,18 @@ export function KeyDecisionMakersModal({
                         </div>
                       )}
                       <div className="flex items-start gap-3">
-                        <User className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isEnriched ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <User
+                          className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isEnriched ? 'text-green-600' : 'text-muted-foreground'}`}
+                        />
                         <div className="flex-1 min-w-0 pr-20">
                           <p className="font-medium text-sm">{person.name}</p>
                           <p className="text-xs text-muted-foreground">{person.title}</p>
                           {person.linkedin_url && (
                             <div className="flex items-center gap-1 mt-1">
                               <Linkedin className="h-3 w-3 text-blue-600" />
-                              <p className="text-xs text-blue-600 truncate">{person.linkedin_url}</p>
+                              <p className="text-xs text-blue-600 truncate">
+                                {person.linkedin_url}
+                              </p>
                             </div>
                           )}
                           {person.email && (

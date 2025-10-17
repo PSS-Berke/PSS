@@ -41,11 +41,13 @@ export function PlatformSidebar({
 
   if (isCollapsed) {
     return (
-      <div className={cn(
-        'flex flex-col items-center bg-muted/30 p-4 transition-all duration-300',
-        'md:border-r h-14 md:h-full border-b md:border-b-0',
-        className
-      )}>
+      <div
+        className={cn(
+          'flex flex-col items-center bg-muted/30 p-4 transition-all duration-300',
+          'md:border-r h-14 md:h-full border-b md:border-b-0',
+          className,
+        )}
+      >
         <Button
           onClick={() => onCollapseChange(false)}
           size="sm"
@@ -61,7 +63,13 @@ export function PlatformSidebar({
   }
 
   return (
-    <div className={cn('flex flex-col bg-muted/30 transition-all duration-300', 'md:border-r border-b md:border-b-0 h-auto md:h-full', className)}>
+    <div
+      className={cn(
+        'flex flex-col bg-muted/30 transition-all duration-300',
+        'md:border-r border-b md:border-b-0 h-auto md:h-full',
+        className,
+      )}
+    >
       {/* Header */}
       <div className="px-4 py-3 border-b flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -93,7 +101,9 @@ export function PlatformSidebar({
         >
           {PLATFORMS.map((platform) => {
             const isExpanded = expandedMobilePlatform === platform.id;
-            const hasSelectedCategory = platform.categories.some(cat => cat.key === selectedCategory);
+            const hasSelectedCategory = platform.categories.some(
+              (cat) => cat.key === selectedCategory,
+            );
 
             return (
               <Card
@@ -126,7 +136,7 @@ export function PlatformSidebar({
           <div className="border-t bg-muted/20">
             <div className="px-4 py-2 flex items-center justify-between">
               <h4 className="text-sm font-medium text-muted-foreground">
-                {PLATFORMS.find(p => p.id === expandedMobilePlatform)?.label} - Categories
+                {PLATFORMS.find((p) => p.id === expandedMobilePlatform)?.label} - Categories
               </h4>
               <Button
                 variant="ghost"
@@ -145,31 +155,33 @@ export function PlatformSidebar({
                 msOverflowStyle: 'none',
               }}
             >
-              {PLATFORMS.find(p => p.id === expandedMobilePlatform)?.categories.map((category) => {
-                const isSelected = selectedCategory === category.key;
-                return (
-                  <Card
-                    key={category.id}
-                    className={`flex-shrink-0 w-64 p-4 cursor-pointer transition-all hover:shadow-md ${
-                      isSelected ? 'bg-accent border-primary shadow-sm' : ''
-                    }`}
-                    onClick={() => {
-                      onSelectCategory(expandedMobilePlatform, category.key);
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate mb-1">
-                          {category.label}
-                        </p>
-                        {isSelected && (
-                          <Badge variant="default" className="text-xs">Active</Badge>
-                        )}
+              {PLATFORMS.find((p) => p.id === expandedMobilePlatform)?.categories.map(
+                (category) => {
+                  const isSelected = selectedCategory === category.key;
+                  return (
+                    <Card
+                      key={category.id}
+                      className={`flex-shrink-0 w-64 p-4 cursor-pointer transition-all hover:shadow-md ${
+                        isSelected ? 'bg-accent border-primary shadow-sm' : ''
+                      }`}
+                      onClick={() => {
+                        onSelectCategory(expandedMobilePlatform, category.key);
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate mb-1">{category.label}</p>
+                          {isSelected && (
+                            <Badge variant="default" className="text-xs">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                );
-              })}
+                    </Card>
+                  );
+                },
+              )}
             </div>
           </div>
         )}
@@ -214,7 +226,7 @@ export function PlatformSidebar({
                           'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
                           isSelected
                             ? 'bg-accent border-primary font-medium'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                         )}
                       >
                         {category.label}

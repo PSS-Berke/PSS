@@ -2,71 +2,97 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Phone, PhoneOff, PhoneIncoming, PhoneOutgoing, PhoneMissed,
-  Users, Clock, Mic, MicOff, Pause, Play, X, Search, ChevronRight, Settings,
-  Plus, Building2, Mail, Star, Check, ChevronDown, ChevronUp, PhoneCall
+  Phone,
+  PhoneOff,
+  PhoneIncoming,
+  PhoneOutgoing,
+  PhoneMissed,
+  Users,
+  Clock,
+  Mic,
+  MicOff,
+  Pause,
+  Play,
+  X,
+  Search,
+  ChevronRight,
+  Settings,
+  Plus,
+  Building2,
+  Mail,
+  Star,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  PhoneCall,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/xano/auth-context';
 import { Device } from '@twilio/voice-sdk';
 
-
 type TwilioError = {
-  code: string
-  message: string
+  code: string;
+  message: string;
   payload: {
-    code: number
-    message: string
-    more_info: string
-    status: number
-  }
-}
+    code: number;
+    message: string;
+    more_info: string;
+    status: number;
+  };
+};
 
 type TwilioResponse = {
-  account_sid: string
-  annotation: string | null
-  answered_by: string | null
-  api_version: string
-  caller_name: string | null
-  date_created: string | null
-  date_updated: string | null
-  direction: string
-  duration: number | null
-  end_time: string | null
-  forwarded_from: string | null
-  from: string
-  from_formatted: string
-  group_sid: string | null
-  parent_call_sid: string | null
-  phone_number_sid: string
-  price: number | null
-  price_unit: string
-  queue_time: string
-  sid: string
-  start_time: string | null
-  status: string
+  account_sid: string;
+  annotation: string | null;
+  answered_by: string | null;
+  api_version: string;
+  caller_name: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  direction: string;
+  duration: number | null;
+  end_time: string | null;
+  forwarded_from: string | null;
+  from: string;
+  from_formatted: string;
+  group_sid: string | null;
+  parent_call_sid: string | null;
+  phone_number_sid: string;
+  price: number | null;
+  price_unit: string;
+  queue_time: string;
+  sid: string;
+  start_time: string | null;
+  status: string;
   subresource_uris: {
-    events: string
-    notifications: string
-    payments: string
-    recordings: string
-    siprec: string
-    streams: string
-    transcriptions: string
-    user_defined_message_subscriptions: string
-    user_defined_messages: string
-  },
-  to: string
-  to_formatted: string
-  trunk_sid: string | null,
-  uri: string
-}
+    events: string;
+    notifications: string;
+    payments: string;
+    recordings: string;
+    siprec: string;
+    streams: string;
+    transcriptions: string;
+    user_defined_message_subscriptions: string;
+    user_defined_messages: string;
+  };
+  to: string;
+  to_formatted: string;
+  trunk_sid: string | null;
+  uri: string;
+};
 // Mock data
 const initialMockCallLogs = [
   {
@@ -108,11 +134,46 @@ const initialMockCallLogs = [
 ];
 
 const initialMockContacts = [
-  { id: 1, name: 'John Doe', company: 'Acme Corp', phone_number: '+1 (555) 123-4567', email: 'john@acme.com', is_favorite: true },
-  { id: 2, name: 'Jane Smith', company: 'Tech Inc', phone_number: '+1 (555) 987-6543', email: 'jane@tech.com', is_favorite: true },
-  { id: 3, name: 'Bob Johnson', company: 'StartupXYZ', phone_number: '+1 (555) 456-7890', email: 'bob@startup.com', is_favorite: false },
-  { id: 4, name: 'Alice Williams', company: 'Enterprise Co', phone_number: '+1 (555) 234-5678', email: 'alice@enterprise.com', is_favorite: false },
-  { id: 5, name: 'Charlie Brown', company: 'Design Studio', phone_number: '+1 (555) 345-6789', email: 'charlie@design.com', is_favorite: false },
+  {
+    id: 1,
+    name: 'John Doe',
+    company: 'Acme Corp',
+    phone_number: '+1 (555) 123-4567',
+    email: 'john@acme.com',
+    is_favorite: true,
+  },
+  {
+    id: 2,
+    name: 'Jane Smith',
+    company: 'Tech Inc',
+    phone_number: '+1 (555) 987-6543',
+    email: 'jane@tech.com',
+    is_favorite: true,
+  },
+  {
+    id: 3,
+    name: 'Bob Johnson',
+    company: 'StartupXYZ',
+    phone_number: '+1 (555) 456-7890',
+    email: 'bob@startup.com',
+    is_favorite: false,
+  },
+  {
+    id: 4,
+    name: 'Alice Williams',
+    company: 'Enterprise Co',
+    phone_number: '+1 (555) 234-5678',
+    email: 'alice@enterprise.com',
+    is_favorite: false,
+  },
+  {
+    id: 5,
+    name: 'Charlie Brown',
+    company: 'Design Studio',
+    phone_number: '+1 (555) 345-6789',
+    email: 'charlie@design.com',
+    is_favorite: false,
+  },
 ];
 
 type ViewType = 'dialer' | 'contacts' | 'recent';
@@ -150,7 +211,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
   const [isDeviceReady, setIsDeviceReady] = useState(false);
 
-
   const [settings, setSettings] = useState({
     phoneNumber: '+1 (555) 900-1234',
     voicemailEnabled: true,
@@ -173,7 +233,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     if (!activeCall) return;
 
     const interval = setInterval(() => {
-      setCallDuration(prev => prev + 1);
+      setCallDuration((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -196,11 +256,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   };
 
   const addDigit = (digit: string) => {
-    setDialedNumber(prev => prev + digit);
+    setDialedNumber((prev) => prev + digit);
   };
 
   const deleteDigit = () => {
-    setDialedNumber(prev => prev.slice(0, -1));
+    setDialedNumber((prev) => prev.slice(0, -1));
   };
 
   // Initialize Twilio device
@@ -209,7 +269,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
     try {
       // Step 1: Get Twilio token from backend (no auth)
-      const tokenResponse = await fetch('https://api.mwairealty.co.ke/v1/voice/token?identity=agent');
+      const tokenResponse = await fetch(
+        'https://api.mwairealty.co.ke/v1/voice/token?identity=agent',
+      );
 
       if (!tokenResponse.ok) {
         throw new Error('Failed to get Twilio token');
@@ -260,7 +322,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   }, [token]);
 
   const makeCall = async (number: string) => {
-    const contact = contacts.find(c => c.phone_number === number);
+    const contact = contacts.find((c) => c.phone_number === number);
     //get twilio token
     const response = await fetch('https://api.mwairealty.co.ke/v1/voice/call', {
       method: 'POST',
@@ -287,7 +349,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setCallDuration(0);
 
     setTimeout(() => {
-      setActiveCall((prev: any) => prev ? { ...prev, status: 'in-progress' } : null);
+      setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
     }, 2000);
   };
 
@@ -306,11 +368,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   };
 
   const handleSettingChange = (key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleNewContactChange = (key: string, value: any) => {
-    setNewContact(prev => ({ ...prev, [key]: value }));
+    setNewContact((prev) => ({ ...prev, [key]: value }));
   };
 
   const saveSettings = () => {
@@ -327,7 +389,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       ...newContact,
     };
 
-    setContacts(prev => [...prev, contactToAdd]);
+    setContacts((prev) => [...prev, contactToAdd]);
     setNewContact({
       name: '',
       company: '',
@@ -338,13 +400,14 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setShowAddContact(false);
   };
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.phone_number.includes(searchQuery) ||
-    contact.company?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.phone_number.includes(searchQuery) ||
+      contact.company?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const filteredCallLogs = callLogs.filter(log => {
+  const filteredCallLogs = callLogs.filter((log) => {
     if (callFilter === 'all') return true;
     if (callFilter === 'missed') return log.status === 'missed';
     if (callFilter === 'inbound') return log.direction === 'inbound';
@@ -352,7 +415,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     return true;
   });
 
-  const missedCallsCount = callLogs.filter(l => l.status === 'missed').length;
+  const missedCallsCount = callLogs.filter((l) => l.status === 'missed').length;
 
   const getStatusBadge = () => {
     if (activeCall) {
@@ -410,7 +473,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
               toggleExpanded();
             }}
           >
-            {isExpanded ? <ChevronUp className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4" />}
+            {isExpanded ? (
+              <ChevronUp className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            )}
           </Button>
         </div>
       </CardHeader>
@@ -455,7 +522,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       >
                         <span className="text-2xl font-light">{button.digit}</span>
                         {button.letters && (
-                          <span className="text-xs text-muted-foreground mt-0.5">{button.letters}</span>
+                          <span className="text-xs text-muted-foreground mt-0.5">
+                            {button.letters}
+                          </span>
                         )}
                       </button>
                     ))}
@@ -504,22 +573,75 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     </Button>
                   </div>
 
-                  {filteredContacts.filter(c => c.is_favorite).length > 0 && (
+                  {filteredContacts.filter((c) => c.is_favorite).length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                         Favorites
                       </h3>
                       <div className="space-y-2">
-                        {filteredContacts.filter(c => c.is_favorite).map(contact => (
-                          <div key={contact.id} className="flex flex-col gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                        {filteredContacts
+                          .filter((c) => c.is_favorite)
+                          .map((contact) => (
+                            <div
+                              key={contact.id}
+                              className="flex flex-col gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-base flex-shrink-0">
+                                  {contact.name.charAt(0)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-sm text-foreground truncate">
+                                    {contact.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {contact.company}
+                                  </p>
+                                  <p className="text-xs text-foreground font-mono truncate">
+                                    {contact.phone_number}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                onClick={() => makeCall(contact.phone_number)}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 text-white w-full"
+                              >
+                                <Phone className="w-3.5 h-3.5 mr-1.5" />
+                                Call
+                              </Button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
+                      All Contacts
+                    </h3>
+                    <div className="space-y-2">
+                      {filteredContacts
+                        .filter((c) => !c.is_favorite)
+                        .map((contact) => (
+                          <div
+                            key={contact.id}
+                            className="flex flex-col gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors"
+                          >
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-base flex-shrink-0">
+                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-base flex-shrink-0">
                                 {contact.name.charAt(0)}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm text-foreground truncate">{contact.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{contact.company}</p>
-                                <p className="text-xs text-foreground font-mono truncate">{contact.phone_number}</p>
+                                <p className="font-medium text-sm text-foreground truncate">
+                                  {contact.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {contact.company}
+                                </p>
+                                <p className="text-xs text-foreground font-mono truncate">
+                                  {contact.phone_number}
+                                </p>
                               </div>
                             </div>
                             <Button
@@ -532,37 +654,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                             </Button>
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-                      All Contacts
-                    </h3>
-                    <div className="space-y-2">
-                      {filteredContacts.filter(c => !c.is_favorite).map(contact => (
-                        <div key={contact.id} className="flex flex-col gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-base flex-shrink-0">
-                              {contact.name.charAt(0)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm text-foreground truncate">{contact.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{contact.company}</p>
-                              <p className="text-xs text-foreground font-mono truncate">{contact.phone_number}</p>
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => makeCall(contact.phone_number)}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white w-full"
-                          >
-                            <Phone className="w-3.5 h-3.5 mr-1.5" />
-                            Call
-                          </Button>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -576,7 +667,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       { id: 'missed' as CallFilterType, label: 'Missed', count: missedCallsCount },
                       { id: 'inbound' as CallFilterType, label: 'Incoming' },
                       { id: 'outbound' as CallFilterType, label: 'Outgoing' },
-                    ].map(filter => (
+                    ].map((filter) => (
                       <button
                         key={filter.id}
                         onClick={() => setCallFilter(filter.id)}
@@ -584,15 +675,17 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                           'px-3 py-2 rounded-lg transition-colors font-medium text-xs',
                           callFilter === filter.id
                             ? 'bg-[#C33527] text-white'
-                            : 'bg-muted text-foreground hover:bg-muted/80'
+                            : 'bg-muted text-foreground hover:bg-muted/80',
                         )}
                       >
                         {filter.label}
                         {filter.count !== undefined && filter.count > 0 && (
-                          <span className={cn(
-                            'ml-2 px-2 py-0.5 rounded-full text-xs',
-                            callFilter === filter.id ? 'bg-white/20' : 'bg-background'
-                          )}>
+                          <span
+                            className={cn(
+                              'ml-2 px-2 py-0.5 rounded-full text-xs',
+                              callFilter === filter.id ? 'bg-white/20' : 'bg-background',
+                            )}
+                          >
                             {filter.count}
                           </span>
                         )}
@@ -601,31 +694,54 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   </div>
 
                   <div className="space-y-2">
-                    {filteredCallLogs.map(log => {
-                      const Icon = log.status === 'missed' ? PhoneMissed :
-                        log.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
-                      const iconColor = log.status === 'missed' ? 'text-red-500' :
-                        log.direction === 'inbound' ? 'text-blue-500' : 'text-green-500';
+                    {filteredCallLogs.map((log) => {
+                      const Icon =
+                        log.status === 'missed'
+                          ? PhoneMissed
+                          : log.direction === 'inbound'
+                            ? PhoneIncoming
+                            : PhoneOutgoing;
+                      const iconColor =
+                        log.status === 'missed'
+                          ? 'text-red-500'
+                          : log.direction === 'inbound'
+                            ? 'text-blue-500'
+                            : 'text-green-500';
 
                       return (
-                        <div key={log.id} className="flex items-center justify-between gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                        <div
+                          key={log.id}
+                          className="flex items-center justify-between gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors"
+                        >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <Icon className={cn('w-4 h-4 flex-shrink-0', iconColor)} />
                             <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm text-foreground truncate">{log.contact_name}</p>
-                              <p className="text-xs text-muted-foreground font-mono truncate">{log.phone_number}</p>
-                              <p className="text-xs text-muted-foreground">{formatTimestamp(log.timestamp)}</p>
+                              <p className="font-medium text-sm text-foreground truncate">
+                                {log.contact_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground font-mono truncate">
+                                {log.phone_number}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatTimestamp(log.timestamp)}
+                              </p>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <Badge variant={log.status === 'completed' ? 'default' : 'destructive'} className={cn(
-                              'text-xs',
-                              log.status === 'completed' && 'bg-green-100 text-green-700 hover:bg-green-100'
-                            )}>
+                            <Badge
+                              variant={log.status === 'completed' ? 'default' : 'destructive'}
+                              className={cn(
+                                'text-xs',
+                                log.status === 'completed' &&
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                              )}
+                            >
                               {log.status}
                             </Badge>
                             {log.duration > 0 && (
-                              <p className="text-xs text-muted-foreground mt-1">{formatDuration(log.duration)}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {formatDuration(log.duration)}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -645,7 +761,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     'flex flex-col items-center justify-center py-2 rounded-lg transition-colors',
                     currentView === 'dialer'
                       ? 'bg-[#C33527] text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                   )}
                 >
                   <Phone className="w-5 h-5 mb-1" />
@@ -657,12 +773,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     'flex flex-col items-center justify-center py-2 rounded-lg transition-colors relative',
                     currentView === 'contacts'
                       ? 'bg-[#C33527] text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                   )}
                 >
                   <Users className="w-5 h-5 mb-1" />
                   <span className="text-xs font-medium">Contacts</span>
-                  <Badge className="absolute top-0 right-2 h-5 min-w-5 px-1 text-[10px]" variant="secondary">
+                  <Badge
+                    className="absolute top-0 right-2 h-5 min-w-5 px-1 text-[10px]"
+                    variant="secondary"
+                  >
                     {contacts.length}
                   </Badge>
                 </button>
@@ -672,7 +791,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     'flex flex-col items-center justify-center py-2 rounded-lg transition-colors relative',
                     currentView === 'recent'
                       ? 'bg-[#C33527] text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                   )}
                 >
                   <Clock className="w-5 h-5 mb-1" />
@@ -709,7 +828,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     onClick={() => setLeftNavExpanded(!leftNavExpanded)}
                     className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-[#C33527]"
                   >
-                    <ChevronRight className={cn('w-4 h-4 transition-transform', leftNavExpanded && 'rotate-90')} />
+                    <ChevronRight
+                      className={cn('w-4 h-4 transition-transform', leftNavExpanded && 'rotate-90')}
+                    />
                     Phone Menu (3)
                   </button>
                 </div>
@@ -722,7 +843,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
                         currentView === 'dialer'
                           ? 'bg-[#C33527] text-white'
-                          : 'text-foreground hover:bg-muted'
+                          : 'text-foreground hover:bg-muted',
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -737,14 +858,17 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
                         currentView === 'contacts'
                           ? 'bg-[#C33527] text-white'
-                          : 'text-foreground hover:bg-muted'
+                          : 'text-foreground hover:bg-muted',
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <Users className="w-5 h-5" />
                         <span className="font-medium text-sm">Contacts</span>
                       </div>
-                      <Badge variant={currentView === 'contacts' ? 'secondary' : 'outline'} className="text-xs">
+                      <Badge
+                        variant={currentView === 'contacts' ? 'secondary' : 'outline'}
+                        className="text-xs"
+                      >
                         {contacts.length}
                       </Badge>
                     </button>
@@ -755,7 +879,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
                         currentView === 'recent'
                           ? 'bg-[#C33527] text-white'
-                          : 'text-foreground hover:bg-muted'
+                          : 'text-foreground hover:bg-muted',
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -839,7 +963,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         >
                           <span className="text-3xl font-light">{button.digit}</span>
                           {button.letters && (
-                            <span className="text-xs text-muted-foreground mt-1">{button.letters}</span>
+                            <span className="text-xs text-muted-foreground mt-1">
+                              {button.letters}
+                            </span>
                           )}
                         </button>
                       ))}
@@ -888,22 +1014,75 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       </Button>
                     </div>
 
-                    {filteredContacts.filter(c => c.is_favorite).length > 0 && (
+                    {filteredContacts.filter((c) => c.is_favorite).length > 0 && (
                       <div className="mb-8">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                           Favorites
                         </h3>
                         <div className="space-y-2">
-                          {filteredContacts.filter(c => c.is_favorite).map(contact => (
-                            <div key={contact.id} className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                          {filteredContacts
+                            .filter((c) => c.is_favorite)
+                            .map((contact) => (
+                              <div
+                                key={contact.id}
+                                className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-lg flex-shrink-0">
+                                    {contact.name.charAt(0)}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-base text-foreground truncate">
+                                      {contact.name}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {contact.company}
+                                    </p>
+                                    <p className="text-sm text-foreground font-mono truncate">
+                                      {contact.phone_number}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() => makeCall(contact.phone_number)}
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                  <Phone className="w-4 h-4 mr-1.5" />
+                                  Call
+                                </Button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
+                        All Contacts
+                      </h3>
+                      <div className="space-y-2">
+                        {filteredContacts
+                          .filter((c) => !c.is_favorite)
+                          .map((contact) => (
+                            <div
+                              key={contact.id}
+                              className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
+                            >
                               <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-lg flex-shrink-0">
+                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-lg flex-shrink-0">
                                   {contact.name.charAt(0)}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-medium text-base text-foreground truncate">{contact.name}</p>
-                                  <p className="text-sm text-muted-foreground truncate">{contact.company}</p>
-                                  <p className="text-sm text-foreground font-mono truncate">{contact.phone_number}</p>
+                                  <p className="font-medium text-base text-foreground truncate">
+                                    {contact.name}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    {contact.company}
+                                  </p>
+                                  <p className="text-sm text-foreground font-mono truncate">
+                                    {contact.phone_number}
+                                  </p>
                                 </div>
                               </div>
                               <Button
@@ -916,37 +1095,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               </Button>
                             </div>
                           ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-                        All Contacts
-                      </h3>
-                      <div className="space-y-2">
-                        {filteredContacts.filter(c => !c.is_favorite).map(contact => (
-                          <div key={contact.id} className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-lg flex-shrink-0">
-                                {contact.name.charAt(0)}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-base text-foreground truncate">{contact.name}</p>
-                                <p className="text-sm text-muted-foreground truncate">{contact.company}</p>
-                                <p className="text-sm text-foreground font-mono truncate">{contact.phone_number}</p>
-                              </div>
-                            </div>
-                            <Button
-                              onClick={() => makeCall(contact.phone_number)}
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                              <Phone className="w-4 h-4 mr-1.5" />
-                              Call
-                            </Button>
-                          </div>
-                        ))}
                       </div>
                     </div>
                   </div>
@@ -957,10 +1105,14 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     <div className="flex gap-2 mb-6">
                       {[
                         { id: 'all' as CallFilterType, label: 'All' },
-                        { id: 'missed' as CallFilterType, label: 'Missed', count: missedCallsCount },
+                        {
+                          id: 'missed' as CallFilterType,
+                          label: 'Missed',
+                          count: missedCallsCount,
+                        },
                         { id: 'inbound' as CallFilterType, label: 'Incoming' },
                         { id: 'outbound' as CallFilterType, label: 'Outgoing' },
-                      ].map(filter => (
+                      ].map((filter) => (
                         <button
                           key={filter.id}
                           onClick={() => setCallFilter(filter.id)}
@@ -968,15 +1120,17 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                             'px-4 py-2 rounded-lg transition-colors font-medium text-sm',
                             callFilter === filter.id
                               ? 'bg-[#C33527] text-white'
-                              : 'bg-muted text-foreground hover:bg-muted/80'
+                              : 'bg-muted text-foreground hover:bg-muted/80',
                           )}
                         >
                           {filter.label}
                           {filter.count !== undefined && filter.count > 0 && (
-                            <span className={cn(
-                              'ml-2 px-2 py-0.5 rounded-full text-xs',
-                              callFilter === filter.id ? 'bg-white/20' : 'bg-background'
-                            )}>
+                            <span
+                              className={cn(
+                                'ml-2 px-2 py-0.5 rounded-full text-xs',
+                                callFilter === filter.id ? 'bg-white/20' : 'bg-background',
+                              )}
+                            >
                               {filter.count}
                             </span>
                           )}
@@ -985,31 +1139,54 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     </div>
 
                     <div className="space-y-2">
-                      {filteredCallLogs.map(log => {
-                        const Icon = log.status === 'missed' ? PhoneMissed :
-                          log.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;
-                        const iconColor = log.status === 'missed' ? 'text-red-500' :
-                          log.direction === 'inbound' ? 'text-blue-500' : 'text-green-500';
+                      {filteredCallLogs.map((log) => {
+                        const Icon =
+                          log.status === 'missed'
+                            ? PhoneMissed
+                            : log.direction === 'inbound'
+                              ? PhoneIncoming
+                              : PhoneOutgoing;
+                        const iconColor =
+                          log.status === 'missed'
+                            ? 'text-red-500'
+                            : log.direction === 'inbound'
+                              ? 'text-blue-500'
+                              : 'text-green-500';
 
                         return (
-                          <div key={log.id} className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                          <div
+                            key={log.id}
+                            className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
+                          >
                             <div className="flex items-center gap-4 min-w-0 flex-1">
                               <Icon className={cn('w-5 h-5 flex-shrink-0', iconColor)} />
                               <div className="min-w-0 flex-1">
-                                <p className="font-medium text-base text-foreground truncate">{log.contact_name}</p>
-                                <p className="text-sm text-muted-foreground font-mono truncate">{log.phone_number}</p>
-                                <p className="text-xs text-muted-foreground">{formatTimestamp(log.timestamp)}</p>
+                                <p className="font-medium text-base text-foreground truncate">
+                                  {log.contact_name}
+                                </p>
+                                <p className="text-sm text-muted-foreground font-mono truncate">
+                                  {log.phone_number}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatTimestamp(log.timestamp)}
+                                </p>
                               </div>
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <Badge variant={log.status === 'completed' ? 'default' : 'destructive'} className={cn(
-                                'text-xs',
-                                log.status === 'completed' && 'bg-green-100 text-green-700 hover:bg-green-100'
-                              )}>
+                              <Badge
+                                variant={log.status === 'completed' ? 'default' : 'destructive'}
+                                className={cn(
+                                  'text-xs',
+                                  log.status === 'completed' &&
+                                    'bg-green-100 text-green-700 hover:bg-green-100',
+                                )}
+                              >
                                 {log.status}
                               </Badge>
                               {log.duration > 0 && (
-                                <p className="text-sm text-muted-foreground mt-1">{formatDuration(log.duration)}</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {formatDuration(log.duration)}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -1058,7 +1235,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             </div>
 
             <div>
-              <Label htmlFor="company" className="text-sm font-medium">Company</Label>
+              <Label htmlFor="company" className="text-sm font-medium">
+                Company
+              </Label>
               <div className="relative mt-2">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -1090,7 +1269,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email
+              </Label>
               <div className="relative mt-2">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -1116,13 +1297,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 onClick={() => handleNewContactChange('is_favorite', !newContact.is_favorite)}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  newContact.is_favorite ? 'bg-[#C33527]' : 'bg-border'
+                  newContact.is_favorite ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
                 <span
                   className={cn(
                     'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    newContact.is_favorite ? 'translate-x-6' : 'translate-x-1'
+                    newContact.is_favorite ? 'translate-x-6' : 'translate-x-1',
                   )}
                 />
               </button>
@@ -1192,13 +1373,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 onClick={() => handleSettingChange('voicemailEnabled', !settings.voicemailEnabled)}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  settings.voicemailEnabled ? 'bg-[#C33527]' : 'bg-border'
+                  settings.voicemailEnabled ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
                 <span
                   className={cn(
                     'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    settings.voicemailEnabled ? 'translate-x-6' : 'translate-x-1'
+                    settings.voicemailEnabled ? 'translate-x-6' : 'translate-x-1',
                   )}
                 />
               </button>
@@ -1213,13 +1394,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 onClick={() => handleSettingChange('doNotDisturb', !settings.doNotDisturb)}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  settings.doNotDisturb ? 'bg-[#C33527]' : 'bg-border'
+                  settings.doNotDisturb ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
                 <span
                   className={cn(
                     'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    settings.doNotDisturb ? 'translate-x-6' : 'translate-x-1'
+                    settings.doNotDisturb ? 'translate-x-6' : 'translate-x-1',
                   )}
                 />
               </button>
@@ -1234,13 +1415,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 onClick={() => handleSettingChange('callRecording', !settings.callRecording)}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  settings.callRecording ? 'bg-[#C33527]' : 'bg-border'
+                  settings.callRecording ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
                 <span
                   className={cn(
                     'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    settings.callRecording ? 'translate-x-6' : 'translate-x-1'
+                    settings.callRecording ? 'translate-x-6' : 'translate-x-1',
                   )}
                 />
               </button>
@@ -1248,7 +1429,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
           </div>
 
           <DialogFooter>
-            <Button onClick={saveSettings} className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C]">
+            <Button
+              onClick={saveSettings}
+              className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C]"
+            >
               Save Settings
             </Button>
           </DialogFooter>
@@ -1260,14 +1444,20 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         <div className="fixed inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="max-w-sm w-full text-center">
             <div className="mb-8">
-              <div className={cn(
-                'w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-4xl md:text-5xl font-semibold',
-                activeCall.status === 'ringing' ? 'bg-[#C33527] animate-pulse' : 'bg-[#C33527]'
-              )}>
+              <div
+                className={cn(
+                  'w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-4xl md:text-5xl font-semibold',
+                  activeCall.status === 'ringing' ? 'bg-[#C33527] animate-pulse' : 'bg-[#C33527]',
+                )}
+              >
                 {activeCall.contact_name ? activeCall.contact_name.charAt(0) : '?'}
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2">{activeCall.contact_name || 'Unknown'}</h2>
-              <p className="text-base md:text-lg text-muted-foreground font-mono mb-2">{activeCall.phone_number}</p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                {activeCall.contact_name || 'Unknown'}
+              </h2>
+              <p className="text-base md:text-lg text-muted-foreground font-mono mb-2">
+                {activeCall.phone_number}
+              </p>
               <p className="text-sm md:text-base text-muted-foreground capitalize">
                 {activeCall.status === 'ringing' ? 'Calling...' : formatDuration(callDuration)}
               </p>
@@ -1281,7 +1471,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   onClick={() => setIsMuted(!isMuted)}
                   className="w-14 h-14 md:w-16 md:h-16 rounded-full p-0"
                 >
-                  {isMuted ? <MicOff className="w-5 h-5 md:w-6 md:h-6" /> : <Mic className="w-5 h-5 md:w-6 md:h-6" />}
+                  {isMuted ? (
+                    <MicOff className="w-5 h-5 md:w-6 md:h-6" />
+                  ) : (
+                    <Mic className="w-5 h-5 md:w-6 md:h-6" />
+                  )}
                 </Button>
                 <Button
                   variant="outline"
@@ -1289,7 +1483,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   onClick={() => setIsOnHold(!isOnHold)}
                   className="w-14 h-14 md:w-16 md:h-16 rounded-full p-0"
                 >
-                  {isOnHold ? <Play className="w-5 h-5 md:w-6 md:h-6" /> : <Pause className="w-5 h-5 md:w-6 md:h-6" />}
+                  {isOnHold ? (
+                    <Play className="w-5 h-5 md:w-6 md:h-6" />
+                  ) : (
+                    <Pause className="w-5 h-5 md:w-6 md:h-6" />
+                  )}
                 </Button>
               </div>
             )}

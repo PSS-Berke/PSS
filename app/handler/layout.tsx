@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/xano/auth-context';
-import HandlerHeader from "@/components/handler-header";
+import HandlerHeader from '@/components/handler-header';
 import LoadingSpinner from '@/components/loading-spinner';
 
 export default function Layout(props: { children: React.ReactNode }) {
@@ -29,9 +29,7 @@ export default function Layout(props: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen">
       <HandlerHeader />
-      <div className="flex-grow">
-        {props.children}
-      </div>
+      <div className="flex-grow">{props.children}</div>
     </div>
   );
 }

@@ -15,7 +15,7 @@ import {
   Heading3,
   Minus,
   Undo,
-  Redo
+  Redo,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
@@ -31,7 +31,7 @@ export function RichTextEditor({
   content,
   onChange,
   placeholder = 'Start typing...',
-  editable = true
+  editable = true,
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -54,7 +54,7 @@ export function RichTextEditor({
           'prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
           'prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1',
           'prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4 prose-blockquote:italic',
-          'prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm'
+          'prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm',
         ),
       },
     },
@@ -74,10 +74,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('bold') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('bold') ? 'bg-muted' : '')}
             title="Bold"
           >
             <Bold className="h-4 w-4" />
@@ -87,10 +84,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('italic') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('italic') ? 'bg-muted' : '')}
             title="Italic"
           >
             <Italic className="h-4 w-4" />
@@ -100,10 +94,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('strike') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('strike') ? 'bg-muted' : '')}
             title="Strikethrough"
           >
             <Strikethrough className="h-4 w-4" />
@@ -113,10 +104,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleCode().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('code') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('code') ? 'bg-muted' : '')}
             title="Code"
           >
             <Code className="h-4 w-4" />
@@ -130,10 +118,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('heading', { level: 1 }) ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('heading', { level: 1 }) ? 'bg-muted' : '')}
             title="Heading 1"
           >
             <Heading1 className="h-4 w-4" />
@@ -143,10 +128,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('heading', { level: 2 }) ? 'bg-muted' : '')}
             title="Heading 2"
           >
             <Heading2 className="h-4 w-4" />
@@ -156,10 +138,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('heading', { level: 3 }) ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('heading', { level: 3 }) ? 'bg-muted' : '')}
             title="Heading 3"
           >
             <Heading3 className="h-4 w-4" />
@@ -173,10 +152,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('bulletList') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('bulletList') ? 'bg-muted' : '')}
             title="Bullet List"
           >
             <List className="h-4 w-4" />
@@ -186,10 +162,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('orderedList') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('orderedList') ? 'bg-muted' : '')}
             title="Ordered List"
           >
             <ListOrdered className="h-4 w-4" />
@@ -203,10 +176,7 @@ export function RichTextEditor({
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={cn(
-              'h-8 px-2',
-              editor.isActive('blockquote') ? 'bg-muted' : ''
-            )}
+            className={cn('h-8 px-2', editor.isActive('blockquote') ? 'bg-muted' : '')}
             title="Blockquote"
           >
             <Quote className="h-4 w-4" />

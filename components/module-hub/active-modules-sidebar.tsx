@@ -48,7 +48,7 @@ export function ActiveModulesSidebar({
   onSelectModule,
 }: ActiveModulesSidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = React.useState(
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false,
   );
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -99,7 +99,7 @@ export function ActiveModulesSidebar({
         'bg-muted/30 flex flex-col w-full transition-all duration-300',
         isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-64 lg:w-72 xl:w-80 h-auto md:h-full',
         'md:border-r border-b md:border-b-0',
-        className
+        className,
       )}
     >
       {/* Collapsed Toggle Button */}
@@ -162,9 +162,7 @@ export function ActiveModulesSidebar({
                     key={module.id}
                     className={cn(
                       'p-4 cursor-pointer transition-all hover:bg-accent flex-shrink-0 w-56',
-                      isSelected
-                        ? 'bg-accent border-primary ring-2 ring-primary/20'
-                        : ''
+                      isSelected ? 'bg-accent border-primary ring-2 ring-primary/20' : '',
                     )}
                     onClick={() => onSelectModule?.(module.id)}
                   >
@@ -176,9 +174,7 @@ export function ActiveModulesSidebar({
                         {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium line-clamp-2">
-                          {module.name}
-                        </p>
+                        <p className="text-sm font-medium line-clamp-2">{module.name}</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {module.userCount} users
                         </p>
@@ -211,9 +207,7 @@ export function ActiveModulesSidebar({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{module.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {module.userCount} users
-                        </p>
+                        <p className="text-xs text-muted-foreground">{module.userCount} users</p>
                       </div>
                       {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
                     </div>

@@ -74,7 +74,8 @@
   }
 
   /* Prevent horizontal scroll on mobile */
-  html, body {
+  html,
+  body {
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -262,26 +263,26 @@
   overflow: hidden;
   z-index: 9999;
 }
-  /* Custom FullCalendar button styles for week/month toggle */
-  .calendar-wrapper .fc .fc-button-primary {
-    background: #fff !important;
-    color: #000 !important;
-    border: 1px solid #000 !important;
-    box-shadow: none !important;
-  }
+/* Custom FullCalendar button styles for week/month toggle */
+.calendar-wrapper .fc .fc-button-primary {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  box-shadow: none !important;
+}
 
-  .calendar-wrapper .fc .fc-button-primary:not(:disabled).fc-button-active,
-  .calendar-wrapper .fc .fc-button-primary:not(:disabled):active {
-    background: #fff !important;
-    color: #000 !important;
-    border: 2px solid #000 !important;
-    box-shadow: none !important;
-  }
+.calendar-wrapper .fc .fc-button-primary:not(:disabled).fc-button-active,
+.calendar-wrapper .fc .fc-button-primary:not(:disabled):active {
+  background: #fff !important;
+  color: #000 !important;
+  border: 2px solid #000 !important;
+  box-shadow: none !important;
+}
 
-  .calendar-wrapper .fc .fc-button-primary:focus {
-    outline: 2px solid #000 !important;
-    outline-offset: 2px;
-  }
+.calendar-wrapper .fc .fc-button-primary:focus {
+  outline: 2px solid #000 !important;
+  outline-offset: 2px;
+}
 .loader::after {
   content: '';
   width: 40%;

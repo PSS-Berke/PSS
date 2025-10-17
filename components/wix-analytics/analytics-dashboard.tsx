@@ -72,7 +72,7 @@ export function AnalyticsDashboard({ categoryData, className }: AnalyticsDashboa
                 onClick={() => handleCardClick(card)}
                 className={cn(
                   'group rounded-lg border-2 border-gray-200 bg-white p-6 text-left transition-all hover:shadow-lg',
-                  'border-t-transparent border-t-[3px] hover:border-t-[#C33527]'
+                  'border-t-transparent border-t-[3px] hover:border-t-[#C33527]',
                 )}
               >
                 <div className="flex items-start gap-4">
@@ -93,7 +93,9 @@ export function AnalyticsDashboard({ categoryData, className }: AnalyticsDashboa
         {categoryData.cards.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
             <LucideIcons.Inbox className="h-12 w-12 text-gray-400" />
-            <p className="mt-4 text-sm text-gray-600">No analytics cards available for this category</p>
+            <p className="mt-4 text-sm text-gray-600">
+              No analytics cards available for this category
+            </p>
           </div>
         )}
       </div>

@@ -33,7 +33,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   }, [isCollapsed, isHydrated]);
 
   const toggleSidebar = () => {
-    setIsCollapsed(prev => !prev);
+    setIsCollapsed((prev) => !prev);
   };
 
   const setSidebarCollapsed = (value: boolean) => {

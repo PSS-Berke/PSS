@@ -1,10 +1,10 @@
 'use client';
 
-import { useAuth } from "@/lib/xano/auth-context";
-import { useTheme } from "next-themes";
-import { LogOut } from "lucide-react";
-import { Button } from "./ui/button";
-import { Logo } from "./logo";
+import { useAuth } from '@/lib/xano/auth-context';
+import { useTheme } from 'next-themes';
+import { LogOut } from 'lucide-react';
+import { Button } from './ui/button';
+import { Logo } from './logo';
 
 export default function HandlerHeader() {
   const { user, logout } = useAuth();
@@ -13,14 +13,12 @@ export default function HandlerHeader() {
   return (
     <>
       <header className="fixed w-full z-50 p-4 h-14 flex items-center py-4 border-b justify-between bg-background">
-        <Logo link={user ? "/dashboard" : "/"}/>
+        <Logo link={user ? '/dashboard' : '/'} />
 
         <div className="flex items-center justify-end gap-5">
           {user && (
             <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                {user.email}
-              </span>
+              <span className="text-sm text-muted-foreground">{user.email}</span>
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="text-sm hover:underline"
@@ -39,7 +37,7 @@ export default function HandlerHeader() {
           )}
         </div>
       </header>
-      <div className="min-h-14"/> {/* Placeholder for fixed header */}
+      <div className="min-h-14" /> {/* Placeholder for fixed header */}
     </>
   );
 }

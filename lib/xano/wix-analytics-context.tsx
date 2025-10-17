@@ -51,7 +51,10 @@ const initialState: WixAnalyticsState = {
 };
 
 // Reducer
-function wixAnalyticsReducer(state: WixAnalyticsState, action: WixAnalyticsAction): WixAnalyticsState {
+function wixAnalyticsReducer(
+  state: WixAnalyticsState,
+  action: WixAnalyticsAction,
+): WixAnalyticsState {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
@@ -123,22 +126,28 @@ export function WixAnalyticsProvider({ children }: { children: React.ReactNode }
       dispatch({ type: 'SET_SITES', payload: mockSites });
       dispatch({ type: 'SET_LAST_FETCHED', payload: new Date().toISOString() });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to fetch sites' });
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to fetch sites',
+      });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);
 
   // Select a site
-  const selectSite = useCallback((siteId: number | null) => {
-    dispatch({ type: 'SET_SELECTED_SITE', payload: siteId });
-    if (siteId) {
-      const site = state.sites.find((s) => s.id === siteId);
-      if (site) {
-        dispatch({ type: 'SET_SELECTED_PLATFORM', payload: site.platform_type });
+  const selectSite = useCallback(
+    (siteId: number | null) => {
+      dispatch({ type: 'SET_SELECTED_SITE', payload: siteId });
+      if (siteId) {
+        const site = state.sites.find((s) => s.id === siteId);
+        if (site) {
+          dispatch({ type: 'SET_SELECTED_PLATFORM', payload: site.platform_type });
+        }
       }
-    }
-  }, [state.sites]);
+    },
+    [state.sites],
+  );
 
   // Select a platform
   const selectPlatform = useCallback((platform: PlatformType | null) => {
@@ -152,57 +161,69 @@ export function WixAnalyticsProvider({ children }: { children: React.ReactNode }
   }, []);
 
   // Connect a new site
-  const connectSite = useCallback(async (payload: ConnectSitePayload): Promise<WebsiteSite | null> => {
-    dispatch({ type: 'SET_ERROR', payload: null });
+  const connectSite = useCallback(
+    async (payload: ConnectSitePayload): Promise<WebsiteSite | null> => {
+      dispatch({ type: 'SET_ERROR', payload: null });
 
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/wix-analytics/sites', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(payload),
-      // });
-      // const newSite = await response.json();
+      try {
+        // TODO: Replace with actual API call
+        // const response = await fetch('/api/wix-analytics/sites', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(payload),
+        // });
+        // const newSite = await response.json();
 
-      // Mock response
-      const newSite: WebsiteSite = {
-        id: Date.now(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        site_name: payload.site_name,
-        site_url: payload.site_url,
-        platform_type: payload.platform_type,
-        is_connected: true,
-        last_sync_at: new Date().toISOString(),
-        user_id: 1,
-      };
+        // Mock response
+        const newSite: WebsiteSite = {
+          id: Date.now(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          site_name: payload.site_name,
+          site_url: payload.site_url,
+          platform_type: payload.platform_type,
+          is_connected: true,
+          last_sync_at: new Date().toISOString(),
+          user_id: 1,
+        };
 
-      dispatch({ type: 'ADD_SITE', payload: newSite });
-      return newSite;
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to connect site' });
-      return null;
-    }
-  }, []);
+        dispatch({ type: 'ADD_SITE', payload: newSite });
+        return newSite;
+      } catch (error) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to connect site',
+        });
+        return null;
+      }
+    },
+    [],
+  );
 
   // Disconnect a site
-  const disconnectSite = useCallback(async (siteId: number) => {
-    dispatch({ type: 'SET_ERROR', payload: null });
+  const disconnectSite = useCallback(
+    async (siteId: number) => {
+      dispatch({ type: 'SET_ERROR', payload: null });
 
-    try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/wix-analytics/sites/${siteId}`, { method: 'DELETE' });
+      try {
+        // TODO: Replace with actual API call
+        // await fetch(`/api/wix-analytics/sites/${siteId}`, { method: 'DELETE' });
 
-      dispatch({ type: 'REMOVE_SITE', payload: siteId });
+        dispatch({ type: 'REMOVE_SITE', payload: siteId });
 
-      if (state.selectedSiteId === siteId) {
-        dispatch({ type: 'SET_SELECTED_SITE', payload: null });
-        dispatch({ type: 'SET_SELECTED_PLATFORM', payload: null });
+        if (state.selectedSiteId === siteId) {
+          dispatch({ type: 'SET_SELECTED_SITE', payload: null });
+          dispatch({ type: 'SET_SELECTED_PLATFORM', payload: null });
+        }
+      } catch (error) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to disconnect site',
+        });
       }
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to disconnect site' });
-    }
-  }, [state.selectedSiteId]);
+    },
+    [state.selectedSiteId],
+  );
 
   // Refresh metrics
   const refreshMetrics = useCallback(async () => {
@@ -214,7 +235,10 @@ export function WixAnalyticsProvider({ children }: { children: React.ReactNode }
       await new Promise((resolve) => setTimeout(resolve, 1000));
       dispatch({ type: 'SET_LAST_FETCHED', payload: new Date().toISOString() });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to refresh metrics' });
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Failed to refresh metrics',
+      });
     } finally {
       dispatch({ type: 'SET_REFRESHING', payload: false });
     }
@@ -225,7 +249,7 @@ export function WixAnalyticsProvider({ children }: { children: React.ReactNode }
     (categoryKey: string): AnalyticsCategoryData | null => {
       return state.categoryData[categoryKey] || null;
     },
-    [state.categoryData]
+    [state.categoryData],
   );
 
   // Load sites on mount

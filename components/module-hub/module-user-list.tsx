@@ -16,9 +16,7 @@ export function ModuleUserList({ moduleName }: ModuleUserListProps) {
       {/* Header */}
       <div className="flex-shrink-0 p-6 border-b">
         <h2 className="text-2xl font-bold mb-2">{moduleName}</h2>
-        <p className="text-muted-foreground">
-          Users in your company with this module
-        </p>
+        <p className="text-muted-foreground">Users in your company with this module</p>
       </div>
 
       {/* Coming Soon Content */}

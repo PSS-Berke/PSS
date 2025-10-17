@@ -15,7 +15,11 @@ interface SortableModuleWrapperProps {
  * Wrapper component that makes any module draggable and sortable
  * Uses @dnd-kit/sortable for smooth drag-and-drop interactions
  */
-export function SortableModuleWrapper({ id, children, isExpanded = false }: SortableModuleWrapperProps) {
+export function SortableModuleWrapper({
+  id,
+  children,
+  isExpanded = false,
+}: SortableModuleWrapperProps) {
   const {
     attributes,
     listeners,
