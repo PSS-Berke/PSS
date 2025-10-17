@@ -244,7 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!storedToken) throw new Error('Not authenticated');
     try {
       const company = await companyApi.createCompany(storedToken, {
-        company_name: data.company,
+        name: data.company,
         company_code: data.company_code,
       });
       console.log(company);

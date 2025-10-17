@@ -101,7 +101,7 @@ export default function CompanyManagementPage() {
 
     try {
       await companyApi.createCompany(token, {
-        company_name: newCompanyName.trim(),
+        name: newCompanyName.trim(),
         company_code: undefined,
       });
       setIsAddCompanyDialogOpen(false);
