@@ -189,6 +189,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [currentView, setCurrentView] = useState<ViewType>('dialer');
   const [dialedNumber, setDialedNumber] = useState('');
   const [activeCall, setActiveCall] = useState<any>(null);
+  const [currentCall, setCurrentCall] = useState<any>(null);
+  const [callStatus, setCallStatus] = useState<'' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'>('');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
@@ -209,7 +211,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     is_favorite: false,
   });
   const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
-  const [isDeviceReady, setIsDeviceReady] = useState(false);
 
   const [settings, setSettings] = useState({
     phoneNumber: '+1 (555) 900-1234',
@@ -287,12 +288,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       // Set up event handlers
       device.on('registered', () => {
         console.log('Twilio device registered and ready!');
-        setIsDeviceReady(true);
       });
 
       device.on('error', (error) => {
         console.error('Twilio device error:', error);
-        setIsDeviceReady(false);
       });
 
       device.on('incoming', (call) => {
@@ -322,43 +321,120 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   }, [token]);
 
   const makeCall = async (number: string) => {
-    const contact = contacts.find((c) => c.phone_number === number);
-    //get twilio token
-    const response = await fetch('https://api.mwairealty.co.ke/v1/voice/call', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ to: number }),
-    });
-    if (!response.ok) {
-      const data = await response.json();
-      const error = data as TwilioError;
-      console.error(error);
+    if (!twilioDevice) {
+      console.error('Twilio device not ready');
       return;
     }
-    const data = await response.json();
-    console.log(data);
 
-    setActiveCall({
-      phone_number: number,
-      contact_name: contact?.name,
-      status: 'ringing',
-      startTime: new Date().toISOString(),
-    });
-    setCallDuration(0);
+    const contact = contacts.find((c) => c.phone_number === number);
+    setCallStatus('RINGING');
 
-    setTimeout(() => {
-      setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
-    }, 2000);
+    try {
+      // Use Twilio Voice SDK to make the call directly to phone number
+      const call = await twilioDevice.connect({
+        params: {
+          To: number,
+        },
+      });
+
+      // Store the call object for event handling
+      setCurrentCall(call);
+
+      // Set up call event handlers
+      call.on('accept', () => {
+        console.log('CALL STATUS - ACCEPTED');
+        setActiveCall((prev: any) => prev ? { ...prev, status: 'in-progress' } : null);
+        setCallStatus('ACCEPTED');
+      });
+
+      call.on('disconnect', () => {
+        console.log('CALL STATUS - DISCONNECTED');
+        setActiveCall(null);
+        setCurrentCall(null);
+        setCallDuration(0);
+        setIsMuted(false);
+        setIsOnHold(false);
+        setCallStatus('DISCONNECTED');
+      });
+
+      call.on('cancel', () => {
+        console.log('CALL STATUS - CANCELLED');
+        setActiveCall(null);
+        setCurrentCall(null);
+        setCallDuration(0);
+        setCallStatus('CANCELLED');
+      });
+
+      call.on('reject', () => {
+        console.log('CALL STATUS - REJECTED');
+        setActiveCall(null);
+        setCurrentCall(null);
+        setCallDuration(0);
+        setCallStatus('REJECTED');
+      });
+
+      setActiveCall({
+        phone_number: number,
+        contact_name: contact?.name,
+        status: 'ringing',
+        startTime: new Date().toISOString(),
+      });
+      setCallDuration(0);
+
+    } catch (error) {
+      console.error('Failed to make call:', error);
+      setCallStatus('');
+    }
   };
 
   const endCall = () => {
+    // Disconnect the specific call if it exists
+    if (currentCall) {
+      currentCall.disconnect();
+    }
+    // Also disconnect all calls as backup
+    if (twilioDevice) {
+      twilioDevice.disconnectAll();
+    }
     setActiveCall(null);
+    setCurrentCall(null);
     setCallDuration(0);
     setIsMuted(false);
     setIsOnHold(false);
     setDialedNumber('');
+    setCallStatus('');
+  };
+
+  // Function to toggle mute using Twilio call object
+  const toggleMute = () => {
+    if (currentCall) {
+      if (isMuted) {
+        currentCall.mute(false);
+        setIsMuted(false);
+        console.log('Call unmuted');
+      } else {
+        currentCall.mute(true);
+        setIsMuted(true);
+        console.log('Call muted');
+      }
+    }
+  };
+
+  // Function to toggle hold using Twilio call object (using mute as workaround)
+  const toggleHold = () => {
+    if (currentCall) {
+      if (isOnHold) {
+        // Resume call - unmute
+        currentCall.mute(false);
+        setIsOnHold(false);
+        console.log('Call resumed from hold');
+      } else {
+        // Hold call - mute
+        currentCall.mute(true);
+        setIsOnHold(true);
+        console.log('Call placed on hold');
+      }
+    }
   };
 
   const copyPhoneNumber = () => {
@@ -733,7 +809,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -1178,7 +1254,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                    'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
