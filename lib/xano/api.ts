@@ -278,7 +278,19 @@ export const usersApi = {
       token
     );
   },
+
+  async onboardCompany(token: string, data: { company: string; company_code?: number }): Promise<User> {
+    return apiRequest<User>(
+      '/company',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      token
+    );
+  },
 };
+
 
 
 // LinkedIn Copilot API

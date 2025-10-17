@@ -78,7 +78,8 @@ export default function SignInPage() {
         // Expecting shape: { name, email, token }
         if (data?.token) {
           await authenticateWithToken(data.token);
-          const redirect = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+          // Google users go to onboarding, regular users go to dashboard
+          const redirect = new URLSearchParams(window.location.search).get('redirect') || '/auth/onboarding';
           router.push(redirect);
         } else {
           setError('Google continue response missing token');
