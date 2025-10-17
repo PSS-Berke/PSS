@@ -20,9 +20,7 @@ export function CompanyInfoModule({ company }: CompanyInfoModuleProps) {
               {company.display_name || company.name}
             </h3>
           </div>
-          {company.headline && (
-            <p className="text-sm text-gray-600 italic">{company.headline}</p>
-          )}
+          {company.headline && <p className="text-sm text-gray-600 italic">{company.headline}</p>}
         </div>
 
         {/* Key Stats Grid */}

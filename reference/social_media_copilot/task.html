@@ -1,683 +1,701 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Task Manager</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #ffffff;
+        color: #000000;
+        line-height: 1.5;
+        padding: 1rem;
+      }
+
+      .modules-container {
+        display: grid;
+        gap: 1.5rem;
+        max-width: 800px;
+        margin: 0 auto;
+        height: 420px; /* Compact height for ~4 tasks */
+      }
+
+      .module {
+        background: white;
+        border: 1px solid #000000;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%; /* Take full height of grid cell */
+        display: flex;
+        flex-direction: column;
+      }
+
+      .module-header {
+        background: #ffffff;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #000000;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0; /* Prevent header from shrinking */
+        min-height: 60px; /* Consistent header height */
+      }
+
+      .module-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #000000;
+      }
+
+      .module-count {
+        background: #c33527;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .module-content {
+        padding: 1rem;
+        overflow-y: auto;
+        flex: 1; /* Take remaining space (~350px for content) */
+        min-height: 0; /* Allow flex item to shrink */
+      }
+
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .task-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #d1d0d0;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .task-item:hover {
+        border-color: #c33527;
+        background: rgba(195, 53, 39, 0.02);
+      }
+
+      .task-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .publish-toggle {
+        background: none;
+        border: 1px solid #d1d0d0;
+        border-radius: 6px;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+
+      .publish-toggle.published {
+        background: #c33527;
+        color: white;
+        border-color: #c33527;
+      }
+
+      .publish-toggle.unpublished {
+        background: #ffffff;
+        color: #666;
+        border-color: #d1d0d0;
+      }
+
+      .publish-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .publish-toggle.published:hover {
+        background: #da857c;
+        border-color: #da857c;
+      }
+
+      .publish-toggle.unpublished:hover {
+        background: #c33527;
+        color: white;
+        border-color: #c33527;
+      }
+
+      .task-status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      .task-status.published {
+        background: #c33527;
+      }
+
+      .task-status.unpublished {
+        background: #d1d0d0;
+        border: 1px solid #000000;
+      }
+
+      .task-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .task-title {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #000000;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: #666;
+      }
+
+      .task-platform {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: white;
+        text-transform: capitalize;
+      }
+
+      .task-platform.linkedin {
+        background: #0077b5;
+      }
+      .task-platform.instagram {
+        background: #e4405f;
+      }
+      .task-platform.tiktok {
+        background: #000000;
+      }
+      .task-platform.all {
+        background: #c33527;
+      }
+
+      .task-time {
+        color: #666;
+        font-size: 0.8rem;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        font-style: italic;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+      }
+
+      .error {
+        text-align: center;
+        padding: 2rem;
+        color: #c33527;
+        background: rgba(195, 53, 39, 0.05);
+        border-radius: 8px;
+        margin: 1rem;
+      }
+
+      /* View toggle buttons */
+      .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+      }
+
+      .toggle-btn {
+        background: #ffffff;
+        border: 1px solid #000000;
+        color: #000000;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .toggle-btn:hover {
+        background: #da857c;
+        color: #ffffff;
+      }
+
+      .toggle-btn.active {
+        background: #c33527;
+        color: white;
+      }
+
+      .refresh-indicator {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #c33527;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 1001;
+      }
+
+      .refresh-indicator.show {
+        opacity: 0.8;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        padding: 1rem;
+        overflow-y: auto;
+        align-items: flex-start;
+        justify-content: center;
+      }
+
+      .modal.show {
+        display: flex !important;
+      }
+
+      .modal-content {
+        background: white;
+        margin: 2rem auto;
+        padding: 0;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 500px;
+        min-width: 320px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        border: 1px solid #000000;
+        overflow: hidden;
+        position: relative;
+        max-height: calc(100vh - 4rem);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .modal-header {
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #000000;
+        flex-shrink: 0;
+      }
+
+      .modal-header h2 {
+        color: #000000;
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-right: 1rem;
+      }
+
+      .close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #000000;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .close:hover {
+        background: #da857c;
+        color: #ffffff;
+      }
+
+      .modal-view {
+        padding: 1.5rem 2rem 2rem 2rem;
+        overflow-y: auto;
+        flex-grow: 1;
+      }
+
+      .view-field {
+        margin-bottom: 1.5rem;
+      }
+
+      .view-field-label {
+        font-weight: 600;
+        color: #000000;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      .view-field-value {
+        color: #000000;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        padding: 0.75rem 1rem;
+        background: #ffffff;
+        border: 1px solid #d1d0d0;
+        border-radius: 8px;
+        min-height: 45px;
+        display: flex;
+        align-items: center;
+      }
+
+      .view-field-value.empty {
+        color: #d1d0d0;
+        font-style: italic;
+      }
+
+      .view-field-value a {
+        color: #c33527 !important;
+        text-decoration: underline;
+        word-break: break-all;
+      }
+
+      .view-field-value a:hover {
+        color: #da857c !important;
+      }
+
+      /* Rich content display in view mode with copy functionality */
+      .view-field-value.rich-content {
+        align-items: flex-start;
+        min-height: 80px;
+        padding: 0;
+        border: none;
+        background: none;
+      }
+
+      .view-rich-content-wrapper {
+        width: 100%;
+        border: 1px solid #d1d0d0;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .view-rich-content {
+        padding: 0.75rem 1rem;
+        min-height: 80px;
+      }
+
+      .view-rich-content * {
+        margin-bottom: 0.5rem;
+      }
+
+      .view-rich-content *:last-child {
+        margin-bottom: 0;
+      }
+
+      .view-content-footer {
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border-top: 1px solid #d1d0d0;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .view-copy-btn {
+        background: #c33527;
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .view-copy-btn:hover {
+        background: #da857c;
+        transform: translateY(-1px);
+      }
+
+      .view-copy-btn:active {
+        transform: translateY(0);
+      }
+
+      .view-copy-btn.copied {
+        background: #10b981;
+      }
+
+      .view-copy-btn.copied:hover {
+        background: #059669;
+      }
+
+      .content-type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: white;
+        text-transform: capitalize;
+      }
+
+      .content-type-badge.linkedin {
+        background: #0077b5;
+      }
+      .content-type-badge.instagram {
+        background: #e4405f;
+      }
+      .content-type-badge.tiktok {
+        background: #000000;
+      }
+      .content-type-badge.all {
+        background: #c33527;
+      }
+
+      .published-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      .published-status.published {
+        background: rgba(195, 53, 39, 0.1);
+        color: #c33527;
+      }
+
+      .published-status.unpublished {
+        background: rgba(209, 208, 208, 0.3);
+        color: #000000;
+      }
+
+      .published-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .view-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #000000;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        font-family: inherit;
+        min-width: 100px;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background: #c33527;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #da857c;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: #ffffff;
+        color: #000000;
+        border: 1px solid #000000;
+      }
+
+      .btn-secondary:hover {
+        background: #da857c;
+        color: #ffffff;
+      }
+
+      .btn-published {
+        background: #c33527;
+        color: white;
+        border: 1px solid #c33527;
+      }
+
+      .btn-published:hover {
+        background: #da857c;
+        border-color: #da857c;
+      }
+
+      .btn-unpublished {
+        background: #ffffff;
+        color: #000000;
+        border: 1px solid #d1d0d0;
+      }
+
+      .btn-unpublished:hover {
+        background: #d1d0d0;
+        color: #000000;
+      }
+
+      /* Responsive design */
+      @media (min-width: 768px) {
+        .modules-container {
+          grid-template-columns: 1fr 1fr;
+          height: 420px; /* Compact side-by-side layout */
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-            color: #000000;
-            line-height: 1.5;
-            padding: 1rem;
+          padding: 1.5rem;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .modules-container {
+          grid-template-columns: 1fr;
+          height: 860px; /* Stacked modules, each ~420px + gap */
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 0.5rem;
         }
 
         .modules-container {
-            display: grid;
-            gap: 1.5rem;
-            max-width: 800px;
-            margin: 0 auto;
-            height: 420px; /* Compact height for ~4 tasks */
-        }
-
-        .module {
-            background: white;
-            border: 1px solid #000000;
-            border-radius: 12px;
-            overflow: hidden;
-            height: 100%; /* Take full height of grid cell */
-            display: flex;
-            flex-direction: column;
+          height: 800px; /* Slightly shorter on small screens */
+          gap: 1rem; /* Smaller gap */
         }
 
         .module-header {
-            background: #FFFFFF;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #000000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0; /* Prevent header from shrinking */
-            min-height: 60px; /* Consistent header height */
-        }
-
-        .module-title {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #000000;
-        }
-
-        .module-count {
-            background: #C33527;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 500;
+          padding: 0.75rem 1rem;
+          min-height: 55px; /* Slightly smaller header */
         }
 
         .module-content {
-            padding: 1rem;
-            overflow-y: auto;
-            flex: 1; /* Take remaining space (~350px for content) */
-            min-height: 0; /* Allow flex item to shrink */
-        }
-
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+          padding: 0.75rem;
         }
 
         .task-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            border: 1px solid #D1D0D0;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .task-item:hover {
-            border-color: #C33527;
-            background: rgba(195, 53, 39, 0.02);
-        }
-
-        .task-actions {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .publish-toggle {
-            background: none;
-            border: 1px solid #D1D0D0;
-            border-radius: 6px;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .publish-toggle.published {
-            background: #C33527;
-            color: white;
-            border-color: #C33527;
-        }
-
-        .publish-toggle.unpublished {
-            background: #FFFFFF;
-            color: #666;
-            border-color: #D1D0D0;
-        }
-
-        .publish-toggle:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .publish-toggle.published:hover {
-            background: #DA857C;
-            border-color: #DA857C;
-        }
-
-        .publish-toggle.unpublished:hover {
-            background: #C33527;
-            color: white;
-            border-color: #C33527;
-        }
-
-        .task-status {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 0.75rem;
-            flex-shrink: 0;
-        }
-
-        .task-status.published {
-            background: #C33527;
-        }
-
-        .task-status.unpublished {
-            background: #D1D0D0;
-            border: 1px solid #000000;
-        }
-
-        .task-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .task-title {
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: #000000;
-            margin-bottom: 0.25rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          padding: 0.5rem;
         }
 
         .task-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 0.8rem;
-            color: #666;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.25rem;
         }
 
-        .task-platform {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.125rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: white;
-            text-transform: capitalize;
-        }
-
-        .task-platform.linkedin { background: #0077B5; }
-        .task-platform.instagram { background: #E4405F; }
-        .task-platform.tiktok { background: #000000; }
-        .task-platform.all { background: #C33527; }
-
-        .task-time {
-            color: #666;
-            font-size: 0.8rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-            font-style: italic;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-        }
-
-        .error {
-            text-align: center;
-            padding: 2rem;
-            color: #C33527;
-            background: rgba(195, 53, 39, 0.05);
-            border-radius: 8px;
-            margin: 1rem;
-        }
-
-        /* View toggle buttons */
         .view-toggle {
-            display: flex;
-            gap: 0.5rem;
-            margin-left: auto;
+          margin-left: 0;
+          margin-top: 0.5rem;
         }
+      }
 
-        .toggle-btn {
-            background: #FFFFFF;
-            border: 1px solid #000000;
-            color: #000000;
-            padding: 0.375rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
+      /* Custom scrollbar */
+      .module-content::-webkit-scrollbar {
+        width: 6px;
+      }
 
-        .toggle-btn:hover {
-            background: #DA857C;
-            color: #FFFFFF;
-        }
+      .module-content::-webkit-scrollbar-track {
+        background: #ffffff;
+      }
 
-        .toggle-btn.active {
-            background: #C33527;
-            color: white;
-        }
+      .module-content::-webkit-scrollbar-thumb {
+        background: #d1d0d0;
+        border-radius: 3px;
+      }
 
-        .refresh-indicator {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #C33527;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 1001;
-        }
-
-        .refresh-indicator.show {
-            opacity: 0.8;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
-            padding: 1rem;
-            overflow-y: auto;
-            align-items: flex-start;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex !important;
-        }
-
-        .modal-content {
-            background: white;
-            margin: 2rem auto;
-            padding: 0;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 500px;
-            min-width: 320px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-            border: 1px solid #000000;
-            overflow: hidden;
-            position: relative;
-            max-height: calc(100vh - 4rem);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-header {
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #000000;
-            flex-shrink: 0;
-        }
-
-        .modal-header h2 {
-            color: #000000;
-            font-size: 1.25rem;
-            font-weight: 500;
-            margin-right: 1rem;
-        }
-
-        .close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #000000;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .close:hover {
-            background: #DA857C;
-            color: #FFFFFF;
-        }
-
-        .modal-view {
-            padding: 1.5rem 2rem 2rem 2rem;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .view-field {
-            margin-bottom: 1.5rem;
-        }
-
-        .view-field-label {
-            font-weight: 600;
-            color: #000000;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .view-field-value {
-            color: #000000;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            padding: 0.75rem 1rem;
-            background: #FFFFFF;
-            border: 1px solid #D1D0D0;
-            border-radius: 8px;
-            min-height: 45px;
-            display: flex;
-            align-items: center;
-        }
-
-        .view-field-value.empty {
-            color: #D1D0D0;
-            font-style: italic;
-        }
-
-        .view-field-value a {
-            color: #C33527 !important;
-            text-decoration: underline;
-            word-break: break-all;
-        }
-
-        .view-field-value a:hover {
-            color: #DA857C !important;
-        }
-
-        /* Rich content display in view mode with copy functionality */
-        .view-field-value.rich-content {
-            align-items: flex-start;
-            min-height: 80px;
-            padding: 0;
-            border: none;
-            background: none;
-        }
-
-        .view-rich-content-wrapper {
-            width: 100%;
-            border: 1px solid #D1D0D0;
-            border-radius: 8px;
-            background: #FFFFFF;
-        }
-
-        .view-rich-content {
-            padding: 0.75rem 1rem;
-            min-height: 80px;
-        }
-
-        .view-rich-content * {
-            margin-bottom: 0.5rem;
-        }
-
-        .view-rich-content *:last-child {
-            margin-bottom: 0;
-        }
-
-        .view-content-footer {
-            padding: 0.5rem 1rem;
-            background: #f8f9fa;
-            border-top: 1px solid #D1D0D0;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-            font-size: 0.8rem;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .view-copy-btn {
-            background: #C33527;
-            color: white;
-            border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .view-copy-btn:hover {
-            background: #DA857C;
-            transform: translateY(-1px);
-        }
-
-        .view-copy-btn:active {
-            transform: translateY(0);
-        }
-
-        .view-copy-btn.copied {
-            background: #10B981;
-        }
-
-        .view-copy-btn.copied:hover {
-            background: #059669;
-        }
-
-        .content-type-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.375rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: white;
-            text-transform: capitalize;
-        }
-
-        .content-type-badge.linkedin { background: #0077B5; }
-        .content-type-badge.instagram { background: #E4405F; }
-        .content-type-badge.tiktok { background: #000000; }
-        .content-type-badge.all { background: #C33527; }
-
-        .published-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .published-status.published {
-            background: rgba(195, 53, 39, 0.1);
-            color: #C33527;
-        }
-
-        .published-status.unpublished {
-            background: rgba(209, 208, 208, 0.3);
-            color: #000000;
-        }
-
-        .published-icon {
-            width: 16px;
-            height: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .view-actions {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #000000;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-            font-family: inherit;
-            min-width: 100px;
-            white-space: nowrap;
-        }
-
-        .btn-primary {
-            background: #C33527;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #DA857C;
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: #FFFFFF;
-            color: #000000;
-            border: 1px solid #000000;
-        }
-
-        .btn-secondary:hover {
-            background: #DA857C;
-            color: #FFFFFF;
-        }
-
-        .btn-published {
-            background: #C33527;
-            color: white;
-            border: 1px solid #C33527;
-        }
-
-        .btn-published:hover {
-            background: #DA857C;
-            border-color: #DA857C;
-        }
-
-        .btn-unpublished {
-            background: #FFFFFF;
-            color: #000000;
-            border: 1px solid #D1D0D0;
-        }
-
-        .btn-unpublished:hover {
-            background: #D1D0D0;
-            color: #000000;
-        }
-
-        /* Responsive design */
-        @media (min-width: 768px) {
-            .modules-container {
-                grid-template-columns: 1fr 1fr;
-                height: 420px; /* Compact side-by-side layout */
-            }
-            
-            body {
-                padding: 1.5rem;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .modules-container {
-                grid-template-columns: 1fr;
-                height: 860px; /* Stacked modules, each ~420px + gap */
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 0.5rem;
-            }
-            
-            .modules-container {
-                height: 800px; /* Slightly shorter on small screens */
-                gap: 1rem; /* Smaller gap */
-            }
-            
-            .module-header {
-                padding: 0.75rem 1rem;
-                min-height: 55px; /* Slightly smaller header */
-            }
-            
-            .module-content {
-                padding: 0.75rem;
-            }
-            
-            .task-item {
-                padding: 0.5rem;
-            }
-            
-            .task-meta {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.25rem;
-            }
-            
-            .view-toggle {
-                margin-left: 0;
-                margin-top: 0.5rem;
-            }
-        }
-
-        /* Custom scrollbar */
-        .module-content::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .module-content::-webkit-scrollbar-track {
-            background: #FFFFFF;
-        }
-
-        .module-content::-webkit-scrollbar-thumb {
-            background: #D1D0D0;
-            border-radius: 3px;
-        }
-
-        .module-content::-webkit-scrollbar-thumb:hover {
-            background: #DA857C;
-        }
+      .module-content::-webkit-scrollbar-thumb:hover {
+        background: #da857c;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="modules-container">
-        <!-- Upcoming Posts Module -->
-        <div class="module">
-            <div class="module-header">
-                <h2 class="module-title">Upcoming Posts</h2>
-                <div class="view-toggle">
-                    <button class="toggle-btn active" id="btn7days" onclick="setUpcomingView(7)">7 Days</button>
-                    <button class="toggle-btn" id="btn30days" onclick="setUpcomingView(30)">30 Days</button>
-                </div>
-                <span class="module-count" id="upcomingCount">0</span>
-            </div>
-            <div class="module-content">
-                <div class="task-list" id="upcomingTasks">
-                    <div class="loading">Loading upcoming tasks...</div>
-                </div>
-            </div>
+      <!-- Upcoming Posts Module -->
+      <div class="module">
+        <div class="module-header">
+          <h2 class="module-title">Upcoming Posts</h2>
+          <div class="view-toggle">
+            <button class="toggle-btn active" id="btn7days" onclick="setUpcomingView(7)">
+              7 Days
+            </button>
+            <button class="toggle-btn" id="btn30days" onclick="setUpcomingView(30)">30 Days</button>
+          </div>
+          <span class="module-count" id="upcomingCount">0</span>
         </div>
+        <div class="module-content">
+          <div class="task-list" id="upcomingTasks">
+            <div class="loading">Loading upcoming tasks...</div>
+          </div>
+        </div>
+      </div>
 
-        <!-- Today's Posts Module -->
-        <div class="module">
-            <div class="module-header">
-                <h2 class="module-title">Today's Posts</h2>
-                <span class="module-count" id="todayCount">0</span>
-            </div>
-            <div class="module-content">
-                <div class="task-list" id="todayTasks">
-                    <div class="loading">Loading today's tasks...</div>
-                </div>
-            </div>
+      <!-- Today's Posts Module -->
+      <div class="module">
+        <div class="module-header">
+          <h2 class="module-title">Today's Posts</h2>
+          <span class="module-count" id="todayCount">0</span>
         </div>
+        <div class="module-content">
+          <div class="task-list" id="todayTasks">
+            <div class="loading">Loading today's tasks...</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Refresh Indicator -->
@@ -685,201 +703,212 @@
 
     <!-- Modal -->
     <div id="postModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Post Details</h2>
-                <button class="close" onclick="closeModal()">&times;</button>
-            </div>
-            
-            <!-- View Mode -->
-            <div class="modal-view" id="viewMode">
-                <div class="view-field">
-                    <span class="view-field-label">Post Title</span>
-                    <div class="view-field-value" id="viewTitle"></div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">Post Description</span>
-                    <div class="view-field-value" id="viewDescription"></div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">Post Content</span>
-                    <div class="view-field-value rich-content" id="viewRichContentContainer">
-                        <div class="view-rich-content-wrapper">
-                            <div class="view-rich-content" id="viewRichContent"></div>
-                            <div class="view-content-footer">
-                                <span><span id="viewCharCount">0</span> characters</span>
-                                <button type="button" class="view-copy-btn" onclick="copyViewContent()" id="viewCopyBtn">
-                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                                    </svg>
-                                    Copy
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">URL 1</span>
-                    <div class="view-field-value" id="viewUrl1"></div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">URL 2</span>
-                    <div class="view-field-value" id="viewUrl2"></div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">Content Type</span>
-                    <div class="view-field-value" id="viewContentType"></div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">Scheduled Date</span>
-                    <div class="view-field-value" id="viewScheduledDate"></div>
-                </div>
-
-                <div class="view-field">
-                    <span class="view-field-label">Status</span>
-                    <div class="view-field-value" id="viewStatus"></div>
-                </div>
-
-                <div class="view-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
-                    <button type="button" class="btn" id="modalPublishBtn" onclick="toggleModalPublished()">Publish</button>
-                </div>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Post Details</h2>
+          <button class="close" onclick="closeModal()">&times;</button>
         </div>
+
+        <!-- View Mode -->
+        <div class="modal-view" id="viewMode">
+          <div class="view-field">
+            <span class="view-field-label">Post Title</span>
+            <div class="view-field-value" id="viewTitle"></div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">Post Description</span>
+            <div class="view-field-value" id="viewDescription"></div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">Post Content</span>
+            <div class="view-field-value rich-content" id="viewRichContentContainer">
+              <div class="view-rich-content-wrapper">
+                <div class="view-rich-content" id="viewRichContent"></div>
+                <div class="view-content-footer">
+                  <span><span id="viewCharCount">0</span> characters</span>
+                  <button
+                    type="button"
+                    class="view-copy-btn"
+                    onclick="copyViewContent()"
+                    id="viewCopyBtn"
+                  >
+                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                      <path
+                        d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                      />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">URL 1</span>
+            <div class="view-field-value" id="viewUrl1"></div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">URL 2</span>
+            <div class="view-field-value" id="viewUrl2"></div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">Content Type</span>
+            <div class="view-field-value" id="viewContentType"></div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">Scheduled Date</span>
+            <div class="view-field-value" id="viewScheduledDate"></div>
+          </div>
+
+          <div class="view-field">
+            <span class="view-field-label">Status</span>
+            <div class="view-field-value" id="viewStatus"></div>
+          </div>
+
+          <div class="view-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
+            <button type="button" class="btn" id="modalPublishBtn" onclick="toggleModalPublished()">
+              Publish
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Configuration
-        const API_BASE = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ydIfcjKj';
-        
-        let allPosts = [];
-        let upcomingDays = 7; // Default to 7 days view
+      // Configuration
+      const API_BASE = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ydIfcjKj';
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            loadPosts();
-            // Start simple auto-refresh every 30 seconds
-            setInterval(loadPosts, 30000);
+      let allPosts = [];
+      let upcomingDays = 7; // Default to 7 days view
+
+      // Initialize the app
+      document.addEventListener('DOMContentLoaded', function () {
+        loadPosts();
+        // Start simple auto-refresh every 30 seconds
+        setInterval(loadPosts, 30000);
+      });
+
+      // Load posts from API
+      async function loadPosts() {
+        try {
+          // Show quick refresh indicator
+          const indicator = document.getElementById('refreshIndicator');
+          indicator.classList.add('show');
+
+          const response = await fetch(`${API_BASE}/post`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          allPosts = await response.json();
+
+          // Sort posts by scheduled date
+          allPosts.sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date));
+
+          renderTasks();
+
+          // Hide refresh indicator
+          setTimeout(() => {
+            indicator.classList.remove('show');
+          }, 800);
+        } catch (error) {
+          console.error('Error loading posts:', error);
+          showError('Failed to load posts. Please check your connection.');
+        }
+      }
+
+      // Render both task modules
+      function renderTasks() {
+        renderUpcomingTasks();
+        renderTodayTasks();
+      }
+
+      // Render upcoming tasks based on selected days
+      function renderUpcomingTasks() {
+        const now = new Date();
+        const startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(now);
+        endDate.setDate(endDate.getDate() + upcomingDays);
+        endDate.setHours(23, 59, 59, 999);
+
+        const upcomingPosts = allPosts.filter((post) => {
+          const postDate = new Date(post.scheduled_date);
+          return postDate >= startDate && postDate <= endDate;
         });
 
-        // Load posts from API
-        async function loadPosts() {
-            try {
-                // Show quick refresh indicator
-                const indicator = document.getElementById('refreshIndicator');
-                indicator.classList.add('show');
-                
-                const response = await fetch(`${API_BASE}/post`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                allPosts = await response.json();
-                
-                // Sort posts by scheduled date
-                allPosts.sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date));
-                
-                renderTasks();
-                
-                // Hide refresh indicator
-                setTimeout(() => {
-                    indicator.classList.remove('show');
-                }, 800);
-                
-            } catch (error) {
-                console.error('Error loading posts:', error);
-                showError('Failed to load posts. Please check your connection.');
-            }
+        const container = document.getElementById('upcomingTasks');
+        const countEl = document.getElementById('upcomingCount');
+
+        countEl.textContent = upcomingPosts.length;
+
+        if (upcomingPosts.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state">No upcoming posts in the next ' +
+            upcomingDays +
+            ' days</div>';
+          return;
         }
 
-        // Render both task modules
-        function renderTasks() {
-            renderUpcomingTasks();
-            renderTodayTasks();
+        container.innerHTML = upcomingPosts.map((post) => createTaskItem(post)).join('');
+      }
+
+      // Render today's tasks
+      function renderTodayTasks() {
+        const now = new Date();
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(now);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const todayPosts = allPosts.filter((post) => {
+          const postDate = new Date(post.scheduled_date);
+          return postDate >= startOfDay && postDate <= endOfDay;
+        });
+
+        const container = document.getElementById('todayTasks');
+        const countEl = document.getElementById('todayCount');
+
+        countEl.textContent = todayPosts.length;
+
+        if (todayPosts.length === 0) {
+          container.innerHTML = '<div class="empty-state">No posts scheduled for today</div>';
+          return;
         }
 
-        // Render upcoming tasks based on selected days
-        function renderUpcomingTasks() {
-            const now = new Date();
-            const startDate = new Date(now);
-            startDate.setHours(0, 0, 0, 0);
-            
-            const endDate = new Date(now);
-            endDate.setDate(endDate.getDate() + upcomingDays);
-            endDate.setHours(23, 59, 59, 999);
-            
-            const upcomingPosts = allPosts.filter(post => {
-                const postDate = new Date(post.scheduled_date);
-                return postDate >= startDate && postDate <= endDate;
-            });
-            
-            const container = document.getElementById('upcomingTasks');
-            const countEl = document.getElementById('upcomingCount');
-            
-            countEl.textContent = upcomingPosts.length;
-            
-            if (upcomingPosts.length === 0) {
-                container.innerHTML = '<div class="empty-state">No upcoming posts in the next ' + upcomingDays + ' days</div>';
-                return;
-            }
-            
-            container.innerHTML = upcomingPosts.map(post => createTaskItem(post)).join('');
-        }
+        container.innerHTML = todayPosts.map((post) => createTaskItem(post)).join('');
+      }
 
-        // Render today's tasks
-        function renderTodayTasks() {
-            const now = new Date();
-            const startOfDay = new Date(now);
-            startOfDay.setHours(0, 0, 0, 0);
-            
-            const endOfDay = new Date(now);
-            endOfDay.setHours(23, 59, 59, 999);
-            
-            const todayPosts = allPosts.filter(post => {
-                const postDate = new Date(post.scheduled_date);
-                return postDate >= startOfDay && postDate <= endOfDay;
-            });
-            
-            const container = document.getElementById('todayTasks');
-            const countEl = document.getElementById('todayCount');
-            
-            countEl.textContent = todayPosts.length;
-            
-            if (todayPosts.length === 0) {
-                container.innerHTML = '<div class="empty-state">No posts scheduled for today</div>';
-                return;
-            }
-            
-            container.innerHTML = todayPosts.map(post => createTaskItem(post)).join('');
-        }
+      // Create individual task item HTML
+      function createTaskItem(post) {
+        const isPublished = post.published || false;
+        const publishedStatus = isPublished ? 'published' : 'unpublished';
+        const publishedIcon = isPublished ? '✓' : '';
 
-        // Create individual task item HTML
-        function createTaskItem(post) {
-            const isPublished = post.published || false;
-            const publishedStatus = isPublished ? 'published' : 'unpublished';
-            const publishedIcon = isPublished ? '✓' : '';
-            
-            const postDate = new Date(post.scheduled_date);
-            const timeString = postDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const dateString = postDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            
-            const title = publishedIcon ? `${publishedIcon} ${post.post_title}` : post.post_title;
-            const toggleText = isPublished ? 'Published' : 'Publish';
-            
-            return `
+        const postDate = new Date(post.scheduled_date);
+        const timeString = postDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateString = postDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+        const title = publishedIcon ? `${publishedIcon} ${post.post_title}` : post.post_title;
+        const toggleText = isPublished ? 'Published' : 'Publish';
+
+        return `
                 <div class="task-item">
                     <div class="task-status ${publishedStatus}"></div>
                     <div class="task-content" onclick="openPost(${post.id})">
@@ -894,143 +923,145 @@
                     </div>
                 </div>
             `;
+      }
+
+      // Set upcoming view (7 days or 30 days)
+      function setUpcomingView(days) {
+        upcomingDays = days;
+
+        // Update button states
+        document.getElementById('btn7days').classList.toggle('active', days === 7);
+        document.getElementById('btn30days').classList.toggle('active', days === 30);
+
+        renderUpcomingTasks();
+      }
+
+      // Handle post click - open modal with post details
+      function openPost(postId) {
+        const post = allPosts.find((p) => p.id === postId);
+        if (!post) return;
+
+        showPostModal(post);
+      }
+
+      // Show post details in modal
+      function showPostModal(post) {
+        document.getElementById('modalTitle').textContent = post.post_title;
+        populateModalViewMode(post);
+
+        const modal = document.getElementById('postModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+
+        // Store current post for modal actions
+        window.currentModalPost = post;
+      }
+
+      // Copy function for view mode - Enhanced for WeWeb compatibility
+      function copyViewContent() {
+        let textToCopy = '';
+
+        // Get content from view mode - try to get the plain text version stored in the post
+        if (window.currentModalPost && window.currentModalPost.rich_content_text) {
+          textToCopy = window.currentModalPost.rich_content_text.trim();
+        } else {
+          // Fallback to extracting text from the displayed HTML
+          const viewContentEl = document.getElementById('viewRichContent');
+          if (viewContentEl) {
+            textToCopy = viewContentEl.innerText || viewContentEl.textContent || '';
+            textToCopy = textToCopy.trim();
+          }
         }
 
-        // Set upcoming view (7 days or 30 days)
-        function setUpcomingView(days) {
-            upcomingDays = days;
-            
-            // Update button states
-            document.getElementById('btn7days').classList.toggle('active', days === 7);
-            document.getElementById('btn30days').classList.toggle('active', days === 30);
-            
-            renderUpcomingTasks();
+        if (!textToCopy) {
+          showCopyFeedback('Nothing to copy', 'error', 'viewCopyBtn');
+          return;
         }
 
-        // Handle post click - open modal with post details
-        function openPost(postId) {
-            const post = allPosts.find(p => p.id === postId);
-            if (!post) return;
-            
-            showPostModal(post);
+        // Enhanced copy function with multiple fallbacks for WeWeb compatibility
+        copyToClipboard(textToCopy, 'viewCopyBtn');
+      }
+
+      // Enhanced clipboard function with multiple fallbacks
+      function copyToClipboard(text, buttonId) {
+        // Method 1: Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard
+            .writeText(text)
+            .then(function () {
+              showCopyFeedback('Copied!', 'success', buttonId);
+            })
+            .catch(function (err) {
+              console.log('Clipboard API failed, trying fallback:', err);
+              fallbackCopy(text, buttonId);
+            });
+          return;
         }
 
-        // Show post details in modal
-        function showPostModal(post) {
-            document.getElementById('modalTitle').textContent = post.post_title;
-            populateModalViewMode(post);
-            
-            const modal = document.getElementById('postModal');
-            modal.style.display = 'flex';
-            modal.classList.add('show');
-            
-            // Prevent body scroll when modal is open
-            document.body.style.overflow = 'hidden';
-            
-            // Store current post for modal actions
-            window.currentModalPost = post;
-        }
+        // Method 2: Fallback for environments without clipboard API
+        fallbackCopy(text, buttonId);
+      }
 
-        // Copy function for view mode - Enhanced for WeWeb compatibility
-        function copyViewContent() {
-            let textToCopy = '';
-            
-            // Get content from view mode - try to get the plain text version stored in the post
-            if (window.currentModalPost && window.currentModalPost.rich_content_text) {
-                textToCopy = window.currentModalPost.rich_content_text.trim();
-            } else {
-                // Fallback to extracting text from the displayed HTML
-                const viewContentEl = document.getElementById('viewRichContent');
-                if (viewContentEl) {
-                    textToCopy = viewContentEl.innerText || viewContentEl.textContent || '';
-                    textToCopy = textToCopy.trim();
-                }
-            }
-            
-            if (!textToCopy) {
-                showCopyFeedback('Nothing to copy', 'error', 'viewCopyBtn');
-                return;
-            }
-            
-            // Enhanced copy function with multiple fallbacks for WeWeb compatibility
-            copyToClipboard(textToCopy, 'viewCopyBtn');
+      // Enhanced fallback copy method
+      function fallbackCopy(text, buttonId) {
+        try {
+          // Create textarea element
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+
+          // Style to make it invisible but accessible
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-9999px';
+          textArea.style.top = '-9999px';
+          textArea.style.width = '1px';
+          textArea.style.height = '1px';
+          textArea.style.opacity = '0';
+          textArea.style.border = 'none';
+          textArea.style.outline = 'none';
+          textArea.style.boxShadow = 'none';
+          textArea.style.background = 'transparent';
+
+          // Add to body
+          document.body.appendChild(textArea);
+
+          // Select and focus
+          textArea.select();
+          textArea.setSelectionRange(0, text.length);
+          textArea.focus();
+
+          // Try to copy
+          let successful = false;
+          try {
+            successful = document.execCommand('copy');
+          } catch (err) {
+            console.log('execCommand failed:', err);
+            successful = false;
+          }
+
+          // Clean up
+          document.body.removeChild(textArea);
+
+          if (successful) {
+            showCopyFeedback('Copied!', 'success', buttonId);
+          } else {
+            // Method 3: Show text for manual copying
+            showTextForManualCopy(text, buttonId);
+          }
+        } catch (err) {
+          console.log('Fallback copy failed:', err);
+          // Method 3: Show text for manual copying
+          showTextForManualCopy(text, buttonId);
         }
-        
-        // Enhanced clipboard function with multiple fallbacks
-        function copyToClipboard(text, buttonId) {
-            // Method 1: Try modern clipboard API first
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(function() {
-                    showCopyFeedback('Copied!', 'success', buttonId);
-                }).catch(function(err) {
-                    console.log('Clipboard API failed, trying fallback:', err);
-                    fallbackCopy(text, buttonId);
-                });
-                return;
-            }
-            
-            // Method 2: Fallback for environments without clipboard API
-            fallbackCopy(text, buttonId);
-        }
-        
-        // Enhanced fallback copy method
-        function fallbackCopy(text, buttonId) {
-            try {
-                // Create textarea element
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                
-                // Style to make it invisible but accessible
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-9999px';
-                textArea.style.top = '-9999px';
-                textArea.style.width = '1px';
-                textArea.style.height = '1px';
-                textArea.style.opacity = '0';
-                textArea.style.border = 'none';
-                textArea.style.outline = 'none';
-                textArea.style.boxShadow = 'none';
-                textArea.style.background = 'transparent';
-                
-                // Add to body
-                document.body.appendChild(textArea);
-                
-                // Select and focus
-                textArea.select();
-                textArea.setSelectionRange(0, text.length);
-                textArea.focus();
-                
-                // Try to copy
-                let successful = false;
-                try {
-                    successful = document.execCommand('copy');
-                } catch (err) {
-                    console.log('execCommand failed:', err);
-                    successful = false;
-                }
-                
-                // Clean up
-                document.body.removeChild(textArea);
-                
-                if (successful) {
-                    showCopyFeedback('Copied!', 'success', buttonId);
-                } else {
-                    // Method 3: Show text for manual copying
-                    showTextForManualCopy(text, buttonId);
-                }
-                
-            } catch (err) {
-                console.log('Fallback copy failed:', err);
-                // Method 3: Show text for manual copying
-                showTextForManualCopy(text, buttonId);
-            }
-        }
-        
-        // Method 3: Display text for manual copying when all else fails
-        function showTextForManualCopy(text, buttonId) {
-            // Create a modal overlay for manual copy
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
+      }
+
+      // Method 3: Display text for manual copying when all else fails
+      function showTextForManualCopy(text, buttonId) {
+        // Create a modal overlay for manual copy
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -1043,9 +1074,9 @@
                 justify-content: center;
                 padding: 1rem;
             `;
-            
-            const copyModal = document.createElement('div');
-            copyModal.style.cssText = `
+
+        const copyModal = document.createElement('div');
+        copyModal.style.cssText = `
                 background: white;
                 border-radius: 12px;
                 padding: 1.5rem;
@@ -1056,8 +1087,8 @@
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
                 border: 1px solid #000000;
             `;
-            
-            copyModal.innerHTML = `
+
+        copyModal.innerHTML = `
                 <h3 style="margin: 0 0 1rem 0; color: #000000; font-size: 1.1rem;">Copy Text</h3>
                 <p style="margin: 0 0 1rem 0; color: #666; font-size: 0.9rem;">
                     Select all text below and copy manually (Ctrl+C / Cmd+C):
@@ -1086,289 +1117,288 @@
                     ">Close</button>
                 </div>
             `;
-            
-            overlay.appendChild(copyModal);
-            document.body.appendChild(overlay);
-            
-            // Auto-select the text
-            const textarea = copyModal.querySelector('textarea');
-            setTimeout(() => {
-                textarea.select();
-                textarea.setSelectionRange(0, text.length);
-                textarea.focus();
-            }, 100);
-            
-            // Close on overlay click
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) {
-                    overlay.remove();
-                }
-            });
-            
-            // Close on Escape key
-            const escapeHandler = function(e) {
-                if (e.key === 'Escape') {
-                    overlay.remove();
-                    document.removeEventListener('keydown', escapeHandler);
-                }
-            };
-            document.addEventListener('keydown', escapeHandler);
-            
-            showCopyFeedback('Manual copy', 'success', buttonId);
-        }
-        
-        function showCopyFeedback(message, type, buttonId) {
-            const copyBtn = document.getElementById(buttonId);
-            if (!copyBtn) return;
-            
-            const originalHTML = copyBtn.innerHTML;
-            
-            if (type === 'success') {
-                copyBtn.classList.add('copied');
-                copyBtn.innerHTML = `
+
+        overlay.appendChild(copyModal);
+        document.body.appendChild(overlay);
+
+        // Auto-select the text
+        const textarea = copyModal.querySelector('textarea');
+        setTimeout(() => {
+          textarea.select();
+          textarea.setSelectionRange(0, text.length);
+          textarea.focus();
+        }, 100);
+
+        // Close on overlay click
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) {
+            overlay.remove();
+          }
+        });
+
+        // Close on Escape key
+        const escapeHandler = function (e) {
+          if (e.key === 'Escape') {
+            overlay.remove();
+            document.removeEventListener('keydown', escapeHandler);
+          }
+        };
+        document.addEventListener('keydown', escapeHandler);
+
+        showCopyFeedback('Manual copy', 'success', buttonId);
+      }
+
+      function showCopyFeedback(message, type, buttonId) {
+        const copyBtn = document.getElementById(buttonId);
+        if (!copyBtn) return;
+
+        const originalHTML = copyBtn.innerHTML;
+
+        if (type === 'success') {
+          copyBtn.classList.add('copied');
+          copyBtn.innerHTML = `
                     <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                     </svg>
                     ${message}
                 `;
-            } else {
-                copyBtn.innerHTML = `
+        } else {
+          copyBtn.innerHTML = `
                     <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
                     ${message}
                 `;
-            }
-            
-            // Reset button after 2 seconds
-            setTimeout(() => {
-                copyBtn.classList.remove('copied');
-                copyBtn.innerHTML = originalHTML;
-            }, 2000);
         }
 
-        // Populate modal view mode with post data
-        function populateModalViewMode(post) {
-            // Post Title
-            document.getElementById('viewTitle').textContent = post.post_title;
-            
-            // Post Description
-            const descEl = document.getElementById('viewDescription');
-            if (post.post_description) {
-                descEl.textContent = post.post_description;
-                descEl.classList.remove('empty');
-            } else {
-                descEl.textContent = 'No description provided';
-                descEl.classList.add('empty');
-            }
-            
-            // Display rich content with character count
-            const richContentEl = document.getElementById('viewRichContent');
-            const viewCharCountEl = document.getElementById('viewCharCount');
-            
-            if (post.rich_content_html) {
-                richContentEl.innerHTML = post.rich_content_html;
-                richContentEl.classList.remove('empty');
-                
-                // Calculate character count from plain text version
-                let charCount = 0;
-                if (post.rich_content_text) {
-                    charCount = post.rich_content_text.trim().length;
-                } else {
-                    // Fallback: extract text from HTML
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = post.rich_content_html;
-                    charCount = (tempDiv.textContent || tempDiv.innerText || '').trim().length;
-                }
-                viewCharCountEl.textContent = charCount;
-                
-            } else if (post.rich_content_text) {
-                richContentEl.textContent = post.rich_content_text;
-                richContentEl.classList.remove('empty');
-                viewCharCountEl.textContent = post.rich_content_text.trim().length;
-            } else {
-                richContentEl.textContent = 'No content provided';
-                richContentEl.classList.add('empty');
-                viewCharCountEl.textContent = 0;
-            }
-            
-            // URL 1
-            const url1El = document.getElementById('viewUrl1');
-            if (post.url_1) {
-                url1El.innerHTML = `<a href="${post.url_1}" target="_blank" rel="noopener">${post.url_1}</a>`;
-                url1El.classList.remove('empty');
-            } else {
-                url1El.textContent = 'No URL provided';
-                url1El.classList.add('empty');
-            }
-            
-            // URL 2
-            const url2El = document.getElementById('viewUrl2');
-            if (post.url_2) {
-                url2El.innerHTML = `<a href="${post.url_2}" target="_blank" rel="noopener">${post.url_2}</a>`;
-                url2El.classList.remove('empty');
-            } else {
-                url2El.textContent = 'No URL provided';
-                url2El.classList.add('empty');
-            }
-            
-            // Content Type
-            const contentTypeEl = document.getElementById('viewContentType');
-            const contentTypeText = post.content_type ? post.content_type.charAt(0).toUpperCase() + post.content_type.slice(1) : 'Not specified';
-            contentTypeEl.innerHTML = `<span class="content-type-badge ${post.content_type}">${contentTypeText}</span>`;
-            
-            // Scheduled Date
-            const dateEl = document.getElementById('viewScheduledDate');
-            const date = new Date(post.scheduled_date);
-            dateEl.textContent = date.toLocaleString();
-            
-            // Status
-            const statusEl = document.getElementById('viewStatus');
-            const isPublished = post.published || false;
-            if (isPublished) {
-                statusEl.innerHTML = `
+        // Reset button after 2 seconds
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.innerHTML = originalHTML;
+        }, 2000);
+      }
+
+      // Populate modal view mode with post data
+      function populateModalViewMode(post) {
+        // Post Title
+        document.getElementById('viewTitle').textContent = post.post_title;
+
+        // Post Description
+        const descEl = document.getElementById('viewDescription');
+        if (post.post_description) {
+          descEl.textContent = post.post_description;
+          descEl.classList.remove('empty');
+        } else {
+          descEl.textContent = 'No description provided';
+          descEl.classList.add('empty');
+        }
+
+        // Display rich content with character count
+        const richContentEl = document.getElementById('viewRichContent');
+        const viewCharCountEl = document.getElementById('viewCharCount');
+
+        if (post.rich_content_html) {
+          richContentEl.innerHTML = post.rich_content_html;
+          richContentEl.classList.remove('empty');
+
+          // Calculate character count from plain text version
+          let charCount = 0;
+          if (post.rich_content_text) {
+            charCount = post.rich_content_text.trim().length;
+          } else {
+            // Fallback: extract text from HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = post.rich_content_html;
+            charCount = (tempDiv.textContent || tempDiv.innerText || '').trim().length;
+          }
+          viewCharCountEl.textContent = charCount;
+        } else if (post.rich_content_text) {
+          richContentEl.textContent = post.rich_content_text;
+          richContentEl.classList.remove('empty');
+          viewCharCountEl.textContent = post.rich_content_text.trim().length;
+        } else {
+          richContentEl.textContent = 'No content provided';
+          richContentEl.classList.add('empty');
+          viewCharCountEl.textContent = 0;
+        }
+
+        // URL 1
+        const url1El = document.getElementById('viewUrl1');
+        if (post.url_1) {
+          url1El.innerHTML = `<a href="${post.url_1}" target="_blank" rel="noopener">${post.url_1}</a>`;
+          url1El.classList.remove('empty');
+        } else {
+          url1El.textContent = 'No URL provided';
+          url1El.classList.add('empty');
+        }
+
+        // URL 2
+        const url2El = document.getElementById('viewUrl2');
+        if (post.url_2) {
+          url2El.innerHTML = `<a href="${post.url_2}" target="_blank" rel="noopener">${post.url_2}</a>`;
+          url2El.classList.remove('empty');
+        } else {
+          url2El.textContent = 'No URL provided';
+          url2El.classList.add('empty');
+        }
+
+        // Content Type
+        const contentTypeEl = document.getElementById('viewContentType');
+        const contentTypeText = post.content_type
+          ? post.content_type.charAt(0).toUpperCase() + post.content_type.slice(1)
+          : 'Not specified';
+        contentTypeEl.innerHTML = `<span class="content-type-badge ${post.content_type}">${contentTypeText}</span>`;
+
+        // Scheduled Date
+        const dateEl = document.getElementById('viewScheduledDate');
+        const date = new Date(post.scheduled_date);
+        dateEl.textContent = date.toLocaleString();
+
+        // Status
+        const statusEl = document.getElementById('viewStatus');
+        const isPublished = post.published || false;
+        if (isPublished) {
+          statusEl.innerHTML = `
                     <div class="published-status published">
                         <span class="published-icon">✓</span>
                         Published
                     </div>
                 `;
-            } else {
-                statusEl.innerHTML = `
+        } else {
+          statusEl.innerHTML = `
                     <div class="published-status unpublished">
                         <span class="published-icon">◯</span>
                         Unpublished
                     </div>
                 `;
-            }
-            
-            // Update publish button
-            const publishBtn = document.getElementById('modalPublishBtn');
-            if (isPublished) {
-                publishBtn.textContent = 'Unpublish';
-                publishBtn.className = 'btn btn-unpublished';
-            } else {
-                publishBtn.textContent = 'Publish';
-                publishBtn.className = 'btn btn-published';
-            }
         }
 
-        // Close modal
-        function closeModal() {
-            const modal = document.getElementById('postModal');
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            window.currentModalPost = null;
-            
-            // Restore body scroll
-            document.body.style.overflow = '';
+        // Update publish button
+        const publishBtn = document.getElementById('modalPublishBtn');
+        if (isPublished) {
+          publishBtn.textContent = 'Unpublish';
+          publishBtn.className = 'btn btn-unpublished';
+        } else {
+          publishBtn.textContent = 'Publish';
+          publishBtn.className = 'btn btn-published';
         }
+      }
 
-        // Toggle published status from modal
-        async function toggleModalPublished() {
-            if (!window.currentModalPost) return;
-            
-            const currentStatus = window.currentModalPost.published || false;
-            const newStatus = !currentStatus;
-            
-            const button = document.getElementById('modalPublishBtn');
-            const originalText = button.textContent;
-            
-            try {
-                button.textContent = 'Updating...';
-                button.disabled = true;
-                
-                const response = await fetch(`${API_BASE}/post/${window.currentModalPost.id}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ published: newStatus })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to update post');
-                }
-                
-                // Update the post in our local data
-                const postIndex = allPosts.findIndex(post => post.id === window.currentModalPost.id);
-                if (postIndex !== -1) {
-                    allPosts[postIndex].published = newStatus;
-                    window.currentModalPost.published = newStatus;
-                }
-                
-                // Refresh the modal view
-                populateModalViewMode(window.currentModalPost);
-                
-                // Re-render the tasks to show updated status
-                renderTasks();
-                
-                // Show success feedback
-                showTemporaryMessage(newStatus ? 'Post published!' : 'Post unpublished!');
-                
-            } catch (error) {
-                console.error('Error updating post:', error);
-                
-                // Restore button state
-                button.textContent = originalText;
-                button.disabled = false;
-                
-                // Show error message
-                showTemporaryMessage('Failed to update post. Please try again.', true);
-            }
+      // Close modal
+      function closeModal() {
+        const modal = document.getElementById('postModal');
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        window.currentModalPost = null;
+
+        // Restore body scroll
+        document.body.style.overflow = '';
+      }
+
+      // Toggle published status from modal
+      async function toggleModalPublished() {
+        if (!window.currentModalPost) return;
+
+        const currentStatus = window.currentModalPost.published || false;
+        const newStatus = !currentStatus;
+
+        const button = document.getElementById('modalPublishBtn');
+        const originalText = button.textContent;
+
+        try {
+          button.textContent = 'Updating...';
+          button.disabled = true;
+
+          const response = await fetch(`${API_BASE}/post/${window.currentModalPost.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ published: newStatus }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update post');
+          }
+
+          // Update the post in our local data
+          const postIndex = allPosts.findIndex((post) => post.id === window.currentModalPost.id);
+          if (postIndex !== -1) {
+            allPosts[postIndex].published = newStatus;
+            window.currentModalPost.published = newStatus;
+          }
+
+          // Refresh the modal view
+          populateModalViewMode(window.currentModalPost);
+
+          // Re-render the tasks to show updated status
+          renderTasks();
+
+          // Show success feedback
+          showTemporaryMessage(newStatus ? 'Post published!' : 'Post unpublished!');
+        } catch (error) {
+          console.error('Error updating post:', error);
+
+          // Restore button state
+          button.textContent = originalText;
+          button.disabled = false;
+
+          // Show error message
+          showTemporaryMessage('Failed to update post. Please try again.', true);
         }
+      }
 
-        // Toggle published status of a post
-        async function togglePublished(postId, newStatus) {
-            try {
-                // Update button to show loading state
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = 'Updating...';
-                button.disabled = true;
-                
-                const response = await fetch(`${API_BASE}/post/${postId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ published: newStatus })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to update post');
-                }
-                
-                // Update the post in our local data
-                const postIndex = allPosts.findIndex(post => post.id === postId);
-                if (postIndex !== -1) {
-                    allPosts[postIndex].published = newStatus;
-                }
-                
-                // Re-render the tasks to show updated status
-                renderTasks();
-                
-                // Show success feedback
-                showTemporaryMessage(newStatus ? 'Post published!' : 'Post unpublished!');
-                
-            } catch (error) {
-                console.error('Error updating post:', error);
-                
-                // Restore button state
-                const button = event.target;
-                button.textContent = originalText;
-                button.disabled = false;
-                
-                // Show error message
-                showTemporaryMessage('Failed to update post. Please try again.', true);
-            }
+      // Toggle published status of a post
+      async function togglePublished(postId, newStatus) {
+        try {
+          // Update button to show loading state
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = 'Updating...';
+          button.disabled = true;
+
+          const response = await fetch(`${API_BASE}/post/${postId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ published: newStatus }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update post');
+          }
+
+          // Update the post in our local data
+          const postIndex = allPosts.findIndex((post) => post.id === postId);
+          if (postIndex !== -1) {
+            allPosts[postIndex].published = newStatus;
+          }
+
+          // Re-render the tasks to show updated status
+          renderTasks();
+
+          // Show success feedback
+          showTemporaryMessage(newStatus ? 'Post published!' : 'Post unpublished!');
+        } catch (error) {
+          console.error('Error updating post:', error);
+
+          // Restore button state
+          const button = event.target;
+          button.textContent = originalText;
+          button.disabled = false;
+
+          // Show error message
+          showTemporaryMessage('Failed to update post. Please try again.', true);
         }
+      }
 
-        // Show temporary success/error message
-        function showTemporaryMessage(message, isError = false) {
-            // Create message element
-            const messageEl = document.createElement('div');
-            messageEl.textContent = message;
-            messageEl.style.cssText = `
+      // Show temporary success/error message
+      function showTemporaryMessage(message, isError = false) {
+        // Create message element
+        const messageEl = document.createElement('div');
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
                 position: fixed;
                 top: 20px;
                 left: 50%;
@@ -1382,126 +1412,129 @@
                 z-index: 1000;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             `;
-            
-            document.body.appendChild(messageEl);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                if (messageEl.parentNode) {
-                    messageEl.parentNode.removeChild(messageEl);
-                }
-            }, 3000);
-        }
 
-        // Show error message
-        function showError(message) {
-            const containers = ['upcomingTasks', 'todayTasks'];
-            containers.forEach(containerId => {
-                const container = document.getElementById(containerId);
-                container.innerHTML = `<div class="error">${message}</div>`;
-            });
-            
-            document.getElementById('upcomingCount').textContent = '0';
-            document.getElementById('todayCount').textContent = '0';
-        }
+        document.body.appendChild(messageEl);
 
-        // Listen for messages from parent window (if embedded in iframe)
-        window.addEventListener('message', function(event) {
-            // Handle messages from parent window if needed
-            if (event.data.type === 'refresh') {
-                loadPosts();
-            }
+        // Remove after 3 seconds
+        setTimeout(() => {
+          if (messageEl.parentNode) {
+            messageEl.parentNode.removeChild(messageEl);
+          }
+        }, 3000);
+      }
+
+      // Show error message
+      function showError(message) {
+        const containers = ['upcomingTasks', 'todayTasks'];
+        containers.forEach((containerId) => {
+          const container = document.getElementById(containerId);
+          container.innerHTML = `<div class="error">${message}</div>`;
         });
 
-        // Auto-resize iframe functionality - SIMPLIFIED for fixed height
-        function sendHeightToParent() {
-            if (window.parent !== window) {
-                // Send a fixed height based on screen size
-                const isMobile = window.innerWidth <= 767;
-                const isSmallMobile = window.innerWidth <= 480;
-                
-                let fixedHeight;
-                if (isSmallMobile) {
-                    fixedHeight = 750; // Small mobile
-                } else if (isMobile) {
-                    fixedHeight = 850; // Mobile
-                } else {
-                    fixedHeight = 700; // Desktop (side by side layout is more compact)
-                }
-                
-                console.log('Sending fixed height to parent:', fixedHeight);
-                
-                window.parent.postMessage({
-                    type: 'IFRAME_SIZE',
-                    height: fixedHeight
-                }, '*');
-            }
+        document.getElementById('upcomingCount').textContent = '0';
+        document.getElementById('todayCount').textContent = '0';
+      }
+
+      // Listen for messages from parent window (if embedded in iframe)
+      window.addEventListener('message', function (event) {
+        // Handle messages from parent window if needed
+        if (event.data.type === 'refresh') {
+          loadPosts();
+        }
+      });
+
+      // Auto-resize iframe functionality - SIMPLIFIED for fixed height
+      function sendHeightToParent() {
+        if (window.parent !== window) {
+          // Send a fixed height based on screen size
+          const isMobile = window.innerWidth <= 767;
+          const isSmallMobile = window.innerWidth <= 480;
+
+          let fixedHeight;
+          if (isSmallMobile) {
+            fixedHeight = 750; // Small mobile
+          } else if (isMobile) {
+            fixedHeight = 850; // Mobile
+          } else {
+            fixedHeight = 700; // Desktop (side by side layout is more compact)
+          }
+
+          console.log('Sending fixed height to parent:', fixedHeight);
+
+          window.parent.postMessage(
+            {
+              type: 'IFRAME_SIZE',
+              height: fixedHeight,
+            },
+            '*',
+          );
+        }
+      }
+
+      // Simple setup for fixed height
+      function setupAutoResize() {
+        // Send height immediately
+        sendHeightToParent();
+
+        // Only send on window resize (for responsive changes)
+        window.addEventListener('resize', sendHeightToParent);
+      }
+
+      // Remove height updates from these functions since we have fixed height
+      const originalRenderTasks = renderTasks;
+      const originalShowPostModal = showPostModal;
+      const originalCloseModal = closeModal;
+
+      // Manual height update function for debugging
+      window.updateIframeHeight = sendHeightToParent;
+
+      // Initialize auto-resize
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupAutoResize);
+      } else {
+        setupAutoResize();
+      }
+
+      // Close modal when clicking outside or pressing escape
+      window.onclick = function (event) {
+        const modal = document.getElementById('postModal');
+        if (event.target === modal) {
+          closeModal();
+        }
+      };
+
+      // Add keyboard accessibility
+      document.addEventListener('keydown', function (event) {
+        const modal = document.getElementById('postModal');
+
+        // Close modal on Escape key
+        if (event.key === 'Escape' && modal.classList.contains('show')) {
+          closeModal();
         }
 
-        // Simple setup for fixed height
-        function setupAutoResize() {
-            // Send height immediately
-            sendHeightToParent();
-            
-            // Only send on window resize (for responsive changes)
-            window.addEventListener('resize', sendHeightToParent);
-        }
+        // Trap focus within modal when open
+        if (modal.classList.contains('show')) {
+          const focusableElements = modal.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          );
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
 
-        // Remove height updates from these functions since we have fixed height
-        const originalRenderTasks = renderTasks;
-        const originalShowPostModal = showPostModal;
-        const originalCloseModal = closeModal;
-
-        // Manual height update function for debugging
-        window.updateIframeHeight = sendHeightToParent;
-
-        // Initialize auto-resize
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupAutoResize);
-        } else {
-            setupAutoResize();
-        }
-
-        // Close modal when clicking outside or pressing escape
-        window.onclick = function(event) {
-            const modal = document.getElementById('postModal');
-            if (event.target === modal) {
-                closeModal();
+          if (event.key === 'Tab') {
+            if (event.shiftKey) {
+              if (document.activeElement === firstElement) {
+                lastElement.focus();
+                event.preventDefault();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                firstElement.focus();
+                event.preventDefault();
+              }
             }
+          }
         }
-
-        // Add keyboard accessibility
-        document.addEventListener('keydown', function(event) {
-            const modal = document.getElementById('postModal');
-            
-            // Close modal on Escape key
-            if (event.key === 'Escape' && modal.classList.contains('show')) {
-                closeModal();
-            }
-            
-            // Trap focus within modal when open
-            if (modal.classList.contains('show')) {
-                const focusableElements = modal.querySelectorAll(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
-                const firstElement = focusableElements[0];
-                const lastElement = focusableElements[focusableElements.length - 1];
-                
-                if (event.key === 'Tab') {
-                    if (event.shiftKey) {
-                        if (document.activeElement === firstElement) {
-                            lastElement.focus();
-                            event.preventDefault();
-                        }
-                    } else {
-                        if (document.activeElement === lastElement) {
-                            firstElement.focus();
-                            event.preventDefault();
-                        }
-                    }
-                }
-            }
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

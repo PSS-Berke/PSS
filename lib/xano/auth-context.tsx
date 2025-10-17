@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { authApi, usersApi, XanoApiError } from './api';
+import { authApi, companyApi, usersApi, XanoApiError } from './api';
 import type { User, LoginCredentials, RegisterCredentials } from './types';
 
 interface AuthContextType {
@@ -19,6 +19,8 @@ interface AuthContextType {
   updateProfile: (data: Partial<User>) => Promise<void>;
   switchCompany: (companyId: number) => Promise<void>;
   refreshUser: () => Promise<void>;
+  authenticateWithToken: (token: string) => Promise<void>;
+  onboardCompany: (data: { company: string; company_code?: number }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,7 +46,7 @@ const setStoredToken = (token: string): void => {
     expires: 7,
     sameSite: 'lax', // Changed from 'strict' to 'lax' for mobile compatibility
     secure: isSecure, // Only use secure flag on HTTPS
-    path: '/' // Explicit path to ensure cookie works across all routes
+    path: '/', // Explicit path to ensure cookie works across all routes
   });
   localStorage.setItem(TOKEN_KEY, token);
 };
@@ -66,7 +68,7 @@ const setStoredRefreshToken = (token: string): void => {
     expires: 30,
     sameSite: 'lax', // Changed from 'strict' to 'lax' for mobile compatibility
     secure: isSecure, // Only use secure flag on HTTPS
-    path: '/' // Explicit path to ensure cookie works across all routes
+    path: '/', // Explicit path to ensure cookie works across all routes
   });
   localStorage.setItem(REFRESH_TOKEN_KEY, token);
 };
@@ -107,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const storedToken = getStoredToken();
         console.log('Auth check - stored token exists:', !!storedToken);
-        
+
         if (!storedToken) {
           if (mounted) {
             console.log('No stored token found, setting unauthenticated state');
@@ -129,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await authApi.getMe(storedToken);
           console.log('User data fetch result:', !!userData);
-          
+
           if (mounted && userData) {
             setUser(userData);
             setToken(storedToken);
@@ -158,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
         }
       }
-    };
+    }
 
     initAuth();
 
@@ -167,10 +169,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-
   const login = useCallback(async (credentials: LoginCredentials) => {
     if (!process.env.NEXT_PUBLIC_XANO_API_KEY) {
-      throw new Error('Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.');
+      throw new Error(
+        'Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.',
+      );
     }
 
     try {
@@ -178,11 +181,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user);
       setToken(response.token);
       setStoredToken(response.token);
-      
+
       if (response.refresh_token) {
         setStoredRefreshToken(response.refresh_token);
       }
-      
+
       // Navigation is handled by the signin page to support redirect param
     } catch (error) {
       console.error('Login failed:', error);
@@ -192,7 +195,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(async (credentials: RegisterCredentials) => {
     if (!process.env.NEXT_PUBLIC_XANO_API_KEY) {
-      throw new Error('Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.');
+      throw new Error(
+        'Xano API key not configured. Please set NEXT_PUBLIC_XANO_API_KEY in your environment variables.',
+      );
     }
 
     try {
@@ -221,6 +226,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
+  const authenticateWithToken = useCallback(async (incomingToken: string) => {
+    try {
+      setStoredToken(incomingToken);
+      setToken(incomingToken);
+      // Best effort fetch of user profile
+      const userData = await authApi.getMe(incomingToken);
+      setUser(userData);
+    } catch (error) {
+      console.error('authenticateWithToken failed:', error);
+      // still keep token so app can proceed; user can be fetched later
+    }
+  }, []);
+
+  const onboardCompany = useCallback(async (data: { company: string; company_code?: number }) => {
+    const storedToken: string = getStoredToken() as string;
+    if (!storedToken) throw new Error('Not authenticated');
+    try {
+      const company = await companyApi.createCompany(storedToken, {
+        name: data.company,
+        company_code: data.company_code,
+      });
+      console.log(company);
+    } catch (error) {
+      console.error('Onboarding failed:', error);
+      throw error;
+    }
+  }, []);
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     const token = getStoredToken();
@@ -257,36 +289,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const switchCompany = useCallback(async (companyId: number) => {
-    console.log('=== AUTH CONTEXT: SWITCH COMPANY START ===');
-    console.log('Current user:', user);
-    console.log('Current company_id:', user?.company_id);
-    console.log('Target company_id:', companyId);
-    console.log('Available companies:', user?.available_companies);
+  const switchCompany = useCallback(
+    async (companyId: number) => {
+      console.log('=== AUTH CONTEXT: SWITCH COMPANY START ===');
+      console.log('Current user:', user);
+      console.log('Current company_id:', user?.company_id);
+      console.log('Target company_id:', companyId);
+      console.log('Available companies:', user?.available_companies);
 
-    const token = getStoredToken();
-    console.log('Token retrieved:', !!token);
+      const token = getStoredToken();
+      console.log('Token retrieved:', !!token);
 
-    if (!token) {
-      console.error('❌ No token available');
-      throw new Error('Not authenticated');
-    }
+      if (!token) {
+        console.error('❌ No token available');
+        throw new Error('Not authenticated');
+      }
 
-    try {
-      console.log('Calling authApi.switchCompany...');
-      await authApi.switchCompany(token, companyId);
-      console.log('✅ authApi.switchCompany succeeded, now refreshing user...');
+      try {
+        console.log('Calling authApi.switchCompany...');
+        await authApi.switchCompany(token, companyId);
+        console.log('✅ authApi.switchCompany succeeded, now refreshing user...');
 
-      await refreshUser();
-      console.log('✅ refreshUser succeeded');
-      console.log('Updated user:', user);
-      console.log('Updated company_id:', user?.company_id);
-    } catch (error) {
-      console.error('❌ AUTH CONTEXT: Switch company failed');
-      console.error('Error details:', error);
-      throw error;
-    }
-  }, [refreshUser, user]);
+        await refreshUser();
+        console.log('✅ refreshUser succeeded');
+        console.log('Updated user:', user);
+        console.log('Updated company_id:', user?.company_id);
+      } catch (error) {
+        console.error('❌ AUTH CONTEXT: Switch company failed');
+        console.error('Error details:', error);
+        throw error;
+      }
+    },
+    [refreshUser, user],
+  );
 
   const value: AuthContextType = {
     user,
@@ -299,13 +334,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
     switchCompany,
     refreshUser,
+    authenticateWithToken,
+    onboardCompany,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {

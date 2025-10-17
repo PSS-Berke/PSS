@@ -5,7 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Plus, Target, MoreHorizontal, ChevronDown, ChevronUp, MoreVertical, Loader2 } from 'lucide-react';
+import {
+  Plus,
+  Target,
+  MoreHorizontal,
+  ChevronDown,
+  ChevronUp,
+  MoreVertical,
+  Loader2,
+} from 'lucide-react';
 import { useBattleCard } from '@/lib/xano/battle-card-context';
 import { cn } from '@/lib/utils';
 import type { BattleCardListItem } from '@/lib/xano/types';
@@ -24,13 +32,18 @@ interface BattleCardSidebarProps {
   onCollapseChange?: (collapsed: boolean) => void;
 }
 
-export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: BattleCardSidebarProps) {
+export function BattleCardSidebar({
+  className,
+  isCollapsed,
+  onCollapseChange,
+}: BattleCardSidebarProps) {
   const { state, generateBattleCard, deleteBattleCard, loadBattleCardDetail } = useBattleCard();
   const [showNewCardModal, setShowNewCardModal] = useState(false);
   const [competitorName, setCompetitorName] = useState('');
   const [serviceName, setServiceName] = useState('');
   const [menuOpenForCard, setMenuOpenForCard] = useState<number | null>(null);
-  const [battleCardPendingDeletion, setBattleCardPendingDeletion] = useState<BattleCardListItem | null>(null);
+  const [battleCardPendingDeletion, setBattleCardPendingDeletion] =
+    useState<BattleCardListItem | null>(null);
   const [isDeletingBattleCard, setIsDeletingBattleCard] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -133,7 +146,7 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
           'bg-muted/30 flex flex-col w-full transition-all duration-300',
           isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-80 h-auto md:h-full',
           'md:border-r border-b md:border-b-0',
-          className
+          className,
         )}
       >
         {/* Collapsed Toggle Button */}
@@ -211,72 +224,70 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseLeave}
                 >
-                  {state.battleCardsList.filter(card => card && card.id).map((card) => {
-                    const isSelected = state.activeBattleCard?.id === card.id;
+                  {state.battleCardsList
+                    .filter((card) => card && card.id)
+                    .map((card) => {
+                      const isSelected = state.activeBattleCard?.id === card.id;
 
-                    return (
-                      <Card
-                        key={card.id}
-                        onClick={() => loadBattleCardDetail(card.id)}
-                        className={cn(
-                          'p-4 cursor-pointer transition-all hover:bg-accent flex-shrink-0 w-64',
-                          isSelected
-                            ? 'bg-accent border-primary ring-2 ring-primary/20'
-                            : ''
-                        )}
-                      >
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium line-clamp-2">
-                                  {getCardTitle(card)}
-                                </p>
-                                {card.created_at && (
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {formatDate(card.created_at)}
+                      return (
+                        <Card
+                          key={card.id}
+                          onClick={() => loadBattleCardDetail(card.id)}
+                          className={cn(
+                            'p-4 cursor-pointer transition-all hover:bg-accent flex-shrink-0 w-64',
+                            isSelected ? 'bg-accent border-primary ring-2 ring-primary/20' : '',
+                          )}
+                        >
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium line-clamp-2">
+                                    {getCardTitle(card)}
                                   </p>
-                                )}
+                                  {card.created_at && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {formatDate(card.created_at)}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              {isSelected && (
-                                <div className="w-2 h-2 bg-primary rounded-full" />
-                              )}
-                              <div className="relative" onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={(e) => handleMenuToggle(card.id, e)}
-                                  aria-label="Open card actions"
-                                >
-                                  <MoreVertical className="h-3 w-3" />
-                                </Button>
-                                {menuOpenForCard === card.id && (
-                                  <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
-                                    <button
-                                      type="button"
-                                      className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setMenuOpenForCard(null);
-                                        setBattleCardPendingDeletion(card);
-                                      }}
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
+                                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={(e) => handleMenuToggle(card.id, e)}
+                                    aria-label="Open card actions"
+                                  >
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                  {menuOpenForCard === card.id && (
+                                    <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
+                                      <button
+                                        type="button"
+                                        className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMenuOpenForCard(null);
+                                          setBattleCardPendingDeletion(card);
+                                        }}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
+                        </Card>
+                      );
+                    })}
                 </div>
               )}
             </div>
@@ -292,70 +303,68 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
               ) : (
                 state.battleCardsList.length > 0 && (
                   <div className="space-y-1 w-full">
-                    {state.battleCardsList.filter(card => card && card.id).map((card) => {
-                      const isSelected = state.activeBattleCard?.id === card.id;
+                    {state.battleCardsList
+                      .filter((card) => card && card.id)
+                      .map((card) => {
+                        const isSelected = state.activeBattleCard?.id === card.id;
 
-                      return (
-                        <Card
-                          key={card.id}
-                          className={cn(
-                            'p-3 cursor-pointer transition-colors hover:bg-accent',
-                            isSelected
-                              ? 'bg-accent border-primary'
-                              : ''
-                          )}
-                          onClick={() => loadBattleCardDetail(card.id)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium truncate">
-                                  {getCardTitle(card)}
-                                </p>
-                                {card.created_at && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatDate(card.created_at)}
+                        return (
+                          <Card
+                            key={card.id}
+                            className={cn(
+                              'p-3 cursor-pointer transition-colors hover:bg-accent',
+                              isSelected ? 'bg-accent border-primary' : '',
+                            )}
+                            onClick={() => loadBattleCardDetail(card.id)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium truncate">
+                                    {getCardTitle(card)}
                                   </p>
-                                )}
+                                  {card.created_at && (
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDate(card.created_at)}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="flex items-center gap-1">
-                              {isSelected && (
-                                <div className="w-2 h-2 bg-primary rounded-full" />
-                              )}
-                              <div className="relative" onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={(e) => handleMenuToggle(card.id, e)}
-                                  aria-label="Open card actions"
-                                >
-                                  <MoreVertical className="h-3 w-3" />
-                                </Button>
-                                {menuOpenForCard === card.id && (
-                                  <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
-                                    <button
-                                      type="button"
-                                      className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setMenuOpenForCard(null);
-                                        setBattleCardPendingDeletion(card);
-                                      }}
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-1">
+                                {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
+                                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={(e) => handleMenuToggle(card.id, e)}
+                                    aria-label="Open card actions"
+                                  >
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                  {menuOpenForCard === card.id && (
+                                    <div className="absolute right-0 top-7 z-20 w-32 rounded-md border border-border bg-background shadow-md">
+                                      <button
+                                        type="button"
+                                        className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMenuOpenForCard(null);
+                                          setBattleCardPendingDeletion(card);
+                                        }}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
+                          </Card>
+                        );
+                      })}
                   </div>
                 )
               )}
@@ -433,7 +442,8 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
           </DialogHeader>
 
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{battleCardPendingDeletion?.competitor_name}&quot;? All analysis data will be lost.
+            Are you sure you want to delete &quot;{battleCardPendingDeletion?.competitor_name}
+            &quot;? All analysis data will be lost.
           </p>
 
           <DialogFooter className="sm:justify-end">
@@ -451,11 +461,7 @@ export function BattleCardSidebar({ className, isCollapsed, onCollapseChange }: 
               onClick={handleConfirmDelete}
               disabled={isDeletingBattleCard}
             >
-              {isDeletingBattleCard ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Delete'
-              )}
+              {isDeletingBattleCard ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

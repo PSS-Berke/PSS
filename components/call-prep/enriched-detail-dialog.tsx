@@ -1,17 +1,28 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogPortal,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogPortal } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { LucideIcon, UserPlus, Sparkles } from 'lucide-react';
-import { pdlPersonApi, pdlCompanyApi, extractPersonNames, extractCompanyName } from '@/lib/peopledatalab/api';
+import {
+  pdlPersonApi,
+  pdlCompanyApi,
+  extractPersonNames,
+  extractCompanyName,
+} from '@/lib/peopledatalab/api';
 import type { PDLPersonProfile, PDLCompanyProfile } from '@/lib/peopledatalab/types';
-import { lookupPersonCache, savePersonCache, lookupCompanyCache, saveCompanyCache } from '@/lib/peopledatalab/cache';
-import { getPersonFromLocalStorage, savePersonToLocalStorage, getCompanyFromLocalStorage, saveCompanyToLocalStorage } from '@/lib/peopledatalab/localStorage-cache';
+import {
+  lookupPersonCache,
+  savePersonCache,
+  lookupCompanyCache,
+  saveCompanyCache,
+} from '@/lib/peopledatalab/cache';
+import {
+  getPersonFromLocalStorage,
+  savePersonToLocalStorage,
+  getCompanyFromLocalStorage,
+  saveCompanyToLocalStorage,
+} from '@/lib/peopledatalab/localStorage-cache';
 import { useAuth } from '@/lib/xano/auth-context';
 import { useCallPrep, type KeyDecisionMaker } from '@/lib/xano/call-prep-context';
 import { KeyDecisionMakersModal } from './key-decision-makers-modal';
@@ -30,7 +41,7 @@ interface CardPosition {
 function calculateGridPositions(
   moduleCount: number,
   cardSizes: ('small' | 'medium' | 'large')[],
-  personIndex: number = 0
+  personIndex: number = 0,
 ): CardPosition[] {
   const positions: CardPosition[] = [];
 
@@ -123,7 +134,7 @@ export function EnrichedDetailDialog({
 
     // Use the enriched data if available
     if (analysis?.keyDecisionMakersWithEnrichment) {
-      return analysis.keyDecisionMakersWithEnrichment.map(kdm => ({
+      return analysis.keyDecisionMakersWithEnrichment.map((kdm) => ({
         name: kdm.name,
         title: kdm.title,
         linkedin_url: kdm.linkedin_url || '',
@@ -146,7 +157,7 @@ export function EnrichedDetailDialog({
 
     // Final fallback: parse from text content
     const names = extractPersonNames(content);
-    return names.map(name => ({
+    return names.map((name) => ({
       name,
       title: '',
       linkedin_url: '',
@@ -186,16 +197,17 @@ export function EnrichedDetailDialog({
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(kdm =>
-        kdm.name.toLowerCase().includes(query) ||
-        kdm.title.toLowerCase().includes(query) ||
-        kdm.email?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (kdm) =>
+          kdm.name.toLowerCase().includes(query) ||
+          kdm.title.toLowerCase().includes(query) ||
+          kdm.email?.toLowerCase().includes(query),
       );
     }
 
     // Filter by enrichment status
     if (showEnrichedOnly) {
-      filtered = filtered.filter(kdm => kdm.enrichment && kdm.enrichment.length > 0);
+      filtered = filtered.filter((kdm) => kdm.enrichment && kdm.enrichment.length > 0);
     }
 
     return filtered;
@@ -229,16 +241,32 @@ export function EnrichedDetailDialog({
 
           try {
             // LAYER 1: Try localStorage first (instant, free)
-            const localCached = getPersonFromLocalStorage(firstName, lastName, companyId, companyName ?? undefined);
+            const localCached = getPersonFromLocalStorage(
+              firstName,
+              lastName,
+              companyId,
+              companyName ?? undefined,
+            );
             if (localCached) {
               return localCached;
             }
 
             // LAYER 2: Try Xano cache (fast, free)
-            const xanoCached = await lookupPersonCache(firstName, lastName, companyName ?? undefined, token ?? undefined);
+            const xanoCached = await lookupPersonCache(
+              firstName,
+              lastName,
+              companyName ?? undefined,
+              token ?? undefined,
+            );
             if (xanoCached) {
               // Save to localStorage for next time
-              savePersonToLocalStorage(firstName, lastName, companyId, xanoCached, companyName ?? undefined);
+              savePersonToLocalStorage(
+                firstName,
+                lastName,
+                companyId,
+                xanoCached,
+                companyName ?? undefined,
+              );
               return xanoCached;
             }
 
@@ -252,13 +280,27 @@ export function EnrichedDetailDialog({
             console.log(`Enrichment response for ${name}:`, {
               status: response.status,
               likelihood: response.likelihood,
-              hasData: !!response.data
+              hasData: !!response.data,
             });
 
             if (response.data && response.likelihood >= 6) {
               // Save to BOTH caches
-              savePersonToLocalStorage(firstName, lastName, companyId, response.data, companyName ?? undefined);
-              await savePersonCache(firstName, lastName, name, response.data, response.likelihood, companyName ?? undefined, token ?? undefined);
+              savePersonToLocalStorage(
+                firstName,
+                lastName,
+                companyId,
+                response.data,
+                companyName ?? undefined,
+              );
+              await savePersonCache(
+                firstName,
+                lastName,
+                name,
+                response.data,
+                response.likelihood,
+                companyName ?? undefined,
+                token ?? undefined,
+              );
               return response.data;
             }
             return null;
@@ -309,7 +351,12 @@ export function EnrichedDetailDialog({
           if (response.data && response.likelihood >= 6) {
             // Save to BOTH caches
             saveCompanyToLocalStorage(companyName, companyId, response.data);
-            await saveCompanyCache(companyName, response.data, response.likelihood, token ?? undefined);
+            await saveCompanyCache(
+              companyName,
+              response.data,
+              response.likelihood,
+              token ?? undefined,
+            );
             setCompanyProfile(response.data);
           }
         } catch (err) {
@@ -389,54 +436,58 @@ export function EnrichedDetailDialog({
           )}
 
           {/* Grid View Tab - Key Decision Makers with Enrichment */}
-          {!isLoading && cardKey === 'keyDecisionMakers' && activeTab === 'grid' && analysis?.keyDecisionMakersWithEnrichment && (
-            <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10 max-h-[calc(90vh-160px)] overflow-y-auto pt-4 pb-4">
-              {/* Search and Filter Bar */}
-              <div className="bg-white rounded-lg shadow-md p-4 mb-4 sticky top-0 z-20">
-                <div className="flex gap-3 items-center">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder="Search by name, title, or email..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C33527] focus:border-transparent"
-                    />
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={showEnrichedOnly ? "default" : "outline"}
-                    onClick={() => setShowEnrichedOnly(!showEnrichedOnly)}
-                    className={showEnrichedOnly ? "bg-green-600 hover:bg-green-700" : ""}
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {showEnrichedOnly ? 'Showing Enriched' : 'Show Enriched Only'}
-                  </Button>
-                  <div className="text-sm text-gray-600">
-                    {filteredDecisionMakers.length} of {analysis.keyDecisionMakersWithEnrichment.length} people
+          {!isLoading &&
+            cardKey === 'keyDecisionMakers' &&
+            activeTab === 'grid' &&
+            analysis?.keyDecisionMakersWithEnrichment && (
+              <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10 max-h-[calc(90vh-160px)] overflow-y-auto pt-4 pb-4">
+                {/* Search and Filter Bar */}
+                <div className="bg-white rounded-lg shadow-md p-4 mb-4 sticky top-0 z-20">
+                  <div className="flex gap-3 items-center">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        placeholder="Search by name, title, or email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C33527] focus:border-transparent"
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={showEnrichedOnly ? 'default' : 'outline'}
+                      onClick={() => setShowEnrichedOnly(!showEnrichedOnly)}
+                      className={showEnrichedOnly ? 'bg-green-600 hover:bg-green-700' : ''}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {showEnrichedOnly ? 'Showing Enriched' : 'Show Enriched Only'}
+                    </Button>
+                    <div className="text-sm text-gray-600">
+                      {filteredDecisionMakers.length} of{' '}
+                      {analysis.keyDecisionMakersWithEnrichment.length} people
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Unified Grid of Decision Makers */}
-              {filteredDecisionMakers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredDecisionMakers.map((kdm, idx) => (
-                    <KeyDecisionMakerCard
-                      key={idx}
-                      decisionMaker={kdm}
-                      onEnrich={() => handleInlineEnrich(kdm)}
-                      isEnriching={enrichingId === kdm.kdm_id}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <p className="text-gray-600">No decision makers found matching your filters.</p>
-                </div>
-              )}
-            </div>
-          )}
+                {/* Unified Grid of Decision Makers */}
+                {filteredDecisionMakers.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredDecisionMakers.map((kdm, idx) => (
+                      <KeyDecisionMakerCard
+                        key={idx}
+                        decisionMaker={kdm}
+                        onEnrich={() => handleInlineEnrich(kdm)}
+                        isEnriching={enrichingId === kdm.kdm_id}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                    <p className="text-gray-600">No decision makers found matching your filters.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
           {/* Loading State */}
           {isLoading && (
@@ -448,90 +499,117 @@ export function EnrichedDetailDialog({
             </div>
           )}
 
-
           {/* Deep Dive Tab - Empty State */}
-          {!isLoading && cardKey === 'keyDecisionMakers' && activeTab === 'deepdive' && personProfiles.length === 0 && (
-            <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10">
-              <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md mx-auto">
-                <p className="text-gray-700 font-medium mb-2">Deep Dive View</p>
-                <p className="text-sm text-gray-600">
-                  Detailed profile cards will appear here when additional enrichment data is available from People Data Labs.
-                </p>
-                <p className="text-xs text-gray-500 mt-4">
-                  This data is loaded separately and may take a moment to appear.
-                </p>
+          {!isLoading &&
+            cardKey === 'keyDecisionMakers' &&
+            activeTab === 'deepdive' &&
+            personProfiles.length === 0 && (
+              <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10">
+                <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md mx-auto">
+                  <p className="text-gray-700 font-medium mb-2">Deep Dive View</p>
+                  <p className="text-sm text-gray-600">
+                    Detailed profile cards will appear here when additional enrichment data is
+                    available from People Data Labs.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-4">
+                    This data is loaded separately and may take a moment to appear.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Deep Dive Tab - Person Profiles - Floating Modules */}
-          {!isLoading && cardKey === 'keyDecisionMakers' && activeTab === 'deepdive' && personProfiles.length > 0 && (
-            <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10 max-h-[calc(90vh-160px)] overflow-y-auto pt-4 pb-4">
-              <div className="relative" style={{ minHeight: `${personProfiles.length * 536 + 32}px` }}>
-                {personProfiles.map((person, personIdx) => {
-                // Define modules with their sizes
-                const modules = [
-                  { component: <PersonContactModule key="contact" person={person} />, size: 'large' as const },
-                  { component: <PersonSkillsModule key="skills" person={person} />, size: 'medium' as const },
-                  { component: <PersonCareerModule key="career" person={person} />, size: 'large' as const },
-                ];
+          {!isLoading &&
+            cardKey === 'keyDecisionMakers' &&
+            activeTab === 'deepdive' &&
+            personProfiles.length > 0 && (
+              <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10 max-h-[calc(90vh-160px)] overflow-y-auto pt-4 pb-4">
+                <div
+                  className="relative"
+                  style={{ minHeight: `${personProfiles.length * 536 + 32}px` }}
+                >
+                  {personProfiles.map((person, personIdx) => {
+                    // Define modules with their sizes
+                    const modules = [
+                      {
+                        component: <PersonContactModule key="contact" person={person} />,
+                        size: 'large' as const,
+                      },
+                      {
+                        component: <PersonSkillsModule key="skills" person={person} />,
+                        size: 'medium' as const,
+                      },
+                      {
+                        component: <PersonCareerModule key="career" person={person} />,
+                        size: 'large' as const,
+                      },
+                    ];
 
-                // Calculate compact pixel-based positions
-                const cardSizes = modules.map(m => m.size);
-                const positions = calculateGridPositions(modules.length, cardSizes, personIdx);
+                    // Calculate compact pixel-based positions
+                    const cardSizes = modules.map((m) => m.size);
+                    const positions = calculateGridPositions(modules.length, cardSizes, personIdx);
 
-                return (
-                  <div key={personIdx}>
-                    {modules.map((module, idx) => (
-                      <div
-                        key={idx}
-                        className="absolute pointer-events-auto"
-                        style={{
-                          ...positions[idx],
-                          animation: `slideInUp 0.5s ease-out ${idx * 100}ms both`,
-                        }}
-                      >
-                        {module.component}
+                    return (
+                      <div key={personIdx}>
+                        {modules.map((module, idx) => (
+                          <div
+                            key={idx}
+                            className="absolute pointer-events-auto"
+                            style={{
+                              ...positions[idx],
+                              animation: `slideInUp 0.5s ease-out ${idx * 100}ms both`,
+                            }}
+                          >
+                            {module.component}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Company Profile - Floating Modules (always show for company background) */}
           {!isLoading && cardKey === 'companyBackground' && companyProfile && (
             <div className="absolute top-32 left-4 right-4 pointer-events-auto z-10 max-h-[calc(90vh-160px)] overflow-y-auto pt-4 pb-4">
               <div className="relative" style={{ minHeight: '448px' }}>
-              {(() => {
-                const companyModules = [
-                  { component: <CompanyInfoModule key="info" company={companyProfile} />, size: 'large' as const },
-                  { component: <CompanyFundingModule key="funding" company={companyProfile} />, size: 'medium' as const },
-                  { component: <CompanyTechModule key="tech" company={companyProfile} />, size: 'large' as const },
-                ];
+                {(() => {
+                  const companyModules = [
+                    {
+                      component: <CompanyInfoModule key="info" company={companyProfile} />,
+                      size: 'large' as const,
+                    },
+                    {
+                      component: <CompanyFundingModule key="funding" company={companyProfile} />,
+                      size: 'medium' as const,
+                    },
+                    {
+                      component: <CompanyTechModule key="tech" company={companyProfile} />,
+                      size: 'large' as const,
+                    },
+                  ];
 
-                const cardSizes = companyModules.map(m => m.size);
-                const positions = calculateGridPositions(companyModules.length, cardSizes, 0);
+                  const cardSizes = companyModules.map((m) => m.size);
+                  const positions = calculateGridPositions(companyModules.length, cardSizes, 0);
 
-                return (
-                  <>
-                    {companyModules.map((module, idx) => (
-                      <div
-                        key={idx}
-                        className="absolute pointer-events-auto"
-                        style={{
-                          ...positions[idx],
-                          animation: `slideInUp 0.5s ease-out ${idx * 100}ms both`,
-                        }}
-                      >
-                        {module.component}
-                      </div>
-                    ))}
-                  </>
-                );
-              })()}
+                  return (
+                    <>
+                      {companyModules.map((module, idx) => (
+                        <div
+                          key={idx}
+                          className="absolute pointer-events-auto"
+                          style={{
+                            ...positions[idx],
+                            animation: `slideInUp 0.5s ease-out ${idx * 100}ms both`,
+                          }}
+                        >
+                          {module.component}
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -554,10 +632,14 @@ export function EnrichedDetailDialog({
             className="absolute top-4 right-4 pointer-events-auto bg-white hover:bg-gray-100 text-gray-700 rounded-full p-2 shadow-lg transition-all hover:scale-110 z-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
-
         </DialogContent>
       </DialogPortal>
 
@@ -567,7 +649,11 @@ export function EnrichedDetailDialog({
           open={enrichModalOpen}
           onOpenChange={setEnrichModalOpen}
           decisionMakers={decisionMakers}
-          companyName={companyBackgroundContent ? extractCompanyName(companyBackgroundContent) || 'the company' : 'the company'}
+          companyName={
+            companyBackgroundContent
+              ? extractCompanyName(companyBackgroundContent) || 'the company'
+              : 'the company'
+          }
           onEnrich={handleEnrichPerson}
           isSubmitting={state.isSubmitting}
         />

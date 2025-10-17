@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useMemo } from 'react';
 import { SidebarContent } from './sidebar-layout';
@@ -56,10 +56,10 @@ export default function PermanentSidebar() {
     <button
       onClick={toggleSidebar}
       className={cn(
-        "flex w-full items-center rounded-md px-2 py-2 transition-colors hover:bg-muted/70",
-        isCollapsed ? "justify-center gap-0" : "gap-3"
+        'flex w-full items-center rounded-md px-2 py-2 transition-colors hover:bg-muted/70',
+        isCollapsed ? 'justify-center gap-0' : 'gap-3',
       )}
-      title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >
       <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
         <Image
@@ -95,18 +95,21 @@ export default function PermanentSidebar() {
         return;
       }
 
-      const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:l7I1EMBg/send_mail_to_support',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: contactForm.name,
+            email: contactForm.email,
+            message: contactForm.message,
+          }),
         },
-        body: JSON.stringify({
-          name: contactForm.name,
-          email: contactForm.email,
-          message: contactForm.message,
-        }),
-      });
+      );
 
       if (response.ok) {
         setContactForm({ name: '', email: '', message: '' });
@@ -124,7 +127,10 @@ export default function PermanentSidebar() {
 
   // Convert navigation items to bottom nav format
   const bottomNavItems: BottomNavItem[] = allNavigationItems
-    .filter((item): item is { name: React.ReactNode; href: string; icon: any; type: 'item' } => item.type === 'item')
+    .filter(
+      (item): item is { name: React.ReactNode; href: string; icon: any; type: 'item' } =>
+        item.type === 'item',
+    )
     .map((item) => ({
       name: String(item.name),
       href: item.href,
@@ -236,10 +242,7 @@ export default function PermanentSidebar() {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -291,20 +294,18 @@ function ConditionalSidebarInner({ children }: { children: React.ReactNode }) {
               priority
             />
           </span>
-          <span className="text-sm font-semibold text-foreground">
-            Parallel Strategies
-          </span>
+          <span className="text-sm font-semibold text-foreground">Parallel Strategies</span>
         </Link>
       </div>
 
       {/* Main Content Area */}
       <div
         className={cn(
-          "flex flex-col flex-grow transition-all duration-300 ease-in-out",
-          "w-full md:w-0", // Mobile: full width, Desktop: w-0 with flex-grow
-          "pt-14 pb-20 md:pt-0 md:pb-0", // Mobile: add padding for header and bottom nav
-          "ml-0 md:ml-[80px]", // Desktop: margin for collapsed sidebar
-          !isCollapsed && "md:ml-[260px]" // Desktop: margin for expanded sidebar
+          'flex flex-col flex-grow transition-all duration-300 ease-in-out',
+          'w-full md:w-0', // Mobile: full width, Desktop: w-0 with flex-grow
+          'pt-14 pb-20 md:pt-0 md:pb-0', // Mobile: add padding for header and bottom nav
+          'ml-0 md:ml-[80px]', // Desktop: margin for collapsed sidebar
+          !isCollapsed && 'md:ml-[260px]', // Desktop: margin for expanded sidebar
         )}
       >
         {children}

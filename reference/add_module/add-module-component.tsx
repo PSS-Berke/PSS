@@ -8,14 +8,14 @@ export default function AddModuleComponent() {
       id: 'automations',
       name: 'Automations',
       icon: '⚡',
-      description: 'Set up automated workflows'
+      description: 'Set up automated workflows',
     },
     {
       id: 'analytics',
       name: 'Analytics',
       icon: '📊',
-      description: 'View insights and metrics'
-    }
+      description: 'View insights and metrics',
+    },
   ];
 
   const handleModuleClick = (moduleId) => {
@@ -36,12 +36,12 @@ export default function AddModuleComponent() {
 
       {/* Modal Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={() => setIsOpen(false)}
         >
           {/* Modal Content */}
-          <div 
+          <div
             className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -69,9 +69,7 @@ export default function AddModuleComponent() {
                       <h3 className="font-semibold text-gray-800 group-hover:text-blue-600">
                         {module.name}
                       </h3>
-                      <p className="text-sm text-gray-500">
-                        {module.description}
-                      </p>
+                      <p className="text-sm text-gray-500">{module.description}</p>
                     </div>
                   </div>
                 </button>

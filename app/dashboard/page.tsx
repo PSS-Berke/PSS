@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState } from 'react';
 import {
@@ -53,7 +53,7 @@ export default function DashboardPage() {
   const { user, isLoading, token } = useAuth();
 
   // Get user's module IDs - memoized to prevent recreation on every render
-  const userModuleIds = React.useMemo(() => user?.modules?.map(m => m.id) || [], [user?.modules]);
+  const userModuleIds = React.useMemo(() => user?.modules?.map((m) => m.id) || [], [user?.modules]);
 
   // Filter modules based on user's access and initialize state
   const [modules, setModules] = useState<ModuleConfig[]>([]);
@@ -71,7 +71,7 @@ export default function DashboardPage() {
 
     const fetchLayoutAndUpdateModules = async () => {
       setIsLoadingLayout(true);
-      const updatedModules = ALL_MODULES.filter(module => userModuleIds.includes(module.id));
+      const updatedModules = ALL_MODULES.filter((module) => userModuleIds.includes(module.id));
 
       // If no token or no modules, just set the default order
       if (!token || updatedModules.length === 0) {
@@ -82,13 +82,10 @@ export default function DashboardPage() {
 
       try {
         // Fetch saved layout
-        const response = await fetch(
-          'https://xnpm-iauo-ef2d.n7e.xano.io/api:omCf_wtg/position',
-          {
-            method: 'GET',
-            headers: getAuthHeaders(token),
-          }
-        );
+        const response = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:omCf_wtg/position', {
+          method: 'GET',
+          headers: getAuthHeaders(token),
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -136,7 +133,7 @@ export default function DashboardPage() {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Handle drag end - reorder modules and save to backend
@@ -163,34 +160,36 @@ export default function DashboardPage() {
 
         // Save the new order to the backend
         if (token && newModuleOrder.length > 0) {
-          const sequence = newModuleOrder.map(m => m.id);
+          const sequence = newModuleOrder.map((m) => m.id);
           console.log('Saving layout order:', sequence);
 
-          fetch(
-            'https://xnpm-iauo-ef2d.n7e.xano.io/api:omCf_wtg/position',
-            {
-              method: 'POST',
-              headers: getAuthHeaders(token),
-              body: JSON.stringify({
-                page: 'dashboard',
-                sequence: sequence,
-              }),
-            }
-          )
-            .then(response => {
+          fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:omCf_wtg/position', {
+            method: 'POST',
+            headers: getAuthHeaders(token),
+            body: JSON.stringify({
+              page: 'dashboard',
+              sequence: sequence,
+            }),
+          })
+            .then((response) => {
               console.log('Response received:', response.status);
               if (response.ok) {
                 console.log('Layout saved successfully');
               } else {
                 console.error('Failed to save layout, status:', response.status);
-                return response.text().then(text => console.error('Error details:', text));
+                return response.text().then((text) => console.error('Error details:', text));
               }
             })
-            .catch(error => {
+            .catch((error) => {
               console.error('Failed to save layout:', error);
             });
         } else {
-          console.log('Not saving - token:', !!token, 'newModuleOrder.length:', newModuleOrder.length);
+          console.log(
+            'Not saving - token:',
+            !!token,
+            'newModuleOrder.length:',
+            newModuleOrder.length,
+          );
         }
 
         return newModuleOrder;
@@ -225,11 +224,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Sortable Modules */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
             items={modules.map((m) => m.sortId)}
             strategy={verticalListSortingStrategy}
@@ -241,7 +236,7 @@ export default function DashboardPage() {
                     <Provider>
                       <Component
                         onExpandedChange={(isExpanded) => {
-                          setExpandedModules(prev => ({ ...prev, [sortId]: isExpanded }));
+                          setExpandedModules((prev) => ({ ...prev, [sortId]: isExpanded }));
                         }}
                       />
                     </Provider>

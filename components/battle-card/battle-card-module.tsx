@@ -30,7 +30,11 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
       return <Badge variant="secondary">Loading...</Badge>;
     }
     if (state.isGenerating) {
-      return <Badge variant="default" className="animate-pulse">Generating Battle Card...</Badge>;
+      return (
+        <Badge variant="default" className="animate-pulse">
+          Generating Battle Card...
+        </Badge>
+      );
     }
     if (state.activeBattleCard) {
       return <Badge variant="default">Active Card</Badge>;
@@ -42,7 +46,7 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
   };
 
   return (
-  <Card className={`w-full ${className}`}>
+    <Card className={`w-full ${className}`}>
       <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors flex-row items-center space-y-0 gap-3 p-4 md:p-6"
         onClick={toggleExpanded}
@@ -73,7 +77,8 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
             {state.battleCardsList.length > 0 && (
               <div className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
                 <FileText className="h-4 w-4" />
-                {state.battleCardsList.length} battle {state.battleCardsList.length === 1 ? 'card' : 'cards'}
+                {state.battleCardsList.length} battle{' '}
+                {state.battleCardsList.length === 1 ? 'card' : 'cards'}
               </div>
             )}
           </div>
@@ -111,8 +116,14 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                  <div
+                    className="w-2 h-2 bg-primary rounded-full animate-pulse"
+                    style={{ animationDelay: '0.2s' }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-primary rounded-full animate-pulse"
+                    style={{ animationDelay: '0.4s' }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -131,7 +142,9 @@ export function BattleCardModule({ className, onExpandedChange }: BattleCardModu
 
           {/* Desktop Layout: Side by side */}
           <div className="hidden md:flex h-[600px]">
-            <div className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}>
+            <div
+              className={`${isSidebarCollapsed ? 'w-14' : 'w-80'} flex-shrink-0 transition-all duration-300`}
+            >
               <BattleCardSidebar
                 isCollapsed={isSidebarCollapsed}
                 onCollapseChange={setIsSidebarCollapsed}

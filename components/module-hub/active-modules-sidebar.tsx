@@ -20,17 +20,18 @@ import { cn } from '@/lib/utils';
 interface Module {
   id: number;
   name: string;
-  icon: LucideIcon;
-  userCount: number;
+  description?: string;
 }
 
-const MOCK_ACTIVE_MODULES: Module[] = [
-  { id: 4, name: 'LinkedIn Copilot', icon: Linkedin, userCount: 5 },
-  { id: 7, name: 'Battle Card', icon: ShieldCheck, userCount: 3 },
-  { id: 6, name: 'Call Prep', icon: Building2, userCount: 4 },
-  { id: 5, name: 'Social Media', icon: Share2, userCount: 2 },
-  { id: 1, name: 'Analytics', icon: BarChart3, userCount: 6 },
-];
+const getModuleIcon = (name: string): LucideIcon => {
+  const n = name.toLowerCase();
+  if (n.includes('linkedin')) return Linkedin;
+  if (n.includes('battle')) return ShieldCheck;
+  if (n.includes('call') || n.includes('prep')) return Building2;
+  if (n.includes('social')) return Share2;
+  if (n.includes('analytic')) return BarChart3;
+  return BarChart3; // default
+};
 
 interface ActiveModulesSidebarProps {
   className?: string;
@@ -38,6 +39,7 @@ interface ActiveModulesSidebarProps {
   onCollapseChange?: (collapsed: boolean) => void;
   selectedModuleId?: number | null;
   onSelectModule?: (moduleId: number) => void;
+  modules?: Module[];
 }
 
 export function ActiveModulesSidebar({
@@ -46,9 +48,10 @@ export function ActiveModulesSidebar({
   onCollapseChange,
   selectedModuleId,
   onSelectModule,
+  modules = [],
 }: ActiveModulesSidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = React.useState(
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false,
   );
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -99,7 +102,7 @@ export function ActiveModulesSidebar({
         'bg-muted/30 flex flex-col w-full transition-all duration-300',
         isCollapsed ? 'md:w-14 h-14 md:h-full' : 'md:w-64 lg:w-72 xl:w-80 h-auto md:h-full',
         'md:border-r border-b md:border-b-0',
-        className
+        className,
       )}
     >
       {/* Collapsed Toggle Button */}
@@ -125,7 +128,7 @@ export function ActiveModulesSidebar({
           <div className="px-4 py-3 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-muted-foreground">
-                Your Modules ({MOCK_ACTIVE_MODULES.length})
+                Your Modules ({modules.length})
               </h3>
               <Button
                 onClick={() => setCollapsed(true)}
@@ -153,8 +156,8 @@ export function ActiveModulesSidebar({
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
             >
-              {MOCK_ACTIVE_MODULES.map((module) => {
-                const Icon = module.icon;
+              {modules.map((module) => {
+                const Icon = getModuleIcon(module.name);
                 const isSelected = selectedModuleId === module.id;
 
                 return (
@@ -162,9 +165,7 @@ export function ActiveModulesSidebar({
                     key={module.id}
                     className={cn(
                       'p-4 cursor-pointer transition-all hover:bg-accent flex-shrink-0 w-56',
-                      isSelected
-                        ? 'bg-accent border-primary ring-2 ring-primary/20'
-                        : ''
+                      isSelected ? 'bg-accent border-primary ring-2 ring-primary/20' : '',
                     )}
                     onClick={() => onSelectModule?.(module.id)}
                   >
@@ -179,9 +180,11 @@ export function ActiveModulesSidebar({
                         <p className="text-sm font-medium line-clamp-2">
                           {module.name}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {module.userCount} users
-                        </p>
+                        {module.description && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                            {module.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -193,8 +196,8 @@ export function ActiveModulesSidebar({
           {/* Desktop: Vertical List */}
           <div className="hidden md:flex flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
             <div className="space-y-1 w-full">
-              {MOCK_ACTIVE_MODULES.map((module) => {
-                const Icon = module.icon;
+              {modules.map((module) => {
+                const Icon = getModuleIcon(module.name);
                 const isSelected = selectedModuleId === module.id;
 
                 return (
@@ -211,9 +214,11 @@ export function ActiveModulesSidebar({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{module.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {module.userCount} users
-                        </p>
+                        {module.description && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {module.description}
+                          </p>
+                        )}
                       </div>
                       {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
                     </div>

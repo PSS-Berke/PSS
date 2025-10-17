@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from "@/lib/xano/auth-context";
-import { useRouter } from "next/navigation";
+import { useAuth } from '@/lib/xano/auth-context';
+import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/loading-spinner';
 
 export default function Layout(props: { children: React.ReactNode }) {

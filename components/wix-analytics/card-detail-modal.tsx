@@ -99,9 +99,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {renderContent()}
-        </div>
+        <div className="flex-1 overflow-y-auto p-6">{renderContent()}</div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
@@ -109,10 +107,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
             Close
           </Button>
           {card.content.type === 'code' && (
-            <Button
-              className="gap-2 bg-[#C33527] hover:bg-[#A82A1F]"
-              onClick={handleCopyCode}
-            >
+            <Button className="gap-2 bg-[#C33527] hover:bg-[#A82A1F]" onClick={handleCopyCode}>
               {copied ? (
                 <>
                   <Check className="h-4 w-4" />

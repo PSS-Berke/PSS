@@ -37,7 +37,9 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
       return 0;
     };
 
-    return [...state.messages].sort((a, b) => getTimestamp(a.created_at) - getTimestamp(b.created_at));
+    return [...state.messages].sort(
+      (a, b) => getTimestamp(a.created_at) - getTimestamp(b.created_at),
+    );
   }, [state.messages]);
 
   const adjustTextareaHeight = (value: string | undefined) => {
@@ -49,7 +51,8 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
     const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
     const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
     const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0;
-    const lineHeight = parseFloat(computedStyle.lineHeight) || parseFloat(computedStyle.fontSize) || 0;
+    const lineHeight =
+      parseFloat(computedStyle.lineHeight) || parseFloat(computedStyle.fontSize) || 0;
 
     if (baseTextareaHeightRef.current === null) {
       baseTextareaHeightRef.current = Math.ceil(lineHeight + paddingTop + paddingBottom);
@@ -57,11 +60,12 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
 
     textarea.style.height = 'auto';
 
-    const minHeight = Math.max(baseTextareaHeightRef.current ?? 0, MIN_COMPOSER_HEIGHT - borderTop - borderBottom);
+    const minHeight = Math.max(
+      baseTextareaHeightRef.current ?? 0,
+      MIN_COMPOSER_HEIGHT - borderTop - borderBottom,
+    );
     const contentHeight = textarea.scrollHeight;
-    const nextHeight = value?.trim()
-      ? Math.max(minHeight, contentHeight)
-      : minHeight;
+    const nextHeight = value?.trim() ? Math.max(minHeight, contentHeight) : minHeight;
 
     textarea.style.height = `${nextHeight}px`;
   };
@@ -71,7 +75,7 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
     currentSession: state.currentSession,
     messagesCount: state.messages.length,
     isLoading: state.isLoading,
-    error: state.error
+    error: state.error,
   });
 
   // Auto-scroll to bottom when new messages arrive
@@ -94,7 +98,6 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
       }
     };
   }, []);
-
 
   const submitMessage = async () => {
     if (!message.trim() || state.isSendingMessage) return;
@@ -163,19 +166,21 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
             {state.currentSession ? state.currentSession.session_name : 'Starting new session...'}
           </p>
         </div>
-        {state.isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        )}
+        {state.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
       </div>
 
-  {/* Messages */}
-  <div className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'px-3 py-4' : 'p-4'} space-y-4 transition-all duration-300`}>
+      {/* Messages */}
+      <div
+        className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'px-3 py-4' : 'p-4'} space-y-4 transition-all duration-300`}
+      >
         {sortedMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Welcome to LinkedIn Copilot</h3>
             <p className="text-muted-foreground mb-4">
-              {"I'm here to help you create engaging LinkedIn content. What would you like to work on today?"}
+              {
+                "I'm here to help you create engaging LinkedIn content. What would you like to work on today?"
+              }
             </p>
             <div className="text-sm text-muted-foreground">
               Try asking me to:
@@ -195,68 +200,62 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 ${
-                  isUserMessage ? 'justify-end' : 'justify-start'
-                }`}
+                className={`flex gap-3 ${isUserMessage ? 'justify-end' : 'justify-start'}`}
               >
-              {msg.role === 'ai' && (
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-primary" />
+                {msg.role === 'ai' && (
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <Card
-                className={`p-3 ${
-                  isUserMessage
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                } transition-all duration-300`}
-                style={{ maxWidth: sidebarCollapsed ? 'calc(100% - 1rem)' : '80%' }}
-              >
-                <div className="flex items-start gap-2">
-                  <div className="whitespace-pre-wrap text-sm flex-1">
-                    {msg.content}
+                <Card
+                  className={`p-3 ${
+                    isUserMessage ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  } transition-all duration-300`}
+                  style={{ maxWidth: sidebarCollapsed ? 'calc(100% - 1rem)' : '80%' }}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="whitespace-pre-wrap text-sm flex-1">{msg.content}</div>
+                    {isAiMessage && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
+                        onClick={() => handleCopy(msg.content ?? '', messageId)}
+                        aria-label={copiedMessageId === messageId ? 'Copied' : 'Copy message'}
+                      >
+                        {copiedMessageId === messageId ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
                   </div>
-                  {isAiMessage && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
-                      onClick={() => handleCopy(msg.content ?? '', messageId)}
-                      aria-label={copiedMessageId === messageId ? 'Copied' : 'Copy message'}
-                    >
-                      {copiedMessageId === messageId ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-                <div className={`text-xs mt-2 ${
-                  isUserMessage
-                    ? 'text-primary-foreground/70'
-                    : 'text-muted-foreground'
-                }`}>
-                  {formatTimestamp(msg.created_at)}
-                </div>
-              </Card>
+                  <div
+                    className={`text-xs mt-2 ${
+                      isUserMessage ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {formatTimestamp(msg.created_at)}
+                  </div>
+                </Card>
 
-              {msg.role === 'user' && (
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary-foreground" />
+                {msg.role === 'user' && (
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary-foreground" />
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             );
           })
         )}
-        
+
         {state.isSendingMessage && (
           <div className="flex gap-3 justify-start">
             <div className="flex-shrink-0">
@@ -264,7 +263,7 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
                 <Bot className="h-4 w-4 text-primary" />
               </div>
             </div>
-              <Card className="bg-muted p-3">
+            <Card className="bg-muted p-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm text-muted-foreground">AI is thinking...</span>
@@ -272,7 +271,7 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
             </Card>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -298,8 +297,8 @@ export function ChatInterface({ className, sidebarCollapsed }: ChatInterfaceProp
             className="flex-1 resize-none overflow-hidden px-3 py-2 min-h-[44px]"
             rows={1}
           />
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!message.trim() || state.isSendingMessage || state.isLoading}
             size="icon"
             className="shrink-0 h-11 w-11"

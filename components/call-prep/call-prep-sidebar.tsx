@@ -33,16 +33,13 @@ export function CallPrepSidebar({
   isCollapsed: propIsCollapsed,
   onCollapseChange,
 }: CallPrepSidebarProps) {
-  const {
-    state,
-    loadAllAnalyses,
-    selectAnalysis,
-    deleteAnalysis,
-  } = useCallPrep();
+  const { state, loadAllAnalyses, selectAnalysis, deleteAnalysis } = useCallPrep();
 
   const [internalCollapsed, setInternalCollapsed] = useState(true);
   const [menuOpenForAnalysis, setMenuOpenForAnalysis] = useState<number | null>(null);
-  const [analysisPendingDeletion, setAnalysisPendingDeletion] = useState<CallPrepAnalysis | null>(null);
+  const [analysisPendingDeletion, setAnalysisPendingDeletion] = useState<CallPrepAnalysis | null>(
+    null,
+  );
   const [isDeletingAnalysis, setIsDeletingAnalysis] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasLoadedRef = useRef(false);
@@ -128,9 +125,7 @@ export function CallPrepSidebar({
     }
     if (analysis.company_background) {
       const firstLine = analysis.company_background.split('\n')[0];
-      return firstLine.length > 30
-        ? firstLine.substring(0, 30) + '...'
-        : firstLine;
+      return firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
     }
     return `Analysis #${analysis.id}`;
   };
@@ -305,9 +300,7 @@ export function CallPrepSidebar({
                     <Card
                       key={analysis.id}
                       className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
-                        state.currentAnalysis?.id === analysis.id
-                          ? 'bg-accent border-primary'
-                          : ''
+                        state.currentAnalysis?.id === analysis.id ? 'bg-accent border-primary' : ''
                       }`}
                       onClick={() => handleAnalysisClick(analysis.id)}
                     >
@@ -397,11 +390,7 @@ export function CallPrepSidebar({
               onClick={handleConfirmDeleteAnalysis}
               disabled={isDeletingAnalysis}
             >
-              {isDeletingAnalysis ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Delete'
-              )}
+              {isDeletingAnalysis ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

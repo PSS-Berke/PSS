@@ -52,11 +52,7 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
   const getStatusBadge = () => {
     // Mock: would check actual connection status
     const connectedPlatforms = PLATFORMS.length;
-    return (
-      <Badge variant="outline">
-        {connectedPlatforms} platforms available
-      </Badge>
-    );
+    return <Badge variant="outline">{connectedPlatforms} platforms available</Badge>;
   };
 
   const getCurrentCategoryData = () => {
@@ -64,97 +60,88 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
     return MOCK_ANALYTICS_DATA[selectedCategory] || null;
   };
 
-  const modalContent = isExpanded && mounted ? (
-    <div
-      className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm"
-      onClick={toggleExpanded}
-    >
+  const modalContent =
+    isExpanded && mounted ? (
       <div
-        className="fixed inset-4 md:inset-8 z-[10000] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm"
+        onClick={toggleExpanded}
       >
-        <Card className="h-full flex flex-col">
-          <CardHeader
-            className="flex-shrink-0 border-b cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={toggleExpanded}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-primary" />
+        <div
+          className="fixed inset-4 md:inset-8 z-[10000] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Card className="h-full flex flex-col">
+            <CardHeader
+              className="flex-shrink-0 border-b cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={toggleExpanded}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Website Analytics Copilot</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Multi-platform website analytics & insights
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-lg">Website Analytics Copilot</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Multi-platform website analytics & insights
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Radio className="h-4 w-4 text-muted-foreground" />
+                    {getStatusBadge()}
+                  </div>
+                  <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <Globe className="h-4 w-4" />
+                    {PLATFORMS.length} platforms
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={toggleExpanded} className="ml-2">
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Radio className="h-4 w-4 text-muted-foreground" />
-                  {getStatusBadge()}
-                </div>
-                <div className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <Globe className="h-4 w-4" />
-                  {PLATFORMS.length} platforms
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleExpanded}
-                  className="ml-2"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-0">
-            {/* Mobile Layout: Stack vertically */}
-            <div className="flex flex-col md:hidden h-full">
-              <PlatformSidebar
-                isCollapsed={isSidebarCollapsed}
-                onCollapseChange={setIsSidebarCollapsed}
-                selectedPlatform={selectedPlatform}
-                selectedCategory={selectedCategory}
-                onSelectCategory={handleSelectCategory}
-              />
-              <div className="flex-1 overflow-auto p-6 w-full">
-                <AnalyticsDashboard
-                  categoryData={getCurrentCategoryData()}
-                />
-              </div>
-            </div>
-
-            {/* Desktop Layout: Side by side */}
-            <div className="hidden md:flex gap-6 h-full p-6">
-              <div
-                className={`${
-                  isSidebarCollapsed ? 'w-14' : 'w-80'
-                } flex-shrink-0 transition-all duration-300 h-full`}
-              >
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden p-0">
+              {/* Mobile Layout: Stack vertically */}
+              <div className="flex flex-col md:hidden h-full">
                 <PlatformSidebar
-                  className="h-full"
                   isCollapsed={isSidebarCollapsed}
                   onCollapseChange={setIsSidebarCollapsed}
                   selectedPlatform={selectedPlatform}
                   selectedCategory={selectedCategory}
                   onSelectCategory={handleSelectCategory}
                 />
+                <div className="flex-1 overflow-auto p-6 w-full">
+                  <AnalyticsDashboard categoryData={getCurrentCategoryData()} />
+                </div>
               </div>
-              <div className="flex-1 min-w-0 h-full overflow-auto">
-                <AnalyticsDashboard
-                  categoryData={getCurrentCategoryData()}
-                  className="h-full"
-                />
+
+              {/* Desktop Layout: Side by side */}
+              <div className="hidden md:flex gap-6 h-full p-6">
+                <div
+                  className={`${
+                    isSidebarCollapsed ? 'w-14' : 'w-80'
+                  } flex-shrink-0 transition-all duration-300 h-full`}
+                >
+                  <PlatformSidebar
+                    className="h-full"
+                    isCollapsed={isSidebarCollapsed}
+                    onCollapseChange={setIsSidebarCollapsed}
+                    selectedPlatform={selectedPlatform}
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={handleSelectCategory}
+                  />
+                </div>
+                <div className="flex-1 min-w-0 h-full overflow-auto">
+                  <AnalyticsDashboard categoryData={getCurrentCategoryData()} className="h-full" />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
-  ) : null;
+    ) : null;
 
   return (
     <>
@@ -169,7 +156,9 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-base md:text-lg truncate">Website Analytics Copilot</CardTitle>
+              <CardTitle className="text-base md:text-lg truncate">
+                Website Analytics Copilot
+              </CardTitle>
               <p className="text-sm text-muted-foreground hidden md:block">
                 Multi-platform website analytics & insights
               </p>

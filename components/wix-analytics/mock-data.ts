@@ -6,7 +6,8 @@ export const MOCK_ANALYTICS_DATA: Record<string, AnalyticsCategoryData> = {
   'wix-overview': {
     name: 'Wix Marketing Hub',
     category: 'Wix',
-    description: 'Welcome to your comprehensive Wix marketing analytics platform. Navigate through the menu to explore analytics, SEO, e-commerce, customer insights, and automation tools.',
+    description:
+      'Welcome to your comprehensive Wix marketing analytics platform. Navigate through the menu to explore analytics, SEO, e-commerce, customer insights, and automation tools.',
     cards: [
       {
         id: 'analytics-tracking-overview',
@@ -141,7 +142,7 @@ export const MOCK_ANALYTICS_DATA: Record<string, AnalyticsCategoryData> = {
   'google-search-console-overview': {
     name: 'Google Search Console Hub',
     category: 'Google',
-    description: 'Monitor your site\'s presence in Google Search results.',
+    description: "Monitor your site's presence in Google Search results.",
     cards: [
       {
         id: 'gsc-performance',
@@ -150,7 +151,7 @@ export const MOCK_ANALYTICS_DATA: Record<string, AnalyticsCategoryData> = {
         summary: 'Clicks, impressions, rankings',
         content: {
           type: 'text',
-          data: '<h3>Search Performance</h3><p>Track your site\'s performance in Google Search.</p><h4>Metrics:</h4><ul><li>Total Clicks</li><li>Impressions</li><li>Average Position</li><li>CTR</li></ul>',
+          data: "<h3>Search Performance</h3><p>Track your site's performance in Google Search.</p><h4>Metrics:</h4><ul><li>Total Clicks</li><li>Impressions</li><li>Average Position</li><li>CTR</li></ul>",
         },
       },
     ],
@@ -177,7 +178,11 @@ export const PLATFORMS = [
     label: 'WordPress',
     categories: [
       { id: 'overview', label: 'Overview', key: 'wordpress-overview' },
-      { id: 'analytics-tracking', label: 'Analytics & Tracking', key: 'wordpress-analytics-tracking' },
+      {
+        id: 'analytics-tracking',
+        label: 'Analytics & Tracking',
+        key: 'wordpress-analytics-tracking',
+      },
       { id: 'seo-content', label: 'SEO & Content', key: 'wordpress-seo-content' },
       { id: 'ecommerce', label: 'E-commerce', key: 'wordpress-ecommerce' },
       { id: 'customer-insights', label: 'Customer Insights', key: 'wordpress-customer-insights' },
@@ -190,7 +195,11 @@ export const PLATFORMS = [
     label: 'Shopify',
     categories: [
       { id: 'overview', label: 'Overview', key: 'shopify-overview' },
-      { id: 'analytics-tracking', label: 'Analytics & Tracking', key: 'shopify-analytics-tracking' },
+      {
+        id: 'analytics-tracking',
+        label: 'Analytics & Tracking',
+        key: 'shopify-analytics-tracking',
+      },
       { id: 'seo-content', label: 'SEO & Content', key: 'shopify-seo-content' },
       { id: 'ecommerce', label: 'E-commerce', key: 'shopify-ecommerce' },
       { id: 'customer-insights', label: 'Customer Insights', key: 'shopify-customer-insights' },

@@ -4,13 +4,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from './button';
 import { Textarea } from './textarea';
 import { cn } from '@/lib/utils';
-import {
-  Type,
-  Bold,
-  Italic,
-  Strikethrough,
-  Underline as UnderlineIcon,
-} from 'lucide-react';
+import { Type, Bold, Italic, Strikethrough, Underline as UnderlineIcon } from 'lucide-react';
 
 interface UnicodeTextFormatterProps {
   content: string;
@@ -41,12 +35,20 @@ const unicodeStyles = {
   strikethrough: {
     prefix: '',
     suffix: '',
-    wrapper: (text: string) => text.split('').map(char => char + '\u0336').join(''),
+    wrapper: (text: string) =>
+      text
+        .split('')
+        .map((char) => char + '\u0336')
+        .join(''),
   },
   underline: {
     prefix: '',
     suffix: '',
-    wrapper: (text: string) => text.split('').map(char => char + '\u0332').join(''),
+    wrapper: (text: string) =>
+      text
+        .split('')
+        .map((char) => char + '\u0332')
+        .join(''),
   },
 };
 
@@ -58,10 +60,13 @@ const convertToUnicode = (text: string, style: keyof typeof unicodeStyles): stri
   }
 
   if ('chars' in styleData && 'map' in styleData) {
-    return text.split('').map(char => {
-      const index = styleData.chars.indexOf(char);
-      return index !== -1 ? styleData.map[index] : char;
-    }).join('');
+    return text
+      .split('')
+      .map((char) => {
+        const index = styleData.chars.indexOf(char);
+        return index !== -1 ? styleData.map[index] : char;
+      })
+      .join('');
   }
 
   return text;
@@ -99,7 +104,12 @@ export function UnicodeTextFormatter({
 
   if (!editable) {
     return (
-      <div className={cn('rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-foreground whitespace-pre-wrap', className)}>
+      <div
+        className={cn(
+          'rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-foreground whitespace-pre-wrap',
+          className,
+        )}
+      >
         {content || '—'}
       </div>
     );

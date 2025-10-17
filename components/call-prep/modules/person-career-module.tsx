@@ -50,9 +50,7 @@ export function PersonCareerModule({ person }: PersonCareerModuleProps) {
                 </div>
 
                 {exp.summary && (
-                  <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                    {exp.summary}
-                  </p>
+                  <p className="text-xs text-gray-600 mt-2 line-clamp-2">{exp.summary}</p>
                 )}
               </div>
             ))

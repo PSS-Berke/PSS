@@ -55,57 +55,67 @@ export default function AdminUsersPage() {
   // Check if user is admin
   useEffect(() => {
     const isAdmin = user?.role === true || (user as any)?.admin === true;
-    console.log('Admin page access check:', { user, isAdmin, role: user?.role, admin: (user as any)?.admin });
+    console.log('Admin page access check:', {
+      user,
+      isAdmin,
+      role: user?.role,
+      admin: (user as any)?.admin,
+    });
     if (!authLoading && (!user || !isAdmin)) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
 
   // Fetch users
-  const fetchUsers = React.useCallback(async (search = '') => {
-    if (!token) return;
+  const fetchUsers = React.useCallback(
+    async (search = '') => {
+      if (!token) return;
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      // Build URL with search query parameter if provided
-      const url = search 
-        ? `https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/get_users?search_term=${encodeURIComponent(search)}`
-        : 'https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/get_users';
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      try {
+        // Build URL with search query parameter if provided
+        const url = search
+          ? `https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/get_users?search_term=${encodeURIComponent(search)}`
+          : 'https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/get_users';
 
-      if (!response.ok) {
-        // If endpoint doesn't exist (404), show a helpful message
-        if (response.status === 404) {
-          setError('The get_users API endpoint has not been created yet in Xano. Please create this endpoint or contact your administrator.');
-          setUsers([]);
-          setIsLoading(false);
-          return;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          // If endpoint doesn't exist (404), show a helpful message
+          if (response.status === 404) {
+            setError(
+              'The get_users API endpoint has not been created yet in Xano. Please create this endpoint or contact your administrator.',
+            );
+            setUsers([]);
+            setIsLoading(false);
+            return;
+          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
 
-      const data = await response.json();
-      // Handle both array response and object with users property
-      const usersArray = Array.isArray(data) ? data : (data.users || []);
-      console.log('Fetched users:', usersArray);
-      console.log('First user structure:', usersArray[0]);
-      setUsers(usersArray);
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch users');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
+        const data = await response.json();
+        // Handle both array response and object with users property
+        const usersArray = Array.isArray(data) ? data : data.users || [];
+        console.log('Fetched users:', usersArray);
+        console.log('First user structure:', usersArray[0]);
+        setUsers(usersArray);
+      } catch (err) {
+        console.error('Failed to fetch users:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch users');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token],
+  );
 
   useEffect(() => {
     const isAdmin = user?.role === true || (user as any)?.admin === true;
@@ -141,7 +151,7 @@ export default function AdminUsersPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: newUserName,
@@ -160,7 +170,7 @@ export default function AdminUsersPage() {
       setNewUserName('');
       setNewUserEmail('');
       setNewUserAdmin(false);
-      
+
       // Refresh users list
       fetchUsers(searchTerm);
     } catch (err) {
@@ -191,13 +201,16 @@ export default function AdminUsersPage() {
     try {
       console.log('Deleting user with ID:', userId);
 
-      const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/admin/remove_user/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        `https://xnpm-iauo-ef2d.n7e.xano.io/api:iChl_6jf/admin/remove_user/${userId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -248,12 +261,10 @@ export default function AdminUsersPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold">User Management</h1>
-              <p className="mt-2 text-muted-foreground">
-                Manage all users in the system
-              </p>
+              <p className="mt-2 text-muted-foreground">Manage all users in the system</p>
             </div>
           </div>
-          <Button 
+          <Button
             onClick={() => setIsAddUserDialogOpen(true)}
             className="bg-[#C33527] hover:bg-[#DA857C] text-white"
           >
@@ -275,10 +286,7 @@ export default function AdminUsersPage() {
                   className="pl-10"
                 />
               </div>
-              <Button 
-                type="submit"
-                className="bg-[#C33527] hover:bg-[#DA857C] text-white"
-              >
+              <Button type="submit" className="bg-[#C33527] hover:bg-[#DA857C] text-white">
                 Search
               </Button>
             </form>
@@ -300,9 +308,7 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Users ({users.length})</CardTitle>
-                <CardDescription>
-                  All registered users in the system
-                </CardDescription>
+                <CardDescription>All registered users in the system</CardDescription>
               </div>
               <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
                 {users.length}
@@ -332,10 +338,14 @@ export default function AdminUsersPage() {
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                         {(user.role || user.admin) && (
-                          <Badge className="bg-[#C33527] hover:bg-[#DA857C] text-white">Admin</Badge>
+                          <Badge className="bg-[#C33527] hover:bg-[#DA857C] text-white">
+                            Admin
+                          </Badge>
                         )}
                         {user.invite_accepted === false && (
-                          <Badge variant="outline" className="border-[#C33527] text-[#C33527]">Pending Invite</Badge>
+                          <Badge variant="outline" className="border-[#C33527] text-[#C33527]">
+                            Pending Invite
+                          </Badge>
                         )}
                       </div>
                       <div className="mt-2 text-sm text-muted-foreground">
@@ -348,11 +358,7 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(user)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(user)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -384,8 +390,8 @@ export default function AdminUsersPage() {
               </div>
             )}
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsDeleteDialogOpen(false);
                   setError(null);
@@ -394,7 +400,7 @@ export default function AdminUsersPage() {
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
                 className="bg-[#C33527] hover:bg-[#DA857C] text-white disabled:opacity-50"
@@ -465,21 +471,24 @@ export default function AdminUsersPage() {
                     Grant admin privileges
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">Admins can manage users and access admin features</p>
+                <p className="text-xs text-muted-foreground">
+                  Admins can manage users and access admin features
+                </p>
               </div>
               <div className="flex items-start gap-2 p-3 bg-muted rounded-lg border border-border">
                 <Mail className="h-5 w-5 text-[#C33527] mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium">Email Invitation</p>
                   <p className="text-muted-foreground mt-1">
-                    An invitation email will be sent to this address with instructions to set up their account.
+                    An invitation email will be sent to this address with instructions to set up
+                    their account.
                   </p>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsAddUserDialogOpen(false);
                   setNewUserName('');
@@ -490,7 +499,7 @@ export default function AdminUsersPage() {
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleSendInvite}
                 disabled={isSendingInvite || !newUserName || !newUserEmail}
                 className="bg-[#C33527] hover:bg-[#DA857C] text-white disabled:opacity-50"

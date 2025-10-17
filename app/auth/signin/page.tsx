@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
+import { authApi } from '@/lib/xano/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,11 +15,7 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
 
   return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-3"
-      aria-label="Parallel Strategies home"
-    >
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="Parallel Strategies home">
       <span
         className={
           isDark
@@ -36,7 +33,11 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
         />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className={isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'}>
+        <span
+          className={
+            isDark ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-[#C33527]'
+          }
+        >
           Parallel Strategies
         </span>
         <span className={isDark ? 'text-sm text-white/70' : 'text-sm text-[#C33527]/70'}>
@@ -54,7 +55,7 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { login } = useAuth();
+  const { login, authenticateWithToken } = useAuth();
   const router = useRouter();
 
   // Check for verification success message
@@ -63,7 +64,9 @@ export default function SignInPage() {
     if (searchParams.get('verified') === 'true') {
       setSuccessMessage('Email verified successfully! You can now sign in.');
     } else if (searchParams.get('accepted') === 'true') {
-      setSuccessMessage('Invitation accepted successfully! You can now sign in with your new password.');
+      setSuccessMessage(
+        'Invitation accepted successfully! You can now sign in with your new password.',
+      );
     }
     //call google sign in
     const continueGoogleSignIn = async (code: string) => {
@@ -72,21 +75,26 @@ export default function SignInPage() {
         setError('Google redirect URI is not set!');
         return;
       }
-      const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${code}&redirect_uri=${redirectUri}`, {
-        method: 'GET',
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log(data);
-      } else {
-        setError('Google sign in failed!');
+      try {
+        const data = await authApi.continueGoogleAuth(code, redirectUri);
+        // Expecting shape: { name, email, token }
+        if (data?.token) {
+          await authenticateWithToken(data.token);
+          // New Google users go to onboarding, regular users go to dashboard
+          const hasCompany = data.has_company;
+          const redirect = hasCompany ? '/dashboard' : '/auth/onboarding';
+          router.push(redirect);
+        } else {
+          setError('Google continue response missing token');
+        }
+      } catch (error: any) {
+        setError(error.message || 'Google sign in failed!');
       }
-    }
+    };
     const code = searchParams.get('code');
     if (code) {
       continueGoogleSignIn(code);
     }
-
   }, []);
 
   const generateGoogleSignInUrl = async () => {
@@ -95,17 +103,13 @@ export default function SignInPage() {
       setError('Google redirect URI is not set!');
       return;
     }
-    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${redirectUri}`, {
-      method: 'GET',
-    });
-    const data = await response.json();
-    if (response.ok) {
+    try {
+      const data = await authApi.getGoogleAuthUrl(redirectUri);
       window.open(data.authUrl, '_blank');
-    } else {
-      setError('Google sign in failed!');
+    } catch (error: any) {
+      setError(error.message || 'Google sign in failed!');
     }
-
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,22 +138,25 @@ export default function SignInPage() {
           <div className="space-y-10">
             <BrandMark variant="dark" />
             <div className="space-y-6">
-              <h2 className="text-3xl font-semibold leading-tight md:text-4xl">
-                Welcome back.
-              </h2>
+              <h2 className="text-3xl font-semibold leading-tight md:text-4xl">Welcome back.</h2>
               <p className="text-base leading-7 text-white/80">
-                Access the Parallel Strategies control center to manage your campaigns,
-                monitor performance, and collaborate with your team using a unified red-themed experience.
+                Access the Parallel Strategies control center to manage your campaigns, monitor
+                performance, and collaborate with your team using a unified red-themed experience.
               </p>
             </div>
           </div>
           <div className="space-y-2 text-sm text-white/70">
             <p className="font-medium">Need an account?</p>
-            <Link href="/auth/signup" className="inline-flex items-center gap-1 font-semibold text-white hover:text-white/80">
+            <Link
+              href="/auth/signup"
+              className="inline-flex items-center gap-1 font-semibold text-white hover:text-white/80"
+            >
               Create one now
             </Link>
           </div>
-          <p className="text-xs text-white/50">© {currentYear} Parallel Strategies. All rights reserved.</p>
+          <p className="text-xs text-white/50">
+            © {currentYear} Parallel Strategies. All rights reserved.
+          </p>
         </div>
 
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-12 lg:h-full">
@@ -182,7 +189,10 @@ export default function SignInPage() {
                     />
                   </div>
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="password" className="text-sm font-medium text-muted-foreground/90">
+                    <Label
+                      htmlFor="password"
+                      className="text-sm font-medium text-muted-foreground/90"
+                    >
                       Password
                     </Label>
                     <Input
@@ -220,17 +230,21 @@ export default function SignInPage() {
                     className="w-full rounded-lg bg-white py-2.5 text-base font-medium text-black shadow-md shadow-[#C33527]/20 transition-colors hover:bg-white/90"
                     disabled={isLoading}
                     onClick={() => generateGoogleSignInUrl()}
-                  > <div className="flex items-center justify-center gap-3">
+                  >
+                    {' '}
+                    <div className="flex items-center justify-center gap-3">
                       <Image src="/img/google.png" alt="Google" width={20} height={20} />
                       Sign in with Google
-
                     </div>
                   </Button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">
                   Don&apos;t have an account?{' '}
-                  <Link href="/auth/signup" className="font-semibold text-[#C33527] hover:text-[#9E2A1F]">
+                  <Link
+                    href="/auth/signup"
+                    className="font-semibold text-[#C33527] hover:text-[#9E2A1F]"
+                  >
                     Sign up
                   </Link>
                 </div>

@@ -37,10 +37,13 @@ export function CallPrepPromptDialog({
   useEffect(() => {
     if (state.justCompleted && !isSubmitting) {
       // Check if there are decision makers to enrich
-      if (state.justCompleted.keyDecisionMakersWithEnrichment && state.justCompleted.keyDecisionMakersWithEnrichment.length > 0) {
+      if (
+        state.justCompleted.keyDecisionMakersWithEnrichment &&
+        state.justCompleted.keyDecisionMakersWithEnrichment.length > 0
+      ) {
         setCurrentCallPrepId(state.justCompleted.id);
         // Convert to KeyDecisionMaker format for the modal
-        const kdms = state.justCompleted.keyDecisionMakersWithEnrichment.map(kdm => ({
+        const kdms = state.justCompleted.keyDecisionMakersWithEnrichment.map((kdm) => ({
           name: kdm.name,
           title: kdm.title,
           linkedin_url: kdm.linkedin_url || '',
@@ -65,7 +68,6 @@ export function CallPrepPromptDialog({
     // Call the generate API in the background
     await generateCallPrep(prompt);
   };
-
 
   const handleEnrich = async (person: any) => {
     if (!state.justCompleted) return { status: 500 };
@@ -107,11 +109,7 @@ export function CallPrepPromptDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
