@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { authApi, usersApi, XanoApiError } from './api';
+import { authApi, companyApi, usersApi, XanoApiError } from './api';
 import type { User, LoginCredentials, RegisterCredentials } from './types';
 
 interface AuthContextType {
@@ -238,11 +238,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const onboardCompany = useCallback(async (data: { company: string; company_code?: number }) => {
-    const storedToken = getStoredToken();
+    const storedToken: string = getStoredToken() as string;
     if (!storedToken) throw new Error('Not authenticated');
     try {
-      const updatedUser = await usersApi.onboardCompany(storedToken, data);
-      setUser(updatedUser);
+      const company = await companyApi.createCompany(storedToken, { company_name: data.company, company_code: data.company_code });
+      console.log(company);
     } catch (error) {
       console.error('Onboarding failed:', error);
       throw error;

@@ -56,7 +56,7 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState(false);
 
   const { onboardCompany } = useAuth();
-
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -68,6 +68,9 @@ export default function SignUpPage() {
         company_code: companyCode ? parseInt(companyCode) : undefined
       });
       setSuccess(true);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to complete onboarding');
     } finally {
@@ -123,6 +126,7 @@ export default function SignUpPage() {
                       type="text"
                       placeholder="Your Company"
                       value={company}
+                      required
                       onChange={(e) => setCompany(e.target.value)}
                       className="border-muted focus-visible:ring-[#C33527] focus-visible:ring-offset-2"
                     />

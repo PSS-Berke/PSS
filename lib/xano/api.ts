@@ -279,18 +279,8 @@ export const usersApi = {
     );
   },
 
-  async onboardCompany(token: string, data: { company: string; company_code?: number }): Promise<User> {
-    return apiRequest<User>(
-      '/company',
-      {
-        method: 'POST',
-        body: JSON.stringify(data),
-      },
-      token
-    );
-  },
-};
 
+};
 
 
 // LinkedIn Copilot API
@@ -935,6 +925,23 @@ export const battleCardApi = {
 
 // Company API
 export const companyApi = {
+  async createCompany(token: string, data: { company_name: string; company_code?: number }): Promise<Company> {
+    const url = XANO_CONFIG.COMPANY_BASE_URL;
+    const response = await fetch(`${url}/company`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+      );
+    }
+    return response.json();
+  },
+
   async getCompanies(token: string): Promise<Company[]> {
     // Use the new company_details endpoint
     const url = XANO_CONFIG.ENDPOINTS.COMPANY.GET_COMPANY_DETAILS;
@@ -982,63 +989,45 @@ export const companyApi = {
     return [];
   },
 
-  async createCompany(token: string, companyName: string): Promise<Company> {
-    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.CREATE_COMPANY);
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: getAuthHeaders(token),
-      body: JSON.stringify({ company_name: companyName }),
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new XanoApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData
-      );
-    }
 
-    return response.json();
+    async updateCompany(token: string, companyId: number, companyName: string): Promise < Company > {
+      const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.UPDATE_COMPANY);
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          company_id: companyId,
+          company_name: companyName
+        }),
+      });
+
+      if(!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+  throw new XanoApiError(
+    errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+    response.status,
+    errorData
+  );
+}
+
+return response.json();
   },
 
-  async updateCompany(token: string, companyId: number, companyName: string): Promise<Company> {
-    const url = getApiUrl(XANO_CONFIG.ENDPOINTS.COMPANY.UPDATE_COMPANY);
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: getAuthHeaders(token),
-      body: JSON.stringify({
-        company_id: companyId,
-        company_name: companyName
-      }),
-    });
+  async deleteCompany(token: string, companyId: number): Promise < void> {
+  const url = getApiUrl(`${XANO_CONFIG.ENDPOINTS.COMPANY.DELETE_COMPANY}/${companyId}`);
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: getAuthHeaders(token),
+  });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new XanoApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData
-      );
-    }
-
-    return response.json();
-  },
-
-  async deleteCompany(token: string, companyId: number): Promise<void> {
-    const url = getApiUrl(`${XANO_CONFIG.ENDPOINTS.COMPANY.DELETE_COMPANY}/${companyId}`);
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: getAuthHeaders(token),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new XanoApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData
-      );
-    }
+  if(!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+  throw new XanoApiError(
+    errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+    response.status,
+    errorData
+  );
+}
   },
 };
