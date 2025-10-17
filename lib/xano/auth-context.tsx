@@ -19,6 +19,7 @@ interface AuthContextType {
   updateProfile: (data: Partial<User>) => Promise<void>;
   switchCompany: (companyId: number) => Promise<void>;
   refreshUser: () => Promise<void>;
+  authenticateWithToken: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -107,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const storedToken = getStoredToken();
         console.log('Auth check - stored token exists:', !!storedToken);
-        
+
         if (!storedToken) {
           if (mounted) {
             console.log('No stored token found, setting unauthenticated state');
@@ -129,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await authApi.getMe(storedToken);
           console.log('User data fetch result:', !!userData);
-          
+
           if (mounted && userData) {
             setUser(userData);
             setToken(storedToken);
@@ -178,11 +179,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user);
       setToken(response.token);
       setStoredToken(response.token);
-      
+
       if (response.refresh_token) {
         setStoredRefreshToken(response.refresh_token);
       }
-      
+
       // Navigation is handled by the signin page to support redirect param
     } catch (error) {
       console.error('Login failed:', error);
@@ -220,6 +221,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push('/');
     }
   }, [router]);
+
+
+  const authenticateWithToken = useCallback(async (incomingToken: string) => {
+    try {
+      setStoredToken(incomingToken);
+      setToken(incomingToken);
+      // Best effort fetch of user profile
+      const userData = await authApi.getMe(incomingToken);
+      setUser(userData);
+    } catch (error) {
+      console.error('authenticateWithToken failed:', error);
+      // still keep token so app can proceed; user can be fetched later
+    }
+  }, []);
 
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
@@ -299,6 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
     switchCompany,
     refreshUser,
+    authenticateWithToken,
   };
 
   return (

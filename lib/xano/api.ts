@@ -220,6 +220,40 @@ export const authApi = {
       throw error;
     }
   },
+
+  async getGoogleAuthUrl(redirectUri: string): Promise<{ authUrl: string }> {
+    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${encodeURIComponent(redirectUri)}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
+
+  async continueGoogleAuth(code: string, redirectUri: string): Promise<{ name: string; email: string; token: string }> {
+    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new XanoApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return response.json();
+  },
 };
 
 // Users API
@@ -662,7 +696,7 @@ export const socialCopilotApi = {
     imageData?: string | null,
     imageName?: string | null,
     url?: string | null,
-   
+
   ): Promise<any> {
     const apiUrl = 'https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/tweet';
 
