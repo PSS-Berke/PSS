@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
+import { authApi } from '@/lib/xano/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,7 +55,7 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { login } = useAuth();
+  const { login, authenticateWithToken } = useAuth();
   const router = useRouter();
 
   // Check for verification success message
@@ -72,14 +73,18 @@ export default function SignInPage() {
         setError('Google redirect URI is not set!');
         return;
       }
-      const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/continue?code=${code}&redirect_uri=${redirectUri}`, {
-        method: 'GET',
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log(data);
-      } else {
-        setError('Google sign in failed!');
+      try {
+        const data = await authApi.continueGoogleAuth(code, redirectUri);
+        // Expecting shape: { name, email, token }
+        if (data?.token) {
+          await authenticateWithToken(data.token);
+          const redirect = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+          router.push(redirect);
+        } else {
+          setError('Google continue response missing token');
+        }
+      } catch (error: any) {
+        setError(error.message || 'Google sign in failed!');
       }
     }
     const code = searchParams.get('code');
@@ -95,16 +100,12 @@ export default function SignInPage() {
       setError('Google redirect URI is not set!');
       return;
     }
-    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:U0aE1wpF/oauth/google/init?redirect_uri=${redirectUri}`, {
-      method: 'GET',
-    });
-    const data = await response.json();
-    if (response.ok) {
+    try {
+      const data = await authApi.getGoogleAuthUrl(redirectUri);
       window.open(data.authUrl, '_blank');
-    } else {
-      setError('Google sign in failed!');
+    } catch (error: any) {
+      setError(error.message || 'Google sign in failed!');
     }
-
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

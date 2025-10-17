@@ -208,15 +208,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     if (twilioDevice) return;
 
     try {
-      // Step 1: Get Twilio token
-      const tokenResponse = await fetch('https://xnpm-iauo-ef2d.n7e.xano.io/api:sOWCvXFH/token', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ identity: "agent" }),
-      });
+      // Step 1: Get Twilio token from backend (no auth)
+      const tokenResponse = await fetch('https://api.mwairealty.co.ke/v1/voice/token?identity=agent');
 
       if (!tokenResponse.ok) {
         throw new Error('Failed to get Twilio token');
@@ -269,15 +262,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const makeCall = async (number: string) => {
     const contact = contacts.find(c => c.phone_number === number);
     //get twilio token
-    const response = await fetch(`https://xnpm-iauo-ef2d.n7e.xano.io/api:sOWCvXFH/call`, {
+    const response = await fetch('https://api.mwairealty.co.ke/v1/voice/call', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        phone: number,
-      }),
+      body: JSON.stringify({ to: number }),
     });
     if (!response.ok) {
       const data = await response.json();
