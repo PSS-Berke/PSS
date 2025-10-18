@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Building2, Phone, Mail, Star } from 'lucide-react';
+import { Plus, Users, Building2, Phone, Mail, Star, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -138,11 +138,11 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#C33527]/15 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-[#C33527]" />
+              <Pencil className="w-5 h-5 text-[#C33527]" />
             </div>
             <div>
-              <DialogTitle>Add New Contact</DialogTitle>
-              <DialogDescription>Enter contact information</DialogDescription>
+              <DialogTitle>Edit Contact</DialogTitle>
+              <DialogDescription>Edit contact information</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -267,7 +267,7 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
             disabled={isSubmitting}
             className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C] disabled:opacity-50"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Pencil className="w-4 h-4 mr-2" />
             {isSubmitting ? 'Editing...' : 'Edit Contact'}
           </Button>
         </DialogFooter>

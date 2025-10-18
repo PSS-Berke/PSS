@@ -32,6 +32,7 @@ import { ContactCard } from './components/ContactCard';
 import { SettingsModal } from './components/SettingsModal';
 import { ActiveCallOverlay } from './components/ActiveCallOverlay';
 import { EditContact } from './components/EditContact';
+import DeleteContact from './components/DeleteContact';
 
 type TwilioError = {
   code: string;
@@ -110,6 +111,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
 
   const { token } = useAuth();
   const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
@@ -540,7 +542,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         {filteredContacts
                           .filter((c) => c.is_favorite)
                           .map((contact) => (
-                            <ContactCard key={contact.id} contact={contact} makeCall={makeCall} onEdit={() => setEditingContact(contact)} />
+                            <ContactCard
+                              key={contact.id}
+                              contact={contact}
+                              makeCall={makeCall}
+                              onEdit={() => setEditingContact(contact)}
+                              onDelete={() => setDeletingContact(contact)}
+                            />
                           ))}
                       </div>
                     </div>
@@ -554,7 +562,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       {filteredContacts
                         .filter((c) => !c.is_favorite)
                         .map((contact) => (
-                          <ContactCard key={contact.id} contact={contact} makeCall={makeCall} onEdit={() => setEditingContact(contact)} />
+                          <ContactCard
+                            key={contact.id}
+                            contact={contact}
+                            makeCall={makeCall}
+                            onEdit={() => setEditingContact(contact)}
+                            onDelete={() => setDeletingContact(contact)}
+                          />
                         ))}
                     </div>
                   </div>
@@ -635,7 +649,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -927,35 +941,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                           {filteredContacts
                             .filter((c) => c.is_favorite)
                             .map((contact) => (
-                              <div
+                              <ContactCard
                                 key={contact.id}
-                                className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                              >
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-lg flex-shrink-0">
-                                    {contact.name.charAt(0)}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="font-medium text-base text-foreground truncate">
-                                      {contact.name}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground truncate">
-                                      {contact.company}
-                                    </p>
-                                    <p className="text-sm text-foreground font-mono truncate">
-                                      {contact.phone_number}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Button
-                                  onClick={() => makeCall(contact.phone_number)}
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                  <Phone className="w-4 h-4 mr-1.5" />
-                                  Call
-                                </Button>
-                              </div>
+                                contact={contact}
+                                makeCall={makeCall}
+                                onEdit={() => setEditingContact(contact)}
+                                onDelete={() => setDeletingContact(contact)}
+                              />
                             ))}
                         </div>
                       </div>
@@ -969,35 +961,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         {filteredContacts
                           .filter((c) => !c.is_favorite)
                           .map((contact) => (
-                            <div
+                            <ContactCard
                               key={contact.id}
-                              className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-lg flex-shrink-0">
-                                  {contact.name.charAt(0)}
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="font-medium text-base text-foreground truncate">
-                                    {contact.name}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {contact.company}
-                                  </p>
-                                  <p className="text-sm text-foreground font-mono truncate">
-                                    {contact.phone_number}
-                                  </p>
-                                </div>
-                              </div>
-                              <Button
-                                onClick={() => makeCall(contact.phone_number)}
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                              >
-                                <Phone className="w-4 h-4 mr-1.5" />
-                                Call
-                              </Button>
-                            </div>
+                              contact={contact}
+                              makeCall={makeCall}
+                              onEdit={() => setEditingContact(contact)}
+                              onDelete={() => setDeletingContact(contact)}
+                            />
                           ))}
                       </div>
                     </div>
@@ -1082,7 +1052,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                    'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
@@ -1120,6 +1090,17 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         onSuccess={() => {
           mutateContacts();
           setEditingContact(null);
+        }}
+      />
+
+      {/* Delete Contact Modal */}
+      <DeleteContact
+        isOpen={!!deletingContact}
+        contact={deletingContact}
+        onClose={() => setDeletingContact(null)}
+        onSuccess={() => {
+          mutateContacts();
+          setDeletingContact(null);
         }}
       />
 
