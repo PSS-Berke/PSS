@@ -31,6 +31,7 @@ import { AddContact } from './components/AddContact';
 import { ContactCard } from './components/ContactCard';
 import { SettingsModal } from './components/SettingsModal';
 import { ActiveCallOverlay } from './components/ActiveCallOverlay';
+import { EditContact } from './components/EditContact';
 
 type TwilioError = {
   code: string;
@@ -108,6 +109,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [leftNavExpanded, setLeftNavExpanded] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
   const { token } = useAuth();
   const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
@@ -538,7 +540,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         {filteredContacts
                           .filter((c) => c.is_favorite)
                           .map((contact) => (
-                            <ContactCard key={contact.id} contact={contact} makeCall={makeCall} />
+                            <ContactCard key={contact.id} contact={contact} makeCall={makeCall} onEdit={() => setEditingContact(contact)} />
                           ))}
                       </div>
                     </div>
@@ -552,7 +554,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       {filteredContacts
                         .filter((c) => !c.is_favorite)
                         .map((contact) => (
-                          <ContactCard key={contact.id} contact={contact} makeCall={makeCall} />
+                          <ContactCard key={contact.id} contact={contact} makeCall={makeCall} onEdit={() => setEditingContact(contact)} />
                         ))}
                     </div>
                   </div>
@@ -633,7 +635,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -1080,7 +1082,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                    'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
@@ -1108,6 +1110,17 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         isOpen={showAddContact}
         onClose={() => setShowAddContact(false)}
         onSuccess={() => mutateContacts()}
+      />
+
+      {/* Edit Contact Modal */}
+      <EditContact
+        isOpen={!!editingContact}
+        contact={editingContact}
+        onClose={() => setEditingContact(null)}
+        onSuccess={() => {
+          mutateContacts();
+          setEditingContact(null);
+        }}
       />
 
       {/* Settings Modal */}
