@@ -40,8 +40,32 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/xano/auth-context';
+import { useAuth, useUser } from '@/lib/xano/auth-context';
 import { Device } from '@twilio/voice-sdk';
+import {
+  apiAddContact,
+  apiGetCallLogs,
+  apiGetContacts,
+  apiStoreCallLog,
+} from '@/lib/services/PhoneService';
+import { AxiosError } from 'axios';
+import useSWR from 'swr';
+import { CallLog, Contact } from '@/@types/phone';
+import { z } from 'zod';
+
+// Zod validation schema for contact form
+const contactSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  phone_number: z
+    .string()
+    .min(1, 'Phone number is required')
+    .regex(/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number'),
+  email: z.string().email('Please enter a valid email address').or(z.literal('')),
+  company: z.string().max(100, 'Company name must be less than 100 characters').or(z.literal('')),
+  is_favorite: z.boolean().default(false),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
 
 type TwilioError = {
   code: string;
@@ -93,88 +117,6 @@ type TwilioResponse = {
   trunk_sid: string | null;
   uri: string;
 };
-// Mock data
-const initialMockCallLogs = [
-  {
-    id: 1,
-    phone_number: '+1 (555) 123-4567',
-    contact_name: 'John Doe',
-    direction: 'outbound' as const,
-    status: 'completed' as const,
-    duration: 245,
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 2,
-    phone_number: '+1 (555) 987-6543',
-    contact_name: 'Jane Smith',
-    direction: 'inbound' as const,
-    status: 'missed' as const,
-    duration: 0,
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: 3,
-    phone_number: '+1 (555) 456-7890',
-    contact_name: 'Bob Johnson',
-    direction: 'outbound' as const,
-    status: 'completed' as const,
-    duration: 180,
-    timestamp: new Date(Date.now() - 10800000).toISOString(),
-  },
-  {
-    id: 4,
-    phone_number: '+1 (555) 234-5678',
-    contact_name: 'Alice Williams',
-    direction: 'inbound' as const,
-    status: 'completed' as const,
-    duration: 320,
-    timestamp: new Date(Date.now() - 14400000).toISOString(),
-  },
-];
-
-const initialMockContacts = [
-  {
-    id: 1,
-    name: 'John Doe',
-    company: 'Acme Corp',
-    phone_number: '+1 (555) 123-4567',
-    email: 'john@acme.com',
-    is_favorite: true,
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    company: 'Tech Inc',
-    phone_number: '+1 (555) 987-6543',
-    email: 'jane@tech.com',
-    is_favorite: true,
-  },
-  {
-    id: 3,
-    name: 'Bob Johnson',
-    company: 'StartupXYZ',
-    phone_number: '+1 (555) 456-7890',
-    email: 'bob@startup.com',
-    is_favorite: false,
-  },
-  {
-    id: 4,
-    name: 'Alice Williams',
-    company: 'Enterprise Co',
-    phone_number: '+1 (555) 234-5678',
-    email: 'alice@enterprise.com',
-    is_favorite: false,
-  },
-  {
-    id: 5,
-    name: 'Charlie Brown',
-    company: 'Design Studio',
-    phone_number: '+1 (555) 345-6789',
-    email: 'charlie@design.com',
-    is_favorite: false,
-  },
-];
 
 type ViewType = 'dialer' | 'contacts' | 'recent';
 type CallFilterType = 'all' | 'missed' | 'inbound' | 'outbound';
@@ -190,7 +132,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [dialedNumber, setDialedNumber] = useState('');
   const [activeCall, setActiveCall] = useState<any>(null);
   const [currentCall, setCurrentCall] = useState<any>(null);
-  const [callStatus, setCallStatus] = useState<'' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'>('');
+  const [callStatus, setCallStatus] = useState<
+    '' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'
+  >('');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
@@ -200,10 +144,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
   const [copiedNumber, setCopiedNumber] = useState(false);
-  const [contacts, setContacts] = useState(initialMockContacts);
-  const [callLogs] = useState(initialMockCallLogs);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { token } = useAuth();
-  const [newContact, setNewContact] = useState({
+  const [newContact, setNewContact] = useState<ContactFormData>({
     name: '',
     company: '',
     phone_number: '',
@@ -211,7 +156,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     is_favorite: false,
   });
   const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
-
+  const { user } = useUser();
   const [settings, setSettings] = useState({
     phoneNumber: '+1 (555) 900-1234',
     voicemailEnabled: true,
@@ -222,6 +167,20 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     callRecording: false,
     notificationSound: true,
   });
+
+  const {
+    data: contactsData,
+    error: contactsError,
+    isLoading: contactsIsLoading,
+    mutate: mutateContacts,
+  } = useSWR<Contact[]>('/api:GqG2MSGo/contacts', apiGetContacts);
+
+  const {
+    data: callLogs,
+    error: callLogsError,
+    isLoading: callLogsIsLoading,
+    mutate: mutateCallLogs,
+  } = useSWR<CallLog[]>('/api:mDRLMGRq/call_logs', apiGetCallLogs);
 
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
@@ -326,7 +285,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       return;
     }
 
-    const contact = contacts.find((c) => c.phone_number === number);
     setCallStatus('RINGING');
 
     try {
@@ -339,11 +297,24 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
       // Store the call object for event handling
       setCurrentCall(call);
+      const contact = contactsData?.find((contact: Contact) => contact.phone_number === number);
+      //set up call log
+      await apiStoreCallLog({
+        id: 0,
+        created_at: new Date().toISOString(),
+        phone: number,
+        contact_name: contact?.name || 'Unknown',
+        direction: 'outbound',
+        status: 'completed',
+        duration: 0,
+        user_id: user?.id || 0,
+        contact_id: contact?.id || 0,
+      });
 
       // Set up call event handlers
       call.on('accept', () => {
         console.log('CALL STATUS - ACCEPTED');
-        setActiveCall((prev: any) => prev ? { ...prev, status: 'in-progress' } : null);
+        setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
         setCallStatus('ACCEPTED');
       });
 
@@ -375,12 +346,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
       setActiveCall({
         phone_number: number,
-        contact_name: contact?.name,
+        contact_name:
+          contactsData?.find((contact: Contact) => contact.phone_number === number)?.name ||
+          'Unknown',
         status: 'ringing',
         startTime: new Date().toISOString(),
       });
       setCallDuration(0);
-
     } catch (error) {
       console.error('Failed to make call:', error);
       setCallStatus('');
@@ -449,49 +421,78 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
   const handleNewContactChange = (key: string, value: any) => {
     setNewContact((prev) => ({ ...prev, [key]: value }));
+
+    // Clear error for this field when user starts typing
+    if (formErrors[key]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[key];
+        return newErrors;
+      });
+    }
   };
 
   const saveSettings = () => {
     setShowSettings(false);
   };
 
-  const handleAddContact = () => {
-    if (!newContact.name || !newContact.phone_number) {
-      return;
+  const handleAddContact = async () => {
+    setIsSubmitting(true);
+    setFormErrors({});
+
+    try {
+      // Validate form data with Zod
+      const validatedData = contactSchema.parse(newContact);
+
+      await apiAddContact(validatedData);
+      mutateContacts();
+
+      // Reset form on success
+      setNewContact({
+        name: '',
+        company: '',
+        phone_number: '',
+        email: '',
+        is_favorite: false,
+      });
+      setShowAddContact(false);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Handle Zod validation errors
+        const errors: Record<string, string> = {};
+        error.issues.forEach((err: z.ZodIssue) => {
+          if (err.path[0]) {
+            errors[err.path[0] as string] = err.message;
+          }
+        });
+        setFormErrors(errors);
+      } else {
+        console.error('Failed to add contact:', (error as AxiosError).message);
+        setFormErrors({ general: 'Failed to add contact. Please try again.' });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const contactToAdd = {
-      id: Date.now(),
-      ...newContact,
-    };
-
-    setContacts((prev) => [...prev, contactToAdd]);
-    setNewContact({
-      name: '',
-      company: '',
-      phone_number: '',
-      email: '',
-      is_favorite: false,
-    });
-    setShowAddContact(false);
   };
 
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.phone_number.includes(searchQuery) ||
-      contact.company?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredContacts =
+    contactsData?.filter(
+      (contact: Contact) =>
+        contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.phone_number.includes(searchQuery) ||
+        contact.company?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) || [];
 
-  const filteredCallLogs = callLogs.filter((log) => {
-    if (callFilter === 'all') return true;
-    if (callFilter === 'missed') return log.status === 'missed';
-    if (callFilter === 'inbound') return log.direction === 'inbound';
-    if (callFilter === 'outbound') return log.direction === 'outbound';
-    return true;
-  });
+  const filteredCallLogs =
+    callLogs?.filter((log) => {
+      if (callFilter === 'all') return true;
+      if (callFilter === 'missed') return log.status === 'missed';
+      if (callFilter === 'inbound') return log.direction === 'inbound';
+      if (callFilter === 'outbound') return log.direction === 'outbound';
+      return true;
+    }) || [];
 
-  const missedCallsCount = callLogs.filter((l) => l.status === 'missed').length;
+  const missedCallsCount = callLogs?.filter((l) => l.status === 'missed').length || 0;
 
   const getStatusBadge = () => {
     if (activeCall) {
@@ -530,11 +531,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             <div className="flex text-sm text-muted-foreground items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Users className="h-4 w-4" />
-                {contacts.length}
+                {contactsData?.length}
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />
-                {callLogs.length}
+                {callLogs?.length || 0}
               </div>
             </div>
           </div>
@@ -649,7 +650,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     </Button>
                   </div>
 
-                  {filteredContacts.filter((c) => c.is_favorite).length > 0 && (
+                  {filteredContacts && filteredContacts.filter((c) => c.is_favorite).length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                         Favorites
@@ -796,10 +797,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 {log.contact_name}
                               </p>
                               <p className="text-xs text-muted-foreground font-mono truncate">
-                                {log.phone_number}
+                                {log.phone}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {formatTimestamp(log.timestamp)}
+                                {formatTimestamp(log.created_at)}
                               </p>
                             </div>
                           </div>
@@ -809,7 +810,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -858,7 +859,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     className="absolute top-0 right-2 h-5 min-w-5 px-1 text-[10px]"
                     variant="secondary"
                   >
-                    {contacts.length}
+                    {contactsData?.length}
                   </Badge>
                 </button>
                 <button
@@ -945,7 +946,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         variant={currentView === 'contacts' ? 'secondary' : 'outline'}
                         className="text-xs"
                       >
-                        {contacts.length}
+                        {contactsData?.length}
                       </Badge>
                     </button>
 
@@ -984,8 +985,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     {currentView === 'dialer' && 'Enter a number to make a call'}
-                    {currentView === 'contacts' && `${filteredContacts.length} contacts available`}
-                    {currentView === 'recent' && `${filteredCallLogs.length} calls in history`}
+                    {currentView === 'contacts' &&
+                      `${filteredContacts?.length || 0} contacts available`}
+                    {currentView === 'recent' &&
+                      `${filteredCallLogs?.length || 0} calls in history`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1090,7 +1093,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       </Button>
                     </div>
 
-                    {filteredContacts.filter((c) => c.is_favorite).length > 0 && (
+                    {filteredContacts?.filter((c: Contact) => c.is_favorite).length > 0 && (
                       <div className="mb-8">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                           Favorites
@@ -1241,10 +1244,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                   {log.contact_name}
                                 </p>
                                 <p className="text-sm text-muted-foreground font-mono truncate">
-                                  {log.phone_number}
+                                  {log.phone}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {formatTimestamp(log.timestamp)}
+                                  {formatTimestamp(log.created_at)}
                                 </p>
                               </div>
                             </div>
@@ -1254,7 +1257,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                    'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
@@ -1293,6 +1296,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {formErrors.general && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{formErrors.general}</p>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="name" className="text-sm font-medium">
                 Name <span className="text-red-500">*</span>
@@ -1305,9 +1314,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   value={newContact.name}
                   onChange={(e) => handleNewContactChange('name', e.target.value)}
                   placeholder="John Doe"
-                  className="pl-10"
+                  className={cn('pl-10', formErrors.name && 'border-red-500 focus:border-red-500')}
                 />
               </div>
+              {formErrors.name && <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>}
             </div>
 
             <div>
@@ -1322,9 +1332,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   value={newContact.company}
                   onChange={(e) => handleNewContactChange('company', e.target.value)}
                   placeholder="Acme Corp"
-                  className="pl-10"
+                  className={cn(
+                    'pl-10',
+                    formErrors.company && 'border-red-500 focus:border-red-500',
+                  )}
                 />
               </div>
+              {formErrors.company && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.company}</p>
+              )}
             </div>
 
             <div>
@@ -1339,9 +1355,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   value={newContact.phone_number}
                   onChange={(e) => handleNewContactChange('phone_number', e.target.value)}
                   placeholder="+1 (555) 123-4567"
-                  className="pl-10 font-mono"
+                  className={cn(
+                    'pl-10 font-mono',
+                    formErrors.phone_number && 'border-red-500 focus:border-red-500',
+                  )}
                 />
               </div>
+              {formErrors.phone_number && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.phone_number}</p>
+              )}
             </div>
 
             <div>
@@ -1356,9 +1378,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   value={newContact.email}
                   onChange={(e) => handleNewContactChange('email', e.target.value)}
                   placeholder="john@acme.com"
-                  className="pl-10"
+                  className={cn('pl-10', formErrors.email && 'border-red-500 focus:border-red-500')}
                 />
               </div>
+              {formErrors.email && <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>}
             </div>
 
             <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
@@ -1396,10 +1419,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             </Button>
             <Button
               onClick={handleAddContact}
-              className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C]"
+              disabled={isSubmitting}
+              className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C] disabled:opacity-50"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Contact
+              {isSubmitting ? 'Adding...' : 'Add Contact'}
             </Button>
           </DialogFooter>
         </DialogContent>
