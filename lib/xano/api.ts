@@ -44,7 +44,7 @@ export class XanoApiError extends Error {
   }
 }
 
-async function apiRequest<T>(
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   token?: string,
@@ -58,7 +58,7 @@ async function apiRequest<T>(
     );
   }
 
-  const url = getApiUrl(endpoint);
+  const url = endpoint.startsWith('http') ? endpoint : getApiUrl(endpoint);
   const headers = skipApiKey ? { 'Content-Type': 'application/json' } : getAuthHeaders(token);
 
   try {

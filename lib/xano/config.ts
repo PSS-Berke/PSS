@@ -15,6 +15,8 @@ export const XANO_CONFIG = {
     process.env.NEXT_PUBLIC_COMPANY_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ZKUwjF5k',
   ABSOLUTE_BASE_URL:
     process.env.NEXT_PUBLIC_ABSOLUTE_BASE_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io',
+  GOOGLE_ANALYTICS_BASE_URL:
+    process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:_dzvItLQ',
   // API Endpoints - configured for your Xano setup
   ENDPOINTS: {
     AUTH: {
@@ -53,6 +55,10 @@ export const XANO_CONFIG = {
       UPDATE_COMPANY: '/admin/update_company',
       DELETE_COMPANY: '/admin/delete_company',
     },
+    GOOGLE_ANALYTICS: {
+      PROPERTIES: '/google/properties',
+      ACCOUNT_DATA: '/google/account_data',
+    },
   },
 } as const;
 
@@ -74,6 +80,10 @@ export const getSocialApiUrl = (endpoint: string): string => {
 // Helper function to get Battle Card API URL
 export const getBattleCardApiUrl = (endpoint: string): string => {
   return `${XANO_CONFIG.BATTLE_CARD_BASE_URL}${endpoint}`;
+};
+
+export const getGoogleAnalyticsApiUrl = (endpoint: string): string => {
+  return `${XANO_CONFIG.GOOGLE_ANALYTICS_BASE_URL}${endpoint}`;
 };
 
 // Helper function to get headers with auth token

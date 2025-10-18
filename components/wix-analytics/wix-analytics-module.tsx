@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, ChevronDown, ChevronUp, X, Radio, Globe } from 'lucide-react';
 import { PlatformSidebar } from './platform-sidebar';
 import { AnalyticsDashboard } from './analytics-dashboard';
+import GaPage from '@/components/google-analytics/ga-page';
 import { MOCK_ANALYTICS_DATA, PLATFORMS } from './mock-data';
 
 interface WixAnalyticsModuleProps {
@@ -113,7 +114,12 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
                   onSelectCategory={handleSelectCategory}
                 />
                 <div className="flex-1 overflow-auto p-6 w-full">
-                  <AnalyticsDashboard categoryData={getCurrentCategoryData()} />
+                  {selectedPlatform === 'google-analytics' &&
+                  selectedCategory === 'google-analytics-tracking' ? (
+                    <GaPage />
+                  ) : (
+                    <AnalyticsDashboard categoryData={getCurrentCategoryData()} />
+                  )}
                 </div>
               </div>
 
@@ -134,7 +140,12 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
                   />
                 </div>
                 <div className="flex-1 min-w-0 h-full overflow-auto">
-                  <AnalyticsDashboard categoryData={getCurrentCategoryData()} className="h-full" />
+                  {selectedPlatform === 'google-analytics' &&
+                  selectedCategory === 'google-analytics-tracking' ? (
+                    <GaPage />
+                  ) : (
+                    <AnalyticsDashboard categoryData={getCurrentCategoryData()} className="h-full" />
+                  )}
                 </div>
               </div>
             </CardContent>
