@@ -3,25 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   Phone,
-  PhoneOff,
   PhoneIncoming,
   PhoneOutgoing,
   PhoneMissed,
   Users,
   Clock,
-  Mic,
-  MicOff,
-  Pause,
-  Play,
-  X,
   Search,
   ChevronRight,
   Settings,
   Plus,
-  Building2,
-  Mail,
-  Star,
-  Check,
   ChevronDown,
   ChevronUp,
   PhoneCall,
@@ -29,19 +19,20 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/xano/auth-context';
+import { useAuth, useUser } from '@/lib/xano/auth-context';
 import { Device } from '@twilio/voice-sdk';
+import { apiGetCallLogs, apiGetContacts, apiStoreCallLog } from '@/lib/services/PhoneService';
+import { AxiosError } from 'axios';
+import useSWR from 'swr';
+import { CallLog, Contact } from '@/@types/phone';
+import { AddContact } from './components/AddContact';
+import { ContactCard } from './components/ContactCard';
+import { SettingsModal } from './components/SettingsModal';
+import { ActiveCallOverlay } from './components/ActiveCallOverlay';
+import { EditContact } from './components/EditContact';
+import DeleteContact from './components/DeleteContact';
 
 type TwilioError = {
   code: string;
@@ -93,88 +84,6 @@ type TwilioResponse = {
   trunk_sid: string | null;
   uri: string;
 };
-// Mock data
-const initialMockCallLogs = [
-  {
-    id: 1,
-    phone_number: '+1 (555) 123-4567',
-    contact_name: 'John Doe',
-    direction: 'outbound' as const,
-    status: 'completed' as const,
-    duration: 245,
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 2,
-    phone_number: '+1 (555) 987-6543',
-    contact_name: 'Jane Smith',
-    direction: 'inbound' as const,
-    status: 'missed' as const,
-    duration: 0,
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: 3,
-    phone_number: '+1 (555) 456-7890',
-    contact_name: 'Bob Johnson',
-    direction: 'outbound' as const,
-    status: 'completed' as const,
-    duration: 180,
-    timestamp: new Date(Date.now() - 10800000).toISOString(),
-  },
-  {
-    id: 4,
-    phone_number: '+1 (555) 234-5678',
-    contact_name: 'Alice Williams',
-    direction: 'inbound' as const,
-    status: 'completed' as const,
-    duration: 320,
-    timestamp: new Date(Date.now() - 14400000).toISOString(),
-  },
-];
-
-const initialMockContacts = [
-  {
-    id: 1,
-    name: 'John Doe',
-    company: 'Acme Corp',
-    phone_number: '+1 (555) 123-4567',
-    email: 'john@acme.com',
-    is_favorite: true,
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    company: 'Tech Inc',
-    phone_number: '+1 (555) 987-6543',
-    email: 'jane@tech.com',
-    is_favorite: true,
-  },
-  {
-    id: 3,
-    name: 'Bob Johnson',
-    company: 'StartupXYZ',
-    phone_number: '+1 (555) 456-7890',
-    email: 'bob@startup.com',
-    is_favorite: false,
-  },
-  {
-    id: 4,
-    name: 'Alice Williams',
-    company: 'Enterprise Co',
-    phone_number: '+1 (555) 234-5678',
-    email: 'alice@enterprise.com',
-    is_favorite: false,
-  },
-  {
-    id: 5,
-    name: 'Charlie Brown',
-    company: 'Design Studio',
-    phone_number: '+1 (555) 345-6789',
-    email: 'charlie@design.com',
-    is_favorite: false,
-  },
-];
 
 type ViewType = 'dialer' | 'contacts' | 'recent';
 type CallFilterType = 'all' | 'missed' | 'inbound' | 'outbound';
@@ -190,7 +99,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [dialedNumber, setDialedNumber] = useState('');
   const [activeCall, setActiveCall] = useState<any>(null);
   const [currentCall, setCurrentCall] = useState<any>(null);
-  const [callStatus, setCallStatus] = useState<'' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'>('');
+  const [callStatus, setCallStatus] = useState<
+    '' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'
+  >('');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
@@ -199,29 +110,26 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [leftNavExpanded, setLeftNavExpanded] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
-  const [copiedNumber, setCopiedNumber] = useState(false);
-  const [contacts, setContacts] = useState(initialMockContacts);
-  const [callLogs] = useState(initialMockCallLogs);
-  const { token } = useAuth();
-  const [newContact, setNewContact] = useState({
-    name: '',
-    company: '',
-    phone_number: '',
-    email: '',
-    is_favorite: false,
-  });
-  const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
 
-  const [settings, setSettings] = useState({
-    phoneNumber: '+1 (555) 900-1234',
-    voicemailEnabled: true,
-    voicemailGreeting: 'default',
-    callForwarding: false,
-    forwardNumber: '',
-    doNotDisturb: false,
-    callRecording: false,
-    notificationSound: true,
-  });
+  const { token } = useAuth();
+  const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
+  const { user } = useUser();
+
+  const {
+    data: contactsData,
+    error: contactsError,
+    isLoading: contactsIsLoading,
+    mutate: mutateContacts,
+  } = useSWR<Contact[]>('/api:GqG2MSGo/contacts', apiGetContacts);
+
+  const {
+    data: callLogs,
+    error: callLogsError,
+    isLoading: callLogsIsLoading,
+    mutate: mutateCallLogs,
+  } = useSWR<CallLog[]>('/api:mDRLMGRq/call_logs', apiGetCallLogs);
 
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
@@ -326,7 +234,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       return;
     }
 
-    const contact = contacts.find((c) => c.phone_number === number);
     setCallStatus('RINGING');
 
     try {
@@ -339,11 +246,24 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
       // Store the call object for event handling
       setCurrentCall(call);
+      const contact = contactsData?.find((contact: Contact) => contact.phone_number === number);
+      //set up call log
+      await apiStoreCallLog({
+        id: 0,
+        created_at: new Date().toISOString(),
+        phone: number,
+        contact_name: contact?.name || 'Unknown',
+        direction: 'outbound',
+        status: 'completed',
+        duration: 0,
+        user_id: user?.id || 0,
+        contact_id: contact?.id || 0,
+      });
 
       // Set up call event handlers
       call.on('accept', () => {
         console.log('CALL STATUS - ACCEPTED');
-        setActiveCall((prev: any) => prev ? { ...prev, status: 'in-progress' } : null);
+        setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
         setCallStatus('ACCEPTED');
       });
 
@@ -375,12 +295,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
       setActiveCall({
         phone_number: number,
-        contact_name: contact?.name,
+        contact_name:
+          contactsData?.find((contact: Contact) => contact.phone_number === number)?.name ||
+          'Unknown',
         status: 'ringing',
         startTime: new Date().toISOString(),
       });
       setCallDuration(0);
-
     } catch (error) {
       console.error('Failed to make call:', error);
       setCallStatus('');
@@ -437,61 +358,24 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     }
   };
 
-  const copyPhoneNumber = () => {
-    navigator.clipboard.writeText(settings.phoneNumber);
-    setCopiedNumber(true);
-    setTimeout(() => setCopiedNumber(false), 2000);
-  };
+  const filteredContacts =
+    contactsData?.filter(
+      (contact: Contact) =>
+        contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.phone_number.includes(searchQuery) ||
+        contact.company?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) || [];
 
-  const handleSettingChange = (key: string, value: any) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
+  const filteredCallLogs =
+    callLogs?.filter((log) => {
+      if (callFilter === 'all') return true;
+      if (callFilter === 'missed') return log.status === 'missed';
+      if (callFilter === 'inbound') return log.direction === 'inbound';
+      if (callFilter === 'outbound') return log.direction === 'outbound';
+      return true;
+    }) || [];
 
-  const handleNewContactChange = (key: string, value: any) => {
-    setNewContact((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const saveSettings = () => {
-    setShowSettings(false);
-  };
-
-  const handleAddContact = () => {
-    if (!newContact.name || !newContact.phone_number) {
-      return;
-    }
-
-    const contactToAdd = {
-      id: Date.now(),
-      ...newContact,
-    };
-
-    setContacts((prev) => [...prev, contactToAdd]);
-    setNewContact({
-      name: '',
-      company: '',
-      phone_number: '',
-      email: '',
-      is_favorite: false,
-    });
-    setShowAddContact(false);
-  };
-
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.phone_number.includes(searchQuery) ||
-      contact.company?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const filteredCallLogs = callLogs.filter((log) => {
-    if (callFilter === 'all') return true;
-    if (callFilter === 'missed') return log.status === 'missed';
-    if (callFilter === 'inbound') return log.direction === 'inbound';
-    if (callFilter === 'outbound') return log.direction === 'outbound';
-    return true;
-  });
-
-  const missedCallsCount = callLogs.filter((l) => l.status === 'missed').length;
+  const missedCallsCount = callLogs?.filter((l) => l.status === 'missed').length || 0;
 
   const getStatusBadge = () => {
     if (activeCall) {
@@ -530,11 +414,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             <div className="flex text-sm text-muted-foreground items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Users className="h-4 w-4" />
-                {contacts.length}
+                {contactsData?.length}
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />
-                {callLogs.length}
+                {callLogs?.length || 0}
               </div>
             </div>
           </div>
@@ -649,7 +533,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     </Button>
                   </div>
 
-                  {filteredContacts.filter((c) => c.is_favorite).length > 0 && (
+                  {filteredContacts && filteredContacts.filter((c) => c.is_favorite).length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                         Favorites
@@ -658,35 +542,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         {filteredContacts
                           .filter((c) => c.is_favorite)
                           .map((contact) => (
-                            <div
+                            <ContactCard
                               key={contact.id}
-                              className="flex flex-col gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-base flex-shrink-0">
-                                  {contact.name.charAt(0)}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-sm text-foreground truncate">
-                                    {contact.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {contact.company}
-                                  </p>
-                                  <p className="text-xs text-foreground font-mono truncate">
-                                    {contact.phone_number}
-                                  </p>
-                                </div>
-                              </div>
-                              <Button
-                                onClick={() => makeCall(contact.phone_number)}
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white w-full"
-                              >
-                                <Phone className="w-3.5 h-3.5 mr-1.5" />
-                                Call
-                              </Button>
-                            </div>
+                              contact={contact}
+                              makeCall={makeCall}
+                              onEdit={() => setEditingContact(contact)}
+                              onDelete={() => setDeletingContact(contact)}
+                            />
                           ))}
                       </div>
                     </div>
@@ -700,35 +562,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       {filteredContacts
                         .filter((c) => !c.is_favorite)
                         .map((contact) => (
-                          <div
+                          <ContactCard
                             key={contact.id}
-                            className="flex flex-col gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-base flex-shrink-0">
-                                {contact.name.charAt(0)}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm text-foreground truncate">
-                                  {contact.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {contact.company}
-                                </p>
-                                <p className="text-xs text-foreground font-mono truncate">
-                                  {contact.phone_number}
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              onClick={() => makeCall(contact.phone_number)}
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700 text-white w-full"
-                            >
-                              <Phone className="w-3.5 h-3.5 mr-1.5" />
-                              Call
-                            </Button>
-                          </div>
+                            contact={contact}
+                            makeCall={makeCall}
+                            onEdit={() => setEditingContact(contact)}
+                            onDelete={() => setDeletingContact(contact)}
+                          />
                         ))}
                     </div>
                   </div>
@@ -796,10 +636,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 {log.contact_name}
                               </p>
                               <p className="text-xs text-muted-foreground font-mono truncate">
-                                {log.phone_number}
+                                {log.phone}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {formatTimestamp(log.timestamp)}
+                                {formatTimestamp(log.created_at)}
                               </p>
                             </div>
                           </div>
@@ -809,7 +649,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -858,7 +698,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     className="absolute top-0 right-2 h-5 min-w-5 px-1 text-[10px]"
                     variant="secondary"
                   >
-                    {contacts.length}
+                    {contactsData?.length}
                   </Badge>
                 </button>
                 <button
@@ -945,7 +785,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         variant={currentView === 'contacts' ? 'secondary' : 'outline'}
                         className="text-xs"
                       >
-                        {contacts.length}
+                        {contactsData?.length}
                       </Badge>
                     </button>
 
@@ -984,8 +824,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     {currentView === 'dialer' && 'Enter a number to make a call'}
-                    {currentView === 'contacts' && `${filteredContacts.length} contacts available`}
-                    {currentView === 'recent' && `${filteredCallLogs.length} calls in history`}
+                    {currentView === 'contacts' &&
+                      `${filteredContacts?.length || 0} contacts available`}
+                    {currentView === 'recent' &&
+                      `${filteredCallLogs?.length || 0} calls in history`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1090,7 +932,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                       </Button>
                     </div>
 
-                    {filteredContacts.filter((c) => c.is_favorite).length > 0 && (
+                    {filteredContacts?.filter((c: Contact) => c.is_favorite).length > 0 && (
                       <div className="mb-8">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                           Favorites
@@ -1099,35 +941,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                           {filteredContacts
                             .filter((c) => c.is_favorite)
                             .map((contact) => (
-                              <div
+                              <ContactCard
                                 key={contact.id}
-                                className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                              >
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-full bg-[#C33527]/15 flex items-center justify-center text-[#C33527] font-semibold text-lg flex-shrink-0">
-                                    {contact.name.charAt(0)}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="font-medium text-base text-foreground truncate">
-                                      {contact.name}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground truncate">
-                                      {contact.company}
-                                    </p>
-                                    <p className="text-sm text-foreground font-mono truncate">
-                                      {contact.phone_number}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Button
-                                  onClick={() => makeCall(contact.phone_number)}
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                  <Phone className="w-4 h-4 mr-1.5" />
-                                  Call
-                                </Button>
-                              </div>
+                                contact={contact}
+                                makeCall={makeCall}
+                                onEdit={() => setEditingContact(contact)}
+                                onDelete={() => setDeletingContact(contact)}
+                              />
                             ))}
                         </div>
                       </div>
@@ -1141,35 +961,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                         {filteredContacts
                           .filter((c) => !c.is_favorite)
                           .map((contact) => (
-                            <div
+                            <ContactCard
                               key={contact.id}
-                              className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-lg flex-shrink-0">
-                                  {contact.name.charAt(0)}
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="font-medium text-base text-foreground truncate">
-                                    {contact.name}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {contact.company}
-                                  </p>
-                                  <p className="text-sm text-foreground font-mono truncate">
-                                    {contact.phone_number}
-                                  </p>
-                                </div>
-                              </div>
-                              <Button
-                                onClick={() => makeCall(contact.phone_number)}
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                              >
-                                <Phone className="w-4 h-4 mr-1.5" />
-                                Call
-                              </Button>
-                            </div>
+                              contact={contact}
+                              makeCall={makeCall}
+                              onEdit={() => setEditingContact(contact)}
+                              onDelete={() => setDeletingContact(contact)}
+                            />
                           ))}
                       </div>
                     </div>
@@ -1241,10 +1039,10 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                   {log.contact_name}
                                 </p>
                                 <p className="text-sm text-muted-foreground font-mono truncate">
-                                  {log.phone_number}
+                                  {log.phone}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {formatTimestamp(log.timestamp)}
+                                  {formatTimestamp(log.created_at)}
                                 </p>
                               </div>
                             </div>
@@ -1254,7 +1052,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                    'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
@@ -1278,306 +1076,48 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       )}
 
       {/* Add Contact Modal */}
-      <Dialog open={showAddContact} onOpenChange={setShowAddContact}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#C33527]/15 flex items-center justify-center">
-                <Plus className="w-5 h-5 text-[#C33527]" />
-              </div>
-              <div>
-                <DialogTitle>Add New Contact</DialogTitle>
-                <DialogDescription>Enter contact information</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
+      <AddContact
+        isOpen={showAddContact}
+        onClose={() => setShowAddContact(false)}
+        onSuccess={() => mutateContacts()}
+      />
 
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="name" className="text-sm font-medium">
-                Name <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative mt-2">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  value={newContact.name}
-                  onChange={(e) => handleNewContactChange('name', e.target.value)}
-                  placeholder="John Doe"
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      {/* Edit Contact Modal */}
+      <EditContact
+        isOpen={!!editingContact}
+        contact={editingContact}
+        onClose={() => setEditingContact(null)}
+        onSuccess={() => {
+          mutateContacts();
+          setEditingContact(null);
+        }}
+      />
 
-            <div>
-              <Label htmlFor="company" className="text-sm font-medium">
-                Company
-              </Label>
-              <div className="relative mt-2">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="company"
-                  type="text"
-                  value={newContact.company}
-                  onChange={(e) => handleNewContactChange('company', e.target.value)}
-                  placeholder="Acme Corp"
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="phone" className="text-sm font-medium">
-                Phone Number <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative mt-2">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={newContact.phone_number}
-                  onChange={(e) => handleNewContactChange('phone_number', e.target.value)}
-                  placeholder="+1 (555) 123-4567"
-                  className="pl-10 font-mono"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email
-              </Label>
-              <div className="relative mt-2">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={newContact.email}
-                  onChange={(e) => handleNewContactChange('email', e.target.value)}
-                  placeholder="john@acme.com"
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
-              <div className="flex items-center gap-3">
-                <Star className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">Add to Favorites</p>
-                  <p className="text-xs text-muted-foreground">Quick access to this contact</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleNewContactChange('is_favorite', !newContact.is_favorite)}
-                className={cn(
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  newContact.is_favorite ? 'bg-[#C33527]' : 'bg-border',
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    newContact.is_favorite ? 'translate-x-6' : 'translate-x-1',
-                  )}
-                />
-              </button>
-            </div>
-          </div>
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowAddContact(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddContact}
-              className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C]"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Contact
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Contact Modal */}
+      <DeleteContact
+        isOpen={!!deletingContact}
+        contact={deletingContact}
+        onClose={() => setDeletingContact(null)}
+        onSuccess={() => {
+          mutateContacts();
+          setDeletingContact(null);
+        }}
+      />
 
       {/* Settings Modal */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#C33527]/15 flex items-center justify-center">
-                <Settings className="w-5 h-5 text-[#C33527]" />
-              </div>
-              <div>
-                <DialogTitle>Phone Settings</DialogTitle>
-                <DialogDescription>Configure your phone preferences</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div>
-              <Label className="text-sm font-medium">Your Phone Number</Label>
-              <div className="flex items-center gap-2 mt-2">
-                <Input
-                  value={settings.phoneNumber}
-                  onChange={(e) => handleSettingChange('phoneNumber', e.target.value)}
-                  className="font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={copyPhoneNumber}
-                  className="flex-shrink-0"
-                >
-                  {copiedNumber ? <Check className="w-4 h-4" /> : 'Copy'}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
-              <div>
-                <p className="font-medium text-sm">Voicemail</p>
-                <p className="text-xs text-muted-foreground">Enable voicemail for missed calls</p>
-              </div>
-              <button
-                onClick={() => handleSettingChange('voicemailEnabled', !settings.voicemailEnabled)}
-                className={cn(
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  settings.voicemailEnabled ? 'bg-[#C33527]' : 'bg-border',
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    settings.voicemailEnabled ? 'translate-x-6' : 'translate-x-1',
-                  )}
-                />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
-              <div>
-                <p className="font-medium text-sm">Do Not Disturb</p>
-                <p className="text-xs text-muted-foreground">Block incoming calls</p>
-              </div>
-              <button
-                onClick={() => handleSettingChange('doNotDisturb', !settings.doNotDisturb)}
-                className={cn(
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  settings.doNotDisturb ? 'bg-[#C33527]' : 'bg-border',
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    settings.doNotDisturb ? 'translate-x-6' : 'translate-x-1',
-                  )}
-                />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
-              <div>
-                <p className="font-medium text-sm">Call Recording</p>
-                <p className="text-xs text-muted-foreground">Record all calls automatically</p>
-              </div>
-              <button
-                onClick={() => handleSettingChange('callRecording', !settings.callRecording)}
-                className={cn(
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  settings.callRecording ? 'bg-[#C33527]' : 'bg-border',
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                    settings.callRecording ? 'translate-x-6' : 'translate-x-1',
-                  )}
-                />
-              </button>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              onClick={saveSettings}
-              className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C]"
-            >
-              Save Settings
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
       {/* Active Call Overlay */}
-      {activeCall && (
-        <div className="fixed inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="max-w-sm w-full text-center">
-            <div className="mb-8">
-              <div
-                className={cn(
-                  'w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-4xl md:text-5xl font-semibold',
-                  activeCall.status === 'ringing' ? 'bg-[#C33527] animate-pulse' : 'bg-[#C33527]',
-                )}
-              >
-                {activeCall.contact_name ? activeCall.contact_name.charAt(0) : '?'}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                {activeCall.contact_name || 'Unknown'}
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground font-mono mb-2">
-                {activeCall.phone_number}
-              </p>
-              <p className="text-sm md:text-base text-muted-foreground capitalize">
-                {activeCall.status === 'ringing' ? 'Calling...' : formatDuration(callDuration)}
-              </p>
-            </div>
-
-            {activeCall.status === 'in-progress' && (
-              <div className="flex justify-center gap-4 md:gap-6 mb-8">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setIsMuted(!isMuted)}
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full p-0"
-                >
-                  {isMuted ? (
-                    <MicOff className="w-5 h-5 md:w-6 md:h-6" />
-                  ) : (
-                    <Mic className="w-5 h-5 md:w-6 md:h-6" />
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setIsOnHold(!isOnHold)}
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full p-0"
-                >
-                  {isOnHold ? (
-                    <Play className="w-5 h-5 md:w-6 md:h-6" />
-                  ) : (
-                    <Pause className="w-5 h-5 md:w-6 md:h-6" />
-                  )}
-                </Button>
-              </div>
-            )}
-
-            <Button
-              onClick={endCall}
-              size="lg"
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-red-600 hover:bg-red-700 text-white p-0 mx-auto"
-            >
-              <PhoneOff className="w-6 h-6 md:w-8 md:h-8" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <ActiveCallOverlay
+        activeCall={activeCall}
+        callDuration={callDuration}
+        isMuted={isMuted}
+        isOnHold={isOnHold}
+        onEndCall={endCall}
+        onToggleMute={toggleMute}
+        onToggleHold={toggleHold}
+        formatDuration={formatDuration}
+      />
     </Card>
   );
 }

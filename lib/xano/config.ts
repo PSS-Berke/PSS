@@ -13,7 +13,8 @@ export const XANO_CONFIG = {
   API_KEY: process.env.NEXT_PUBLIC_XANO_API_KEY || '',
   COMPANY_BASE_URL:
     process.env.NEXT_PUBLIC_COMPANY_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:ZKUwjF5k',
-
+  ABSOLUTE_BASE_URL:
+    process.env.NEXT_PUBLIC_ABSOLUTE_BASE_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io',
   // API Endpoints - configured for your Xano setup
   ENDPOINTS: {
     AUTH: {
