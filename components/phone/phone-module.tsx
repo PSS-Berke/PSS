@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   PhoneCall,
+  PhoneMissedIcon,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -417,7 +418,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 {contactsData?.length}
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
+                <PhoneMissedIcon className="h-4 w-4" />
                 {callLogs?.length || 0}
               </div>
             </div>
@@ -649,7 +650,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -1052,7 +1053,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                    'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
