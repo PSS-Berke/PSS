@@ -87,11 +87,6 @@ interface GoogleAccountSummaryResponse {
     value: number;
   }
 
-  interface RetentionMetricsData {
-    name: string;
-    value: number;
-  }
-
   interface CalculatedKPIs {
     newUsersShare: string;
     viewsPerUser: string;
@@ -106,7 +101,6 @@ interface GoogleAccountSummaryResponse {
     adMetricsTrend: AdMetricsTrend[];
     overallSummary: OverallSummaryItem[];
     newVsReturningPieChartData: NewVsReturningData[];
-    retentionBarChartData: RetentionMetricsData[];
     calculatedKPIs: CalculatedKPIs;
   }
 
@@ -123,7 +117,6 @@ interface GoogleAccountSummaryResponse {
       adMetricsTrend: [], // Added adMetricsTrend initialization
       overallSummary: [],
       newVsReturningPieChartData: [],
-      retentionBarChartData: [],
       calculatedKPIs: { newUsersShare: '0%', viewsPerUser: '0', ctr: '0%' },
     };
 
@@ -238,17 +231,6 @@ interface GoogleAccountSummaryResponse {
       { name: 'Returning Users', value: returningUsers > 0 ? returningUsers : 0 },
     ];
 
-    // For Retention Bar Chart
-    const totalActive1DayUsers = dateChartData.reduce((sum, item) => sum + (item.active1DayUsers || 0), 0);
-    const totalActive7DayUsers = dateChartData.reduce((sum, item) => sum + (item.active7DayUsers || 0), 0);
-    const totalActive28DayUsers = dateChartData.reduce((sum, item) => sum + (item.active28DayUsers || 0), 0);
-
-    const retentionBarChartData: RetentionMetricsData[] = [
-      { name: '1 Day', value: totalActive1DayUsers || 0 },
-      { name: '7 Days', value: totalActive7DayUsers || 0 },
-      { name: '28 Days', value: totalActive28DayUsers || 0 },
-    ];
-
     // Calculated KPIs
     const newUsersShare = totalActiveUsers > 0 ? `${((totalNewUsers / totalActiveUsers) * 100).toFixed(2)}%` : '0%';
     const viewsPerUser = totalActiveUsers > 0 ? (totalScreenPageViews / totalActiveUsers).toFixed(2) : '0';
@@ -268,7 +250,6 @@ interface GoogleAccountSummaryResponse {
       adMetricsTrend,
       overallSummary,
       newVsReturningPieChartData,
-      retentionBarChartData,
       calculatedKPIs,
     };
   };
@@ -293,7 +274,6 @@ export default function GaPage() {
   const [adMetricsTrend, setAdMetricsTrend] = useState<AdMetricsTrend[]>([]);
   const [overallSummary, setOverallSummary] = useState<OverallSummaryItem[]>([]);
   const [newVsReturningPieChartData, setNewVsReturningPieChartData] = useState<NewVsReturningData[]>([]);
-  const [retentionBarChartData, setRetentionBarChartData] = useState<RetentionMetricsData[]>([]);
   const [calculatedKPIs, setCalculatedKPIs] = useState<CalculatedKPIs | null>(null);
 
   type DateRangeKey = '1day' | '7days' | '28days'; // Removed 'custom' from DateRangeKey
@@ -411,7 +391,6 @@ export default function GaPage() {
       setAdMetricsTrend([]);
       setOverallSummary([]);
       setNewVsReturningPieChartData([]);
-      setRetentionBarChartData([]);
       setCalculatedKPIs(null);
       return;
     }
@@ -427,7 +406,6 @@ export default function GaPage() {
     setAdMetricsTrend([]);
     setOverallSummary([]);
     setNewVsReturningPieChartData([]);
-    setRetentionBarChartData([]);
     setCalculatedKPIs(null);
 
     if (!token || !user?.id || !user?.company_id) {
@@ -460,9 +438,6 @@ export default function GaPage() {
           { name: 'totalRevenue' },
           { name: 'transactions' },
           { name: 'newUsers' },
-          { name: 'active1DayUsers' },
-          { name: 'active7DayUsers' },
-          { name: 'active28DayUsers' },
           { name: 'publisherAdClicks' },
           { name: 'publisherAdImpressions' },
         ],
@@ -498,7 +473,6 @@ export default function GaPage() {
       setAdMetricsTrend(processedData.adMetricsTrend);
       setOverallSummary(processedData.overallSummary);
       setNewVsReturningPieChartData(processedData.newVsReturningPieChartData);
-      setRetentionBarChartData(processedData.retentionBarChartData);
       setCalculatedKPIs(processedData.calculatedKPIs);
     } catch (error: any) {
       console.error('Error retrieving Google Analytics account summary:', error);
@@ -658,7 +632,7 @@ export default function GaPage() {
           {summaryLoading && <div>Loading account summary...</div>}
           {summaryError && <div style={{ color: 'red' }}>{summaryError}</div>}
 
-          {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || retentionBarChartData.length > 0 || calculatedKPIs) && (
+          {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
             <div style={{ marginTop: '20px' }}>
               {dateChartData.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
@@ -676,12 +650,6 @@ export default function GaPage() {
                       <Line type="monotone" dataKey="conversions" stroke="#ff7300" />
                       <Line type="monotone" dataKey="totalRevenue" stroke="#d0ed57" />
                       <Line type="monotone" dataKey="transactions" stroke="#a4de6c" />
-                      <Line type="monotone" dataKey="newUsers" stroke="#8dd1e1" />
-                      <Line type="monotone" dataKey="active1DayUsers" stroke="#a593e0" />
-                      <Line type="monotone" dataKey="active7DayUsers" stroke="#67cddc" />
-                      <Line type="monotone" dataKey="active28DayUsers" stroke="#a182c1" />
-                      <Line type="monotone" dataKey="publisherAdClicks" stroke="#e5d8bd" />
-                      <Line type="monotone" dataKey="publisherAdImpressions" stroke="#c2b0e6" />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -703,12 +671,6 @@ export default function GaPage() {
                       <Bar dataKey="conversions" fill="#ff7300" />
                       <Bar dataKey="totalRevenue" fill="#d0ed57" />
                       <Bar dataKey="transactions" fill="#a4de6c" />
-                      <Bar dataKey="newUsers" fill="#8dd1e1" />
-                      <Bar dataKey="active1DayUsers" fill="#a593e0" />
-                      <Bar dataKey="active7DayUsers" fill="#67cddc" />
-                      <Bar dataKey="active28DayUsers" fill="#a182c1" />
-                      <Bar dataKey="publisherAdClicks" fill="#e5d8bd" />
-                      <Bar dataKey="publisherAdImpressions" fill="#c2b0e6" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -846,23 +808,6 @@ export default function GaPage() {
                       <Tooltip />
                       <Legend />
                     </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {/* Retention Metrics Bar Chart */}
-              {retentionBarChartData.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                  <h4>Retention Metrics Comparison</h4>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={retentionBarChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" fill="#8884d8" />
-                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               )}
