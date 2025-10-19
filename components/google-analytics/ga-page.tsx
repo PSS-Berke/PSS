@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/xano/auth-context';
 import { apiRequest } from '@/lib/xano/api';
 import { XANO_CONFIG, getGoogleAnalyticsApiUrl } from '@/lib/xano/config';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
+} from 'recharts';
 
 interface PropertySummary {
   property: string;
@@ -45,6 +48,227 @@ interface GoogleAccountSummaryResponse {
   kind: string;
 }
 
+  type ChartData = {
+    name: string;
+  } & { [key: string]: number };
+
+  interface KpiSummary {
+    activeUsers: { sum: number; avg: number };
+    newUsers: { sum: number; avg: number };
+    screenPageViews: { sum: number; avg: number };
+    publisherAdClicks: { sum: number; avg: number };
+    publisherAdImpressions: { sum: number; avg: number };
+  }
+
+  interface TopDayActivity {
+    date: string;
+    activeUsers: number;
+    newUsers: number;
+    screenPageViews: number;
+  }
+
+  interface AdMetricsTrend {
+    date: string;
+    publisherAdClicks: number;
+    publisherAdImpressions: number;
+  }
+
+  interface OverallSummaryItem {
+    metric: string;
+    value: number | string;
+  }
+
+  interface NewVsReturningData {
+    name: string;
+    value: number;
+  }
+
+  interface RetentionMetricsData {
+    name: string;
+    value: number;
+  }
+
+  interface CalculatedKPIs {
+    newUsersShare: string;
+    viewsPerUser: string;
+    ctr: string;
+  }
+
+  interface ProcessedSummaryData {
+    dateChartData: ChartData[];
+    countryChartData: ChartData[];
+    kpiSummary: KpiSummary;
+    topDaysActivity: TopDayActivity[];
+    adMetricsTrend: AdMetricsTrend[];
+    overallSummary: OverallSummaryItem[];
+    newVsReturningPieChartData: NewVsReturningData[];
+    retentionBarChartData: RetentionMetricsData[];
+    calculatedKPIs: CalculatedKPIs;
+  }
+
+  const processSummaryDataForCharts = (
+    summary: GoogleAccountSummaryResponse | null,
+    metrics: Array<{ name: string }>,
+    dimensions: Array<{ name: string }>,
+  ): ProcessedSummaryData => {
+    if (!summary || !summary.rows) return {
+      dateChartData: [],
+      countryChartData: [],
+      kpiSummary: { activeUsers: { sum: 0, avg: 0 }, newUsers: { sum: 0, avg: 0 }, screenPageViews: { sum: 0, avg: 0 }, publisherAdClicks: { sum: 0, avg: 0 }, publisherAdImpressions: { sum: 0, avg: 0 } },
+      topDaysActivity: [],
+      adMetricsTrend: [], // Added adMetricsTrend initialization
+      overallSummary: [],
+      newVsReturningPieChartData: [],
+      retentionBarChartData: [],
+      calculatedKPIs: { newUsersShare: '0%', viewsPerUser: '0', ctr: '0%' },
+    };
+
+    const dateChartMap = new Map<string, ChartData>();
+    const countryChartMap = new Map<string, ChartData>();
+
+    let totalActiveUsers = 0;
+    let totalNewUsers = 0;
+    let totalScreenPageViews = 0;
+    let totalPublisherAdClicks = 0;
+    let totalPublisherAdImpressions = 0;
+    let daysWithData = 0;
+
+    const dailyActivityData: TopDayActivity[] = [];
+
+    summary.rows.forEach((row) => {
+      const dimensionValues = row.dimensionValues.map((d) => d.value);
+      const metricValues = row.metricValues.map((m) => parseFloat(m.value));
+
+      const dateIndex = dimensions.findIndex((d) => d.name === 'date');
+      const countryIndex = dimensions.findIndex((d) => d.name === 'country');
+
+      const date = dateIndex !== -1 ? dimensionValues[dateIndex] : 'Unknown Date';
+      const country = countryIndex !== -1 ? dimensionValues[countryIndex] : 'Unknown Country';
+
+      // Aggregate for Date Chart
+      if (dateIndex !== -1) {
+        if (!dateChartMap.has(date)) {
+          dateChartMap.set(date, { name: date } as ChartData);
+        }
+        const currentData = dateChartMap.get(date)!;
+        metrics.forEach((metric, idx) => {
+          currentData[metric.name] = (currentData[metric.name] || 0) + metricValues[idx];
+        });
+
+        // For aggregated data and daily activity table
+        const activeUsers = metricValues[metrics.findIndex(m => m.name === 'activeUsers')] || 0;
+        const newUsers = metricValues[metrics.findIndex(m => m.name === 'newUsers')] || 0;
+        const screenPageViews = metricValues[metrics.findIndex(m => m.name === 'screenPageViews')] || 0;
+        const publisherAdClicks = metricValues[metrics.findIndex(m => m.name === 'publisherAdClicks')] || 0;
+        const publisherAdImpressions = metricValues[metrics.findIndex(m => m.name === 'publisherAdImpressions')] || 0;
+
+        totalActiveUsers += activeUsers;
+        totalNewUsers += newUsers;
+        totalScreenPageViews += screenPageViews;
+        totalPublisherAdClicks += publisherAdClicks;
+        totalPublisherAdImpressions += publisherAdImpressions;
+        daysWithData++;
+
+        dailyActivityData.push({
+          date: date,
+          activeUsers: activeUsers,
+          newUsers: newUsers,
+          screenPageViews: screenPageViews,
+        });
+      }
+
+      // Aggregate for Country Chart
+      if (countryIndex !== -1) {
+        if (!countryChartMap.has(country)) {
+          countryChartMap.set(country, { name: country } as ChartData);
+        }
+        const currentData = countryChartMap.get(country)!;
+        metrics.forEach((metric, idx) => {
+          currentData[metric.name] = (currentData[metric.name] || 0) + metricValues[idx];
+        });
+      }
+    });
+
+    const dateChartData = Array.from(dateChartMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const countryChartData = Array.from(countryChartMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Calculate KPIs
+    const avgActiveUsers = daysWithData > 0 ? totalActiveUsers / daysWithData : 0;
+    const avgNewUsers = daysWithData > 0 ? totalNewUsers / daysWithData : 0;
+    const avgScreenPageViews = daysWithData > 0 ? totalScreenPageViews / daysWithData : 0;
+    const avgPublisherAdClicks = daysWithData > 0 ? totalPublisherAdClicks / daysWithData : 0;
+    const avgPublisherAdImpressions = daysWithData > 0 ? totalPublisherAdImpressions / daysWithData : 0;
+
+    const kpiSummary: KpiSummary = {
+      activeUsers: { sum: totalActiveUsers, avg: parseFloat(avgActiveUsers.toFixed(2)) },
+      newUsers: { sum: totalNewUsers, avg: parseFloat(avgNewUsers.toFixed(2)) },
+      screenPageViews: { sum: totalScreenPageViews, avg: parseFloat(avgScreenPageViews.toFixed(2)) },
+      publisherAdClicks: { sum: totalPublisherAdClicks, avg: parseFloat(avgPublisherAdClicks.toFixed(2)) },
+      publisherAdImpressions: { sum: totalPublisherAdImpressions, avg: parseFloat(avgPublisherAdImpressions.toFixed(2)) },
+    };
+
+    const topDaysActivity = [...dailyActivityData]
+      .sort((a, b) => b.activeUsers - a.activeUsers)
+      .slice(0, 5);
+
+    const overallSummary: OverallSummaryItem[] = [
+      { metric: 'Active Users (sum)', value: totalActiveUsers },
+      { metric: 'New Users (sum)', value: totalNewUsers },
+      { metric: 'Screen Page Views/Screens (sum)', value: totalScreenPageViews },
+      { metric: 'Average daily active users', value: parseFloat(avgActiveUsers.toFixed(2)) },
+      { metric: 'Average daily screen page views/screens', value: parseFloat(avgScreenPageViews.toFixed(2)) },
+      { metric: 'Publisher Ad Clicks (sum)', value: totalPublisherAdClicks },
+      { metric: 'Publisher Ad Impressions (sum)', value: totalPublisherAdImpressions },
+    ];
+
+    const adMetricsTrend: AdMetricsTrend[] = dailyActivityData.map(day => ({
+      date: day.date,
+      publisherAdClicks: dateChartMap.get(day.date)?.publisherAdClicks || 0,
+      publisherAdImpressions: dateChartMap.get(day.date)?.publisherAdImpressions || 0,
+    })).sort((a,b) => a.date.localeCompare(b.date));
+
+    // For Pie Chart (New vs. Returning Users)
+    const returningUsers = totalActiveUsers - totalNewUsers;
+    const newVsReturningPieChartData: NewVsReturningData[] = [
+      { name: 'New Users', value: totalNewUsers },
+      { name: 'Returning Users', value: returningUsers > 0 ? returningUsers : 0 },
+    ];
+
+    // For Retention Bar Chart
+    const totalActive1DayUsers = dateChartData.reduce((sum, item) => sum + (item.active1DayUsers || 0), 0);
+    const totalActive7DayUsers = dateChartData.reduce((sum, item) => sum + (item.active7DayUsers || 0), 0);
+    const totalActive28DayUsers = dateChartData.reduce((sum, item) => sum + (item.active28DayUsers || 0), 0);
+
+    const retentionBarChartData: RetentionMetricsData[] = [
+      { name: '1 Day', value: totalActive1DayUsers },
+      { name: '7 Days', value: totalActive7DayUsers },
+      { name: '28 Days', value: totalActive28DayUsers },
+    ];
+
+    // Calculated KPIs
+    const newUsersShare = totalActiveUsers > 0 ? `${((totalNewUsers / totalActiveUsers) * 100).toFixed(2)}%` : '0%';
+    const viewsPerUser = totalActiveUsers > 0 ? (totalScreenPageViews / totalActiveUsers).toFixed(2) : '0';
+    const ctr = totalPublisherAdImpressions > 0 ? `${((totalPublisherAdClicks / totalPublisherAdImpressions) * 100).toFixed(2)}%` : '0%';
+
+    const calculatedKPIs: CalculatedKPIs = {
+      newUsersShare,
+      viewsPerUser,
+      ctr,
+    };
+
+    return {
+      dateChartData,
+      countryChartData,
+      kpiSummary,
+      topDaysActivity,
+      adMetricsTrend,
+      overallSummary,
+      newVsReturningPieChartData,
+      retentionBarChartData,
+      calculatedKPIs,
+    };
+  };
+
 export default function GaPage() {
   const { user, isLoading, token } = useAuth();
   const [apiLoading, setApiLoading] = useState(false);
@@ -58,6 +282,15 @@ export default function GaPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryData, setSummaryData] = useState<GoogleAccountSummaryResponse | null>(null);
+  const [dateChartData, setDateChartData] = useState<ChartData[]>([]);
+  const [countryChartData, setCountryChartData] = useState<ChartData[]>([]);
+  const [kpiSummary, setKpiSummary] = useState<KpiSummary | null>(null);
+  const [topDaysActivity, setTopDaysActivity] = useState<TopDayActivity[]>([]);
+  const [adMetricsTrend, setAdMetricsTrend] = useState<AdMetricsTrend[]>([]);
+  const [overallSummary, setOverallSummary] = useState<OverallSummaryItem[]>([]);
+  const [newVsReturningPieChartData, setNewVsReturningPieChartData] = useState<NewVsReturningData[]>([]);
+  const [retentionBarChartData, setRetentionBarChartData] = useState<RetentionMetricsData[]>([]);
+  const [calculatedKPIs, setCalculatedKPIs] = useState<CalculatedKPIs | null>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -104,6 +337,16 @@ export default function GaPage() {
     if (expandedPropertyId === propertyId) {
       setExpandedPropertyId(null);
       setSummaryData(null);
+      // Reset all data when collapsing
+      setDateChartData([]);
+      setCountryChartData([]);
+      setKpiSummary(null);
+      setTopDaysActivity([]);
+      setAdMetricsTrend([]);
+      setOverallSummary([]);
+      setNewVsReturningPieChartData([]);
+      setRetentionBarChartData([]);
+      setCalculatedKPIs(null);
       return;
     }
 
@@ -111,6 +354,15 @@ export default function GaPage() {
     setSummaryLoading(true);
     setSummaryError(null);
     setSummaryData(null);
+    setDateChartData([]);
+    setCountryChartData([]);
+    setKpiSummary(null);
+    setTopDaysActivity([]);
+    setAdMetricsTrend([]);
+    setOverallSummary([]);
+    setNewVsReturningPieChartData([]);
+    setRetentionBarChartData([]);
+    setCalculatedKPIs(null);
 
     if (!token || !user?.id || !user?.company_id) {
       setSummaryError('The user is not authenticated, the user ID or company ID is missing.');
@@ -139,8 +391,14 @@ export default function GaPage() {
           { name: 'conversions' },
           { name: 'totalRevenue' },
           { name: 'transactions' },
-        ], // Added common metrics based on typical GA reports
-        dimensions: [{ name: 'date' }, { name: 'country' }], // Added country as per request
+          { name: 'newUsers' },
+          { name: 'active1DayUsers' },
+          { name: 'active7DayUsers' },
+          { name: 'active28DayUsers' },
+          { name: 'publisherAdClicks' },
+          { name: 'publisherAdImpressions' },
+        ],
+        dimensions: [{ name: 'date' }, { name: 'country' }],
         dateRanges: [
           { startDate: '30daysAgo', endDate: 'today' }, // Default to last 30 days
         ],
@@ -158,7 +416,23 @@ export default function GaPage() {
         },
         token,
       );
+      console.log('Google Analytics Account Summary API Response:', response);
       setSummaryData(response);
+
+      const processedData: ProcessedSummaryData = processSummaryDataForCharts(
+        response,
+        payload.metrics,
+        payload.dimensions,
+      );
+      setDateChartData(processedData.dateChartData);
+      setCountryChartData(processedData.countryChartData);
+      setKpiSummary(processedData.kpiSummary);
+      setTopDaysActivity(processedData.topDaysActivity);
+      setAdMetricsTrend(processedData.adMetricsTrend);
+      setOverallSummary(processedData.overallSummary);
+      setNewVsReturningPieChartData(processedData.newVsReturningPieChartData);
+      setRetentionBarChartData(processedData.retentionBarChartData);
+      setCalculatedKPIs(processedData.calculatedKPIs);
     } catch (error: any) {
       console.error('Error retrieving Google Analytics account summary:', error);
       setSummaryError(
@@ -236,7 +510,7 @@ export default function GaPage() {
             >
               <h3>{prop.displayName}</h3>
               <p style={{ fontSize: '0.9em', color: '#666' }}>ID: {prop.property.split('/').pop()}</p>
-              <p style={{ fontSize: '0.9em', color: '#666' }}>Тип: {prop.propertyType}</p>
+              <p style={{ fontSize: '0.9em', color: '#666' }}>Type: {prop.propertyType}</p>
             </div>
           ))}
         </div>
@@ -244,41 +518,225 @@ export default function GaPage() {
 
       {summaryLoading && expandedPropertyId && <div>Loading account summary...</div>}
       {summaryError && expandedPropertyId && <div style={{ color: 'red' }}>{summaryError}</div>}
-      {summaryData && expandedPropertyId && (
-        <div style={{ backgroundColor: '#e6ffe6', padding: '15px', marginTop: '20px', borderRadius: '8px', border: '1px solid #aaffaa' }}>
+      {expandedPropertyId && !summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0) && (
+        <div style={{ marginTop: '20px' }}>
           <h3 style={{ marginBottom: '10px' }}>Google Analytics account information for {expandedPropertyId}:</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(summaryData, null, 2)}</pre>
-        </div>
-      )}
+          {dateChartData.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <h4>Sessions and Users over Time</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dateChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="sessions" stroke="#8884d8" activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="activeUsers" stroke="#82ca9d" />
+                  <Line type="monotone" dataKey="screenPageViews" stroke="#ffc658" />
+                  <Line type="monotone" dataKey="conversions" stroke="#ff7300" />
+                  <Line type="monotone" dataKey="totalRevenue" stroke="#d0ed57" />
+                  <Line type="monotone" dataKey="transactions" stroke="#a4de6c" />
+                  <Line type="monotone" dataKey="newUsers" stroke="#8dd1e1" />
+                  <Line type="monotone" dataKey="active1DayUsers" stroke="#a593e0" />
+                  <Line type="monotone" dataKey="active7DayUsers" stroke="#67cddc" />
+                  <Line type="monotone" dataKey="active28DayUsers" stroke="#a182c1" />
+                  <Line type="monotone" dataKey="publisherAdClicks" stroke="#e5d8bd" />
+                  <Line type="monotone" dataKey="publisherAdImpressions" stroke="#c2b0e6" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-      {/* Existing demo API call section - kept for reference, can be removed later */}
-      <h2 style={{ marginTop: '40px' }}>Demo interaction with Xano API (old)</h2>
-      <button
-        onClick={handleTestApiCall}
-        disabled={apiLoading}
-        style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          cursor: apiLoading ? 'not-allowed' : 'pointer',
-          backgroundColor: apiLoading ? '#ccc' : '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-        }}
-      >
-        {apiLoading ? 'Loading...' : 'Make a test API call'}
-      </button>
+          {countryChartData.length > 0 && (
+            <div>
+              <h4>Metrics by Country</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={countryChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="sessions" fill="#8884d8" />
+                  <Bar dataKey="activeUsers" fill="#82ca9d" />
+                  <Bar dataKey="screenPageViews" fill="#ffc658" />
+                  <Bar dataKey="conversions" fill="#ff7300" />
+                  <Bar dataKey="totalRevenue" fill="#d0ed57" />
+                  <Bar dataKey="transactions" fill="#a4de6c" />
+                  <Bar dataKey="newUsers" fill="#8dd1e1" />
+                  <Bar dataKey="active1DayUsers" fill="#a593e0" />
+                  <Bar dataKey="active7DayUsers" fill="#67cddc" />
+                  <Bar dataKey="active28DayUsers" fill="#a182c1" />
+                  <Bar dataKey="publisherAdClicks" fill="#e5d8bd" />
+                  <Bar dataKey="publisherAdImpressions" fill="#c2b0e6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-      {apiError && (
-        <div style={{ color: 'red', marginTop: '10px' }}>
-          <p>Error: {apiError}</p>
-        </div>
-      )}
+          {kpiSummary && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>Key Performance Indicators (KPI) Summary Table</h4>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #ddd' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Sum</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Average</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Active Users</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.sum}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.avg}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>New Users</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.sum}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.avg}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Screen Page Views</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.sum}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.avg}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Clicks</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.sum}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.avg}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Impressions</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.sum}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.avg}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
 
-      {apiResponse && (
-        <div style={{ backgroundColor: '#f0f0f0', padding: '10px', marginTop: '10px', borderRadius: '5px' }}>
-          <p>Response API:</p>
-          <pre>{apiResponse}</pre>
+          {topDaysActivity.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>Top Days by Activity</h4>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #ddd' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Date</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Active Users</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>New Users</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Screen Page Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topDaysActivity.map((day) => (
+                    <tr key={day.date} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '8px' }}>{day.date}</td>
+                      <td style={{ padding: '8px' }}>{day.activeUsers}</td>
+                      <td style={{ padding: '8px' }}>{day.newUsers}</td>
+                      <td style={{ padding: '8px' }}>{day.screenPageViews}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {adMetricsTrend.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>Ad Performance Trend</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={adMetricsTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="publisherAdClicks" stroke="#8884d8" activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="publisherAdImpressions" stroke="#82ca9d" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {overallSummary.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>Overall Metrics Summary Table</h4>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #ddd' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overallSummary.map((item) => (
+                    <tr key={item.metric} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '8px' }}>{item.metric}</td>
+                      <td style={{ padding: '8px' }}>{item.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* New vs Returning Users Pie Chart */}
+          {newVsReturningPieChartData.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>New vs. Returning Users Ratio</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={newVsReturningPieChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    label
+                  >
+                    {
+                      newVsReturningPieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index === 0 ? '#8884d8' : '#82ca9d'} />
+                      ))
+                    }
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Retention Metrics Bar Chart */}
+          {retentionBarChartData.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>Retention Metrics Comparison</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={retentionBarChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Calculated KPIs */}
+          {calculatedKPIs && (
+            <div style={{ marginTop: '20px' }}>
+              <h4>Calculated Key Performance Indicators (KPIs)</h4>
+              <p><strong>New User Share:</strong> {calculatedKPIs.newUsersShare}</p>
+              <p><strong>Views per User:</strong> {calculatedKPIs.viewsPerUser}</p>
+              <p><strong>Click-Through Rate (CTR):</strong> {calculatedKPIs.ctr}</p>
+            </div>
+          )}
         </div>
       )}
     </div>
