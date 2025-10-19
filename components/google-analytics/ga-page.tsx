@@ -375,12 +375,12 @@ export default function GaPage() {
 
   useEffect(() => {
     if (expandedPropertyId) {
-      handlePropertyClick(expandedPropertyId);
+      handlePropertyClick(expandedPropertyId, true);
     }
-  }, [selectedDateRange]); // Removed customStartDate and customEndDate from dependency array
+  }, [selectedDateRange]);
 
-  const handlePropertyClick = async (propertyId: string) => {
-    if (expandedPropertyId === propertyId) {
+  const handlePropertyClick = async (propertyId: string, isDateRangeChange: boolean = false) => {
+    if (!isDateRangeChange && expandedPropertyId === propertyId) {
       setExpandedPropertyId(null);
       setSummaryData(null);
       // Reset all data when collapsing
@@ -395,7 +395,10 @@ export default function GaPage() {
       return;
     }
 
-    setExpandedPropertyId(propertyId);
+    if (expandedPropertyId !== propertyId) {
+      setExpandedPropertyId(propertyId);
+    }
+
     setSummaryLoading(true);
     setSummaryError(null);
     setSummaryData(null);
@@ -535,7 +538,7 @@ export default function GaPage() {
           {properties.map((prop) => (
             <div
               key={prop.property}
-              onClick={() => handlePropertyClick(prop.property)}
+              onClick={() => handlePropertyClick(prop.property, false)}
               style={{
                 border: '1px solid #ddd',
                 padding: '15px',
@@ -784,7 +787,7 @@ export default function GaPage() {
               )}
 
               {/* New vs Returning Users Pie Chart */}
-              {newVsReturningPieChartData.length > 0 && (
+              {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
                 <div style={{ marginTop: '20px' }}>
                   <h4>New vs. Returning Users Ratio</h4>
                   <ResponsiveContainer width="100%" height={300}>
