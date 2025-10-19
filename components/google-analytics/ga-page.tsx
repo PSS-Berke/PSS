@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/xano/auth-context';
 import { apiRequest } from '@/lib/xano/api';
 import { XANO_CONFIG, getGoogleAnalyticsApiUrl } from '@/lib/xano/config';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from 'recharts';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+// import FullCalendar from '@fullcalendar/react'; // Removed FullCalendar import
+// import dayGridPlugin from '@fullcalendar/daygrid'; // Removed dayGridPlugin import
+// import { EventInput } from '@fullcalendar/core'; // Removed EventInput import
 
 interface PropertySummary {
   property: string;
@@ -152,7 +156,7 @@ interface GoogleAccountSummaryResponse {
         }
         const currentData = dateChartMap.get(date)!;
         metrics.forEach((metric, idx) => {
-          currentData[metric.name] = (currentData[metric.name] || 0) + metricValues[idx];
+          currentData[metric.name] = (currentData[metric.name] || 0) + (metricValues[idx] || 0);
         });
 
         // For aggregated data and daily activity table
@@ -184,7 +188,7 @@ interface GoogleAccountSummaryResponse {
         }
         const currentData = countryChartMap.get(country)!;
         metrics.forEach((metric, idx) => {
-          currentData[metric.name] = (currentData[metric.name] || 0) + metricValues[idx];
+          currentData[metric.name] = (currentData[metric.name] || 0) + (metricValues[idx] || 0);
         });
       }
     });
@@ -240,9 +244,9 @@ interface GoogleAccountSummaryResponse {
     const totalActive28DayUsers = dateChartData.reduce((sum, item) => sum + (item.active28DayUsers || 0), 0);
 
     const retentionBarChartData: RetentionMetricsData[] = [
-      { name: '1 Day', value: totalActive1DayUsers },
-      { name: '7 Days', value: totalActive7DayUsers },
-      { name: '28 Days', value: totalActive28DayUsers },
+      { name: '1 Day', value: totalActive1DayUsers || 0 },
+      { name: '7 Days', value: totalActive7DayUsers || 0 },
+      { name: '28 Days', value: totalActive28DayUsers || 0 },
     ];
 
     // Calculated KPIs
@@ -292,6 +296,62 @@ export default function GaPage() {
   const [retentionBarChartData, setRetentionBarChartData] = useState<RetentionMetricsData[]>([]);
   const [calculatedKPIs, setCalculatedKPIs] = useState<CalculatedKPIs | null>(null);
 
+  type DateRangeKey = '1day' | '7days' | '28days'; // Removed 'custom' from DateRangeKey
+
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRangeKey>('28days');
+  // const [customStartDate, setCustomStartDate] = useState<Date | null>(null); // Removed customStartDate state
+  // const [customEndDate, setCustomEndDate] = useState<Date | null>(null); // Removed customEndDate state
+
+  const calculateDateRange = (range: DateRangeKey, start: Date | null, end: Date | null) => {
+    const today = startOfDay(new Date());
+    let startDate: Date | null = null;
+    let endDate: Date | null = endOfDay(new Date());
+
+    switch (range) {
+      case '1day':
+        startDate = subDays(today, 0);
+        break;
+      case '7days':
+        startDate = subDays(today, 6);
+        break;
+      case '28days':
+        startDate = subDays(today, 27);
+        break;
+      // case 'custom': // Removed custom case
+      //   startDate = start;
+      //   endDate = end;
+      //   break;
+      default:
+        startDate = subDays(today, 27); // Default to 28 days
+        break;
+    }
+
+    return { startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null, endDate: endDate ? format(endDate, 'yyyy-MM-dd') : null };
+  };
+
+  // const renderEventContent = (eventInfo: any) => { // Removed renderEventContent function
+  //   return (
+  //     <>
+  //       <b>{eventInfo.event.title}</b>
+  //       <p>{format(eventInfo.event.start, 'yyyy-MM-dd')}</p>
+  //     </>
+  //   );
+  // };
+
+  // const calendarEvents = useMemo(() => { // Removed calendarEvents useMemo
+  //   const events: EventInput[] = [];
+  //   if (customStartDate) {
+  //     events.push({ title: 'Start', start: customStartDate });
+  //   }
+  //   if (customEndDate) {
+  //     events.push({ title: 'End', start: customEndDate });
+  //   }
+  //   if (customStartDate && customEndDate && customStartDate < customEndDate) {
+  //     events.push({ start: customStartDate, end: customEndDate, display: 'background', color: '#e6ffe6' });
+  //   }
+  //   return events;
+  // }, [customStartDate, customEndDate]);
+
   useEffect(() => {
     const fetchProperties = async () => {
       if (!token || !user?.id) {
@@ -332,6 +392,12 @@ export default function GaPage() {
 
     fetchProperties();
   }, [token, user?.id]);
+
+  useEffect(() => {
+    if (expandedPropertyId) {
+      handlePropertyClick(expandedPropertyId);
+    }
+  }, [selectedDateRange]); // Removed customStartDate and customEndDate from dependency array
 
   const handlePropertyClick = async (propertyId: string) => {
     if (expandedPropertyId === propertyId) {
@@ -378,12 +444,14 @@ export default function GaPage() {
         return;
       }
 
+      const { startDate: formattedStartDate, endDate: formattedEndDate } = calculateDateRange(selectedDateRange, null, null); // Updated call to calculateDateRange
+
       const payload = {
         company_id: user.company_id,
         property_id: numericPropertyId,
         user_id: user.id.toString(),
-        startDate: '2025-02-01',
-        endDate: '2025-10-01',
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
         metrics: [
           { name: 'sessions' },
           { name: 'activeUsers' },
@@ -416,7 +484,6 @@ export default function GaPage() {
         },
         token,
       );
-      console.log('Google Analytics Account Summary API Response:', response);
       setSummaryData(response);
 
       const processedData: ProcessedSummaryData = processSummaryDataForCharts(
@@ -516,228 +583,302 @@ export default function GaPage() {
         </div>
       )}
 
-      {summaryLoading && expandedPropertyId && <div>Loading account summary...</div>}
-      {summaryError && expandedPropertyId && <div style={{ color: 'red' }}>{summaryError}</div>}
-      {expandedPropertyId && !summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0) && (
-        <div style={{ marginTop: '20px' }}>
+      {expandedPropertyId && (
+        <>
+          <div style={{ marginBottom: '10px' }}>
+            <button
+              onClick={() => setSelectedDateRange('1day')}
+              style={{ marginRight: '10px', padding: '8px 15px', backgroundColor: selectedDateRange === '1day' ? '#007bff' : '#f0f0f0', color: selectedDateRange === '1day' ? 'white' : 'black', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+            >
+              1 Day
+            </button>
+            <button
+              onClick={() => setSelectedDateRange('7days')}
+              style={{ marginRight: '10px', padding: '8px 15px', backgroundColor: selectedDateRange === '7days' ? '#007bff' : '#f0f0f0', color: selectedDateRange === '7days' ? 'white' : 'black', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+            >
+              7 Days
+            </button>
+            <button
+              onClick={() => setSelectedDateRange('28days')}
+              style={{ marginRight: '10px', padding: '8px 15px', backgroundColor: selectedDateRange === '28days' ? '#007bff' : '#f0f0f0', color: selectedDateRange === '28days' ? 'white' : 'black', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+            >
+              28 Days
+            </button>
+            {/* <button // Removed Custom button
+              onClick={() => setSelectedDateRange('custom')}
+              style={{ padding: '8px 15px', backgroundColor: selectedDateRange === 'custom' ? '#007bff' : '#f0f0f0', color: selectedDateRange === 'custom' ? 'white' : 'black', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+            >
+              Custom
+            </button> */}
+          </div>
+
+          {/* Calendar for custom range will go here */}
+          {/* {selectedDateRange === 'custom' && (
+            <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '10px' }}>Select Custom Date Range</h4>
+              <FullCalendar
+                plugins={[dayGridPlugin]}
+                initialView="dayGridMonth"
+                headerToolbar={{
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: '',
+                }}
+                dateClick={(info) => {
+                  const clickedDate = new Date(info.dateStr);
+                  if (!customStartDate || (customStartDate && customEndDate)) {
+                    // If no start date or both dates are already selected, start a new selection
+                    setCustomStartDate(clickedDate);
+                    setCustomEndDate(null);
+                  } else if (customStartDate && clickedDate > customStartDate) {
+                    // If start date is selected and clicked date is after, set end date
+                    setCustomEndDate(clickedDate);
+                  } else if (customStartDate && clickedDate < customStartDate) {
+                    // If clicked date is before start date, reset and set new start date
+                    setCustomStartDate(clickedDate);
+                    setCustomEndDate(null);
+                  }
+                }}
+                eventContent={renderEventContent} // Render custom event content
+                events={calendarEvents}
+              />
+              {customStartDate && customEndDate && (
+                <p style={{ marginTop: '10px' }}>
+                  Selected: {format(customStartDate, 'yyyy-MM-dd')} to {format(customEndDate, 'yyyy-MM-dd')}
+                </p>
+              )}
+              {!customStartDate && !customEndDate && (
+                <p style={{ marginTop: '10px' }}>Please select a start date and an end date.</p>
+              )}
+            </div>
+          )} */}
+
           <h3 style={{ marginBottom: '10px' }}>Google Analytics account information for {expandedPropertyId}:</h3>
-          {dateChartData.length > 0 && (
-            <div style={{ marginBottom: '20px' }}>
-              <h4>Sessions and Users over Time</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dateChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="sessions" stroke="#8884d8" activeDot={{ r: 8 }} />
-                  <Line type="monotone" dataKey="activeUsers" stroke="#82ca9d" />
-                  <Line type="monotone" dataKey="screenPageViews" stroke="#ffc658" />
-                  <Line type="monotone" dataKey="conversions" stroke="#ff7300" />
-                  <Line type="monotone" dataKey="totalRevenue" stroke="#d0ed57" />
-                  <Line type="monotone" dataKey="transactions" stroke="#a4de6c" />
-                  <Line type="monotone" dataKey="newUsers" stroke="#8dd1e1" />
-                  <Line type="monotone" dataKey="active1DayUsers" stroke="#a593e0" />
-                  <Line type="monotone" dataKey="active7DayUsers" stroke="#67cddc" />
-                  <Line type="monotone" dataKey="active28DayUsers" stroke="#a182c1" />
-                  <Line type="monotone" dataKey="publisherAdClicks" stroke="#e5d8bd" />
-                  <Line type="monotone" dataKey="publisherAdImpressions" stroke="#c2b0e6" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
 
-          {countryChartData.length > 0 && (
-            <div>
-              <h4>Metrics by Country</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={countryChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="sessions" fill="#8884d8" />
-                  <Bar dataKey="activeUsers" fill="#82ca9d" />
-                  <Bar dataKey="screenPageViews" fill="#ffc658" />
-                  <Bar dataKey="conversions" fill="#ff7300" />
-                  <Bar dataKey="totalRevenue" fill="#d0ed57" />
-                  <Bar dataKey="transactions" fill="#a4de6c" />
-                  <Bar dataKey="newUsers" fill="#8dd1e1" />
-                  <Bar dataKey="active1DayUsers" fill="#a593e0" />
-                  <Bar dataKey="active7DayUsers" fill="#67cddc" />
-                  <Bar dataKey="active28DayUsers" fill="#a182c1" />
-                  <Bar dataKey="publisherAdClicks" fill="#e5d8bd" />
-                  <Bar dataKey="publisherAdImpressions" fill="#c2b0e6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          {summaryLoading && <div>Loading account summary...</div>}
+          {summaryError && <div style={{ color: 'red' }}>{summaryError}</div>}
 
-          {kpiSummary && (
+          {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || retentionBarChartData.length > 0 || calculatedKPIs) && (
             <div style={{ marginTop: '20px' }}>
-              <h4>Key Performance Indicators (KPI) Summary Table</h4>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #ddd' }}>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Sum</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Average</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Active Users</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.sum}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.avg}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>New Users</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.sum}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.avg}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Screen Page Views</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.sum}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.avg}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Clicks</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.sum}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.avg}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Impressions</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.sum}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.avg}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
+              {dateChartData.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h4>Sessions and Users over Time</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={dateChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="sessions" stroke="#8884d8" activeDot={{ r: 8 }} />
+                      <Line type="monotone" dataKey="activeUsers" stroke="#82ca9d" />
+                      <Line type="monotone" dataKey="screenPageViews" stroke="#ffc658" />
+                      <Line type="monotone" dataKey="conversions" stroke="#ff7300" />
+                      <Line type="monotone" dataKey="totalRevenue" stroke="#d0ed57" />
+                      <Line type="monotone" dataKey="transactions" stroke="#a4de6c" />
+                      <Line type="monotone" dataKey="newUsers" stroke="#8dd1e1" />
+                      <Line type="monotone" dataKey="active1DayUsers" stroke="#a593e0" />
+                      <Line type="monotone" dataKey="active7DayUsers" stroke="#67cddc" />
+                      <Line type="monotone" dataKey="active28DayUsers" stroke="#a182c1" />
+                      <Line type="monotone" dataKey="publisherAdClicks" stroke="#e5d8bd" />
+                      <Line type="monotone" dataKey="publisherAdImpressions" stroke="#c2b0e6" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
 
-          {topDaysActivity.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h4>Top Days by Activity</h4>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #ddd' }}>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Date</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Active Users</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>New Users</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Screen Page Views</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topDaysActivity.map((day) => (
-                    <tr key={day.date} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '8px' }}>{day.date}</td>
-                      <td style={{ padding: '8px' }}>{day.activeUsers}</td>
-                      <td style={{ padding: '8px' }}>{day.newUsers}</td>
-                      <td style={{ padding: '8px' }}>{day.screenPageViews}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+              {countryChartData.length > 0 && (
+                <div>
+                  <h4>Metrics by Country</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={countryChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="sessions" fill="#8884d8" />
+                      <Bar dataKey="activeUsers" fill="#82ca9d" />
+                      <Bar dataKey="screenPageViews" fill="#ffc658" />
+                      <Bar dataKey="conversions" fill="#ff7300" />
+                      <Bar dataKey="totalRevenue" fill="#d0ed57" />
+                      <Bar dataKey="transactions" fill="#a4de6c" />
+                      <Bar dataKey="newUsers" fill="#8dd1e1" />
+                      <Bar dataKey="active1DayUsers" fill="#a593e0" />
+                      <Bar dataKey="active7DayUsers" fill="#67cddc" />
+                      <Bar dataKey="active28DayUsers" fill="#a182c1" />
+                      <Bar dataKey="publisherAdClicks" fill="#e5d8bd" />
+                      <Bar dataKey="publisherAdImpressions" fill="#c2b0e6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
 
-          {adMetricsTrend.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h4>Ad Performance Trend</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={adMetricsTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="publisherAdClicks" stroke="#8884d8" activeDot={{ r: 8 }} />
-                  <Line type="monotone" dataKey="publisherAdImpressions" stroke="#82ca9d" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+              {kpiSummary && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Key Performance Indicators (KPI) Summary Table</h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #ddd' }}>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Sum</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Average</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Active Users</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.sum}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.avg}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>New Users</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.sum}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.avg}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Screen Page Views</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.sum}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.avg}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Clicks</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.sum}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.avg}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Impressions</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.sum}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.avg}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-          {overallSummary.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h4>Overall Metrics Summary Table</h4>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #ddd' }}>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {overallSummary.map((item) => (
-                    <tr key={item.metric} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '8px' }}>{item.metric}</td>
-                      <td style={{ padding: '8px' }}>{item.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+              {topDaysActivity.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Top Days by Activity</h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #ddd' }}>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Date</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Active Users</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>New Users</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Screen Page Views</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topDaysActivity.map((day) => (
+                        <tr key={day.date} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '8px' }}>{day.date}</td>
+                          <td style={{ padding: '8px' }}>{day.activeUsers}</td>
+                          <td style={{ padding: '8px' }}>{day.newUsers}</td>
+                          <td style={{ padding: '8px' }}>{day.screenPageViews}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-          {/* New vs Returning Users Pie Chart */}
-          {newVsReturningPieChartData.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h4>New vs. Returning Users Ratio</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={newVsReturningPieChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    fill="#8884d8"
-                    label
-                  >
-                    {
-                      newVsReturningPieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index === 0 ? '#8884d8' : '#82ca9d'} />
-                      ))
-                    }
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+              {adMetricsTrend.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Ad Performance Trend</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={adMetricsTrend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="publisherAdClicks" stroke="#8884d8" activeDot={{ r: 8 }} />
+                      <Line type="monotone" dataKey="publisherAdImpressions" stroke="#82ca9d" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
 
-          {/* Retention Metrics Bar Chart */}
-          {retentionBarChartData.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h4>Retention Metrics Comparison</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={retentionBarChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+              {overallSummary.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Overall Metrics Summary Table</h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #ddd' }}>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {overallSummary.map((item) => (
+                        <tr key={item.metric} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '8px' }}>{item.metric}</td>
+                          <td style={{ padding: '8px' }}>{item.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-          {/* Calculated KPIs */}
-          {calculatedKPIs && (
-            <div style={{ marginTop: '20px' }}>
-              <h4>Calculated Key Performance Indicators (KPIs)</h4>
-              <p><strong>New User Share:</strong> {calculatedKPIs.newUsersShare}</p>
-              <p><strong>Views per User:</strong> {calculatedKPIs.viewsPerUser}</p>
-              <p><strong>Click-Through Rate (CTR):</strong> {calculatedKPIs.ctr}</p>
+              {/* New vs Returning Users Pie Chart */}
+              {newVsReturningPieChartData.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>New vs. Returning Users Ratio</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={newVsReturningPieChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        label
+                      >
+                        {
+                          newVsReturningPieChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={index === 0 ? '#8884d8' : '#82ca9d'} />
+                          ))
+                        }
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Retention Metrics Bar Chart */}
+              {retentionBarChartData.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Retention Metrics Comparison</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={retentionBarChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Calculated KPIs */}
+              {calculatedKPIs && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Calculated Key Performance Indicators (KPIs)</h4>
+                  <p><strong>New User Share:</strong> {calculatedKPIs.newUsersShare}</p>
+                  <p><strong>Views per User:</strong> {calculatedKPIs.viewsPerUser}</p>
+                  <p><strong>Click-Through Rate (CTR):</strong> {calculatedKPIs.ctr}</p>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
