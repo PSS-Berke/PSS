@@ -5,7 +5,7 @@ import { XANO_CONFIG, getGoogleAnalyticsApiUrl } from '@/lib/xano/config';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from 'recharts';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, parse } from 'date-fns';
 // import FullCalendar from '@fullcalendar/react'; // Removed FullCalendar import
 // import dayGridPlugin from '@fullcalendar/daygrid'; // Removed dayGridPlugin import
 // import { EventInput } from '@fullcalendar/core'; // Removed EventInput import
@@ -140,14 +140,15 @@ interface GoogleAccountSummaryResponse {
       const countryIndex = dimensions.findIndex((d) => d.name === 'country');
 
       const date = dateIndex !== -1 ? dimensionValues[dateIndex] : 'Unknown Date';
+      const formattedDate = date !== 'Unknown Date' ? format(parse(date, 'yyyyMMdd', new Date()), 'yyyy-MM-dd') : 'Unknown Date';
       const country = countryIndex !== -1 ? dimensionValues[countryIndex] : 'Unknown Country';
 
       // Aggregate for Date Chart
       if (dateIndex !== -1) {
-        if (!dateChartMap.has(date)) {
-          dateChartMap.set(date, { name: date } as ChartData);
+        if (!dateChartMap.has(formattedDate)) {
+          dateChartMap.set(formattedDate, { name: formattedDate } as ChartData);
         }
-        const currentData = dateChartMap.get(date)!;
+        const currentData = dateChartMap.get(formattedDate)!;
         metrics.forEach((metric, idx) => {
           currentData[metric.name] = (currentData[metric.name] || 0) + (metricValues[idx] || 0);
         });
@@ -167,7 +168,7 @@ interface GoogleAccountSummaryResponse {
         daysWithData++;
 
         dailyActivityData.push({
-          date: date,
+          date: formattedDate,
           activeUsers: activeUsers,
           newUsers: newUsers,
           screenPageViews: screenPageViews,
@@ -637,6 +638,36 @@ export default function GaPage() {
 
           {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
             <div style={{ marginTop: '20px' }}>
+
+              {countryChartData.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #ddd' }}>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Sessions</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Active Users</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Screen Page Views</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Conversions</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Total Revenue</th>
+                        <th style={{ padding: '8px', textAlign: 'left' }}>Transactions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {countryChartData.map((data, index) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '8px' }}>{data.sessions || 0}</td>
+                          <td style={{ padding: '8px' }}>{data.activeUsers || 0}</td>
+                          <td style={{ padding: '8px' }}>{data.screenPageViews || 0}</td>
+                          <td style={{ padding: '8px' }}>{data.conversions || 0}</td>
+                          <td style={{ padding: '8px' }}>{data.totalRevenue || 0}</td>
+                          <td style={{ padding: '8px' }}>{data.transactions || 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+                
               {dateChartData.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
                   <h4>Sessions and Users over Time</h4>
@@ -658,26 +689,6 @@ export default function GaPage() {
                 </div>
               )}
 
-              {countryChartData.length > 0 && (
-                <div>
-                  <h4>Metrics by Country</h4>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={countryChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="sessions" fill="#8884d8" />
-                      <Bar dataKey="activeUsers" fill="#82ca9d" />
-                      <Bar dataKey="screenPageViews" fill="#ffc658" />
-                      <Bar dataKey="conversions" fill="#ff7300" />
-                      <Bar dataKey="totalRevenue" fill="#d0ed57" />
-                      <Bar dataKey="transactions" fill="#a4de6c" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
 
               {kpiSummary && (
                 <div style={{ marginTop: '20px' }}>
