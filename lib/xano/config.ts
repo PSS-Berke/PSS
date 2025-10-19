@@ -58,6 +58,7 @@ export const XANO_CONFIG = {
     GOOGLE_ANALYTICS: {
       PROPERTIES: '/google/properties',
       ACCOUNT_DATA: '/google/account_data',
+      ACCOUNT_SUMMARY: '/google/account_summary',
     },
   },
 } as const;

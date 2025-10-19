@@ -30,6 +30,21 @@ interface AccountSummary {
   propertySummaries: PropertySummary[];
 }
 
+interface GoogleAccountSummaryResponse {
+  dimensionHeaders: Array<{ name: string }>;
+  metricHeaders: Array<any>; // Simplified, can be more detailed if needed
+  rows: Array<{
+    dimensionValues: Array<{ value: string }>;
+    metricValues: Array<{ value: string }>;
+  }>;
+  rowCount: number;
+  metadata: {
+    currencyCode: string;
+    timeZone: string;
+  };
+  kind: string;
+}
+
 export default function GaPage() {
   const { user, isLoading, token } = useAuth();
   const [apiLoading, setApiLoading] = useState(false);
@@ -39,6 +54,10 @@ export default function GaPage() {
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [propertiesError, setPropertiesError] = useState<string | null>(null);
   const [accountDataResponse, setAccountDataResponse] = useState<string | null>(null);
+  const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryData, setSummaryData] = useState<GoogleAccountSummaryResponse | null>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -82,43 +101,55 @@ export default function GaPage() {
   }, [token, user?.id]);
 
   const handlePropertyClick = async (propertyId: string) => {
-    setApiLoading(true);
-    setApiError(null);
-    setAccountDataResponse(null);
+    if (expandedPropertyId === propertyId) {
+      setExpandedPropertyId(null);
+      setSummaryData(null);
+      return;
+    }
 
-    if (!token || !user?.company_id) {
-      setApiError('The user is not authenticated or the company ID is missing.');
-      setApiLoading(false);
+    setExpandedPropertyId(propertyId);
+    setSummaryLoading(true);
+    setSummaryError(null);
+    setSummaryData(null);
+
+    if (!token || !user?.id || !user?.company_id) {
+      setSummaryError('The user is not authenticated, the user ID or company ID is missing.');
+      setSummaryLoading(false);
       return;
     }
 
     try {
       const numericPropertyId = propertyId.split('/').pop();
       if (!numericPropertyId) {
-        setApiError('Failed to extract the numeric property ID.');
-        setApiLoading(false);
+        setSummaryError('Failed to extract the numeric property ID.');
+        setSummaryLoading(false);
         return;
       }
 
       const payload = {
         company_id: user.company_id,
         property_id: numericPropertyId,
-        metrics: [{
-          name: 'sessions'
-        }],
-        dimensions: [{
-          name: 'date'
-        }],
-        dateRanges: [{
-          startDate: '7daysAgo',
-          endDate: 'today'
-        }],
+        user_id: user.id.toString(),
+        startDate: '2025-02-01',
+        endDate: '2025-10-01',
+        metrics: [
+          { name: 'sessions' },
+          { name: 'activeUsers' },
+          { name: 'screenPageViews' },
+          { name: 'conversions' },
+          { name: 'totalRevenue' },
+          { name: 'transactions' },
+        ], // Added common metrics based on typical GA reports
+        dimensions: [{ name: 'date' }, { name: 'country' }], // Added country as per request
+        dateRanges: [
+          { startDate: '30daysAgo', endDate: 'today' }, // Default to last 30 days
+        ],
       };
 
-      const apiUrl = getGoogleAnalyticsApiUrl(XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.ACCOUNT_DATA);
-      console.log('Sending POST request to:', apiUrl);
+      const apiUrl = getGoogleAnalyticsApiUrl(XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.ACCOUNT_SUMMARY);
+      console.log('Sending POST request to Account Summary:', apiUrl, payload);
 
-      const response = await apiRequest(
+      const response = await apiRequest<GoogleAccountSummaryResponse>(
         apiUrl,
         {
           method: 'POST',
@@ -127,15 +158,14 @@ export default function GaPage() {
         },
         token,
       );
-
-      setAccountDataResponse(JSON.stringify(response, null, 2));
+      setSummaryData(response);
     } catch (error: any) {
-      console.error('Error retrieving Google Analytics account data:', error);
-      setApiError(
-        `Error retrieving account details: ${error.message || 'Unknown error'}`,
+      console.error('Error retrieving Google Analytics account summary:', error);
+      setSummaryError(
+        `Error retrieving account summary: ${error.message || 'Unknown error'}`,
       );
     } finally {
-      setApiLoading(false);
+      setSummaryLoading(false);
     }
   };
 
@@ -212,10 +242,12 @@ export default function GaPage() {
         </div>
       )}
 
-      {accountDataResponse && (
+      {summaryLoading && expandedPropertyId && <div>Loading account summary...</div>}
+      {summaryError && expandedPropertyId && <div style={{ color: 'red' }}>{summaryError}</div>}
+      {summaryData && expandedPropertyId && (
         <div style={{ backgroundColor: '#e6ffe6', padding: '15px', marginTop: '20px', borderRadius: '8px', border: '1px solid #aaffaa' }}>
-          <h3 style={{ marginBottom: '10px' }}>Google Analytics account information:</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{accountDataResponse}</pre>
+          <h3 style={{ marginBottom: '10px' }}>Google Analytics account information for {expandedPropertyId}:</h3>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(summaryData, null, 2)}</pre>
         </div>
       )}
 
