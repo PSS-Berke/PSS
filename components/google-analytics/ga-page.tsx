@@ -434,7 +434,10 @@ export default function GaPage() {
                         <ChartContainer config={pieChartConfig} className="h-[250px] w-2/3">
                           <PieChart>
                             <Pie
-                              data={topDaysActivity.map(day => ({ name: day.date, value: day.activeUsers }))}
+                              data={topDaysActivity
+                                .sort((a, b) => b.activeUsers - a.activeUsers)
+                                .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                                .map(day => ({ name: day.date, value: day.activeUsers }))}
                               dataKey="value"
                               nameKey="name"
                               cx="50%"
@@ -442,7 +445,10 @@ export default function GaPage() {
                               outerRadius={70}
                               label
                             >
-                              {topDaysActivity.map((entry, index) => (
+                              {topDaysActivity
+                                .sort((a, b) => b.activeUsers - a.activeUsers)
+                                .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                                .map((entry, index) => (
                                 <Cell key={`cell-${entry.date}-active`} fill={`hsl(var(--chart-${(index % 6) + 1}))`} />
                               ))}
                             </Pie>
@@ -450,7 +456,10 @@ export default function GaPage() {
                           </PieChart>
                         </ChartContainer>
                         <div className="flex flex-col items-start gap-1.5 p-2 w-1/3 text-sm text-muted-foreground">
-                          {topDaysActivity.map((entry, index) => (
+                          {topDaysActivity
+                            .sort((a, b) => b.activeUsers - a.activeUsers)
+                            .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                            .map((entry, index) => (
                             <div key={`legend-${entry.date}-active`} className="flex items-center gap-1">
                               <div
                                 className="h-2 w-2 shrink-0 rounded-[2px]"
@@ -472,7 +481,10 @@ export default function GaPage() {
                         <ChartContainer config={pieChartConfig} className="h-[250px] w-2/3">
                           <PieChart>
                             <Pie
-                              data={topDaysActivity.map(day => ({ name: day.date, value: day.newUsers }))}
+                              data={topDaysActivity
+                                .sort((a, b) => b.newUsers - a.newUsers)
+                                .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                                .map(day => ({ name: day.date, value: day.newUsers }))}
                               dataKey="value"
                               nameKey="name"
                               cx="50%"
@@ -480,7 +492,10 @@ export default function GaPage() {
                               outerRadius={70}
                               label
                             >
-                              {topDaysActivity.map((entry, index) => (
+                              {topDaysActivity
+                                .sort((a, b) => b.newUsers - a.newUsers)
+                                .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                                .map((entry, index) => (
                                 <Cell key={`cell-${entry.date}-new`} fill={`hsl(var(--chart-${(index % 6) + 1}))`} />
                               ))}
                             </Pie>
@@ -488,7 +503,10 @@ export default function GaPage() {
                           </PieChart>
                         </ChartContainer>
                         <div className="flex flex-col items-start gap-1.5 p-2 w-1/3 text-sm text-muted-foreground">
-                          {topDaysActivity.map((entry, index) => (
+                          {topDaysActivity
+                            .sort((a, b) => b.newUsers - a.newUsers)
+                            .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                            .map((entry, index) => (
                             <div key={`legend-${entry.date}-new`} className="flex items-center gap-1">
                               <div
                                 className="h-2 w-2 shrink-0 rounded-[2px]"
@@ -510,7 +528,10 @@ export default function GaPage() {
                         <ChartContainer config={pieChartConfig} className="h-[250px] w-2/3">
                           <PieChart>
                             <Pie
-                              data={topDaysActivity.map(day => ({ name: day.date, value: day.screenPageViews }))}
+                              data={topDaysActivity
+                                .sort((a, b) => b.screenPageViews - a.screenPageViews)
+                                .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                                .map(day => ({ name: day.date, value: day.screenPageViews }))}
                               dataKey="value"
                               nameKey="name"
                               cx="50%"
@@ -518,7 +539,10 @@ export default function GaPage() {
                               outerRadius={70}
                               label
                             >
-                              {topDaysActivity.map((entry, index) => (
+                              {topDaysActivity
+                                .sort((a, b) => b.screenPageViews - a.screenPageViews)
+                                .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                                .map((entry, index) => (
                                 <Cell key={`cell-${entry.date}-views`} fill={`hsl(var(--chart-${(index % 6) + 1}))`} />
                               ))}
                             </Pie>
@@ -526,7 +550,10 @@ export default function GaPage() {
                           </PieChart>
                         </ChartContainer>
                         <div className="flex flex-col items-start gap-1.5 p-2 w-1/3 text-sm text-muted-foreground">
-                          {topDaysActivity.map((entry, index) => (
+                          {topDaysActivity
+                            .sort((a, b) => b.screenPageViews - a.screenPageViews)
+                            .slice(0, selectedDateRange === '28days' ? 5 : 3)
+                            .map((entry, index) => (
                             <div key={`legend-${entry.date}-views`} className="flex items-center gap-1">
                               <div
                                 className="h-2 w-2 shrink-0 rounded-[2px]"
@@ -572,22 +599,24 @@ export default function GaPage() {
                 </div>
               )}
 
-              {/* New vs Returning Users Pie Chart */}
-              {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
-                <div className="mt-4">
-                  <NewVsReturningUsersPieChart
-                    newVsReturningPieChartData={newVsReturningPieChartData}
-                    selectedDateRange={selectedDateRange}
-                  />
-                </div>
-              )}
+              <div className="mt-4 flex flex-col md:flex-row md:items-center gap-4">
+                {/* New vs Returning Users Pie Chart */}
+                {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
+                  <div className="flex-1">
+                    <NewVsReturningUsersPieChart
+                      newVsReturningPieChartData={newVsReturningPieChartData}
+                      selectedDateRange={selectedDateRange}
+                    />
+                  </div>
+                )}
 
-              {/* Calculated KPIs */}
-              {calculatedKPIs && (
-                <div className="mt-4">
-                  <CalculatedKpisDisplay calculatedKPIs={calculatedKPIs} />
-                </div>
-              )}
+                {/* Calculated KPIs */}
+                {calculatedKPIs && (
+                  <div className="flex-1">
+                    <CalculatedKpisDisplay calculatedKPIs={calculatedKPIs} />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>
