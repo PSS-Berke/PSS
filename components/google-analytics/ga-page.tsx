@@ -26,7 +26,7 @@ import { PropertiesDisplay } from './PropertiesDisplay';
 import { CountryChartDataTable } from './CountryChartDataTable';
 import { SessionsAndUsersChart } from './SessionsAndUsersChart';
 import { KpiSummaryTable } from './KpiSummaryTable';
-import { TopDaysActivityTable } from './TopDaysActivityTable';
+/* import { TopDaysActivityTable } from './TopDaysActivityTable'; */
 import { AdPerformanceTrendChart } from './AdPerformanceTrendChart';
 import { NewVsReturningUsersPieChart } from './NewVsReturningUsersPieChart';
 import { CalculatedKpisDisplay } from './CalculatedKpisDisplay';
@@ -309,14 +309,13 @@ export default function GaPage() {
 
   return (
     <div style={{ padding: '10px' }}>
-      <h1>Google Analytics</h1>
+      {/* <h1>Google Analytics</h1>
       <p>Authorized user:</p>
       <p>Name: {user.name || 'Not specified'}</p>
       <p>Email: {user.email}</p>
       <p>User ID: {user.id || 'Not specified'}</p>
-      <p>Company name: {user.company || 'Not specified'}</p>
+      <p>Company name: {user.company || 'Not specified'}</p> */}
 
-      <h2 style={{ marginTop: '20px' }}>Google Analytics properties</h2>
       {propertiesLoading && <div>Loading properties...</div>}
       {propertiesError && <div style={{ color: 'red' }}>{propertiesError}</div>}
       {!propertiesLoading && properties.length === 0 && !propertiesError && (
@@ -408,11 +407,11 @@ export default function GaPage() {
                 </div>
               )}
 
-              {topDaysActivity.length > 0 && (
+              {/* {topDaysActivity.length > 0 && (
                 <div style={{ marginTop: '20px' }}>
                   <TopDaysActivityTable topDaysActivity={topDaysActivity} />
                 </div>
-              )}
+              )} */}
 
               {/* New Pie Charts for Top Days by Activity */}
               {selectedDateRange !== '1day' && topDaysActivity.length > 0 && (
@@ -420,7 +419,7 @@ export default function GaPage() {
                   {/* Active Users Pie Chart */}
                   {topDaysActivity.some(day => day.activeUsers > 0) && (
                     <div style={{ flex: '1' }}>
-                      <h4>Active Users by Day</h4>
+                      <h4>Top Days by Activity</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
