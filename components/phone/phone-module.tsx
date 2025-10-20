@@ -221,16 +221,16 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
       device.on('incoming', async (call) => {
         console.log('Incoming call from:', call.parameters.From);
-
+        const from = call.parameters.From;
         // Look up contact by phone number
-        const contact = contactsData?.find((c: Contact) => c.phone_number === call.parameters.From);
+        const contact = contactsData?.find((c: Contact) => c.phone_number === from);
 
         // Store the incoming call object for later acceptance/rejection
         setIncomingCall(call);
 
         // Set active call for overlay display
         setActiveCall({
-          phone_number: call.parameters.From,
+          phone_number: from,
           contact_name: contact?.name || 'Unknown',
           status: 'incoming',
           startTime: new Date().toISOString(),
@@ -240,7 +240,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         await apiStoreCallLog({
           id: 0,
           created_at: new Date().toISOString(),
-          phone: call.parameters.From,
+          phone_number: from,
           contact_name: contact?.name || 'Unknown',
           direction: 'inbound',
           status: 'completed',
@@ -307,7 +307,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       await apiStoreCallLog({
         id: 0,
         created_at: new Date().toISOString(),
-        phone: number,
+        phone_number: number,
         contact_name: contact?.name || 'Unknown',
         direction: 'outbound',
         status: 'completed',
@@ -743,7 +743,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 {log.contact_name}
                               </p>
                               <p className="text-xs text-muted-foreground font-mono truncate">
-                                {log.phone}
+                                {log.phone_number}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {formatTimestamp(log.created_at)}
@@ -756,7 +756,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -1146,7 +1146,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                   {log.contact_name}
                                 </p>
                                 <p className="text-sm text-muted-foreground font-mono truncate">
-                                  {log.phone}
+                                  {log.phone_number}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {formatTimestamp(log.created_at)}
@@ -1159,7 +1159,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                    'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
