@@ -10,7 +10,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   setSelectedDateRange,
 }) => {
   return (
-    <div className="mb-2 mt-2">
+    <div className="mb-10 mt-10">
       {/* Date range buttons */}
       <div className="flex space-x-2">
         {[{
@@ -29,7 +29,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             className={`
               px-4 py-2 rounded-md text-sm font-medium transition-colors
               ${selectedDateRange === range.key
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-gray-600 text-white hover:bg-gray-700'
                 : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
               }
             `}
