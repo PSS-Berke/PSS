@@ -34,6 +34,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { ActiveCallOverlay } from './components/ActiveCallOverlay';
 import { EditContact } from './components/EditContact';
 import DeleteContact from './components/DeleteContact';
+import { CompanyRedacted } from '@/@types/company';
+import { apiGetCompanyDetails } from '@/lib/services/CompanyService';
 
 type TwilioError = {
   code: string;
@@ -110,6 +112,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [incomingCallTimeout, setIncomingCallTimeout] = useState<NodeJS.Timeout | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [callFilter, setCallFilter] = useState<CallFilterType>('all');
+  const [isDNDEnabled, setIsDNDEnabled] = useState(false);
+  const [dndStartTime, setDndStartTime] = useState<string>('');
+  const [dndEndTime, setDndEndTime] = useState<string>('');
   const [leftNavExpanded, setLeftNavExpanded] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -133,6 +138,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     isLoading: callLogsIsLoading,
     mutate: mutateCallLogs,
   } = useSWR<CallLog[]>('/api:mDRLMGRq/call_logs', apiGetCallLogs);
+
+  const {
+    data: companyData,
+    error: companyError,
+    isLoading: companyIsLoading,
+    mutate: mutateCompany,
+  } = useSWR<CompanyRedacted[]>('/api:ZKUwjF5k/company_details', apiGetCompanyDetails);
+
+  const company = companyData?.find((c: CompanyRedacted) => c.company_id === user?.company_id);
 
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
@@ -280,7 +294,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setCallStatus('RINGING');
 
     try {
-      const contact = contactsData?.find((contact: Contact) => String(contact.phone_number) === String(number));
+      const contact = contactsData?.find(
+        (contact: Contact) => String(contact.phone_number) === String(number),
+      );
 
       // Set active call immediately when making the call
       const activeCallData = {
@@ -1212,7 +1228,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       />
 
       {/* Settings Modal */}
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        company={company}
+        onSuccess={() => mutateCompany()}
+      />
 
       {/* Active Call Overlay */}
       <ActiveCallOverlay
