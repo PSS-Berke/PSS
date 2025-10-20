@@ -17,7 +17,7 @@ const AxiosRequestIntrceptorConfigCallback = (config: InternalAxiosRequestConfig
         }*/
 
     if (accessToken) {
-      config.headers[REQUEST_HEADER_AUTH_KEY] = `${TOKEN_TYPE}${accessToken}`;
+      config.headers[REQUEST_HEADER_AUTH_KEY] = `${TOKEN_TYPE} ${accessToken}`;
     }
   }
 
