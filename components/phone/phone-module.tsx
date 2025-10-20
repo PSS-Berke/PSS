@@ -100,12 +100,14 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [dialedNumber, setDialedNumber] = useState('');
   const [activeCall, setActiveCall] = useState<any>(null);
   const [currentCall, setCurrentCall] = useState<any>(null);
+  const [incomingCall, setIncomingCall] = useState<any>(null);
   const [callStatus, setCallStatus] = useState<
     '' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'
   >('');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
+  const [incomingCallTimeout, setIncomingCallTimeout] = useState<NodeJS.Timeout | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [callFilter, setCallFilter] = useState<CallFilterType>('all');
   const [leftNavExpanded, setLeftNavExpanded] = useState(true);
@@ -153,6 +155,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   useEffect(() => {
     console.log('ActiveCall state changed:', activeCall);
   }, [activeCall]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (incomingCallTimeout) {
+        clearTimeout(incomingCallTimeout);
+      }
+    };
+  }, [incomingCallTimeout]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -208,16 +219,42 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         console.error('Twilio device error:', error);
       });
 
-      device.on('incoming', (call) => {
+      device.on('incoming', async (call) => {
         console.log('Incoming call from:', call.parameters.From);
-        // Handle incoming call
+
+        // Look up contact by phone number
+        const contact = contactsData?.find((c: Contact) => c.phone_number === call.parameters.From);
+
+        // Store the incoming call object for later acceptance/rejection
+        setIncomingCall(call);
+
+        // Set active call for overlay display
         setActiveCall({
           phone_number: call.parameters.From,
-          contact_name: 'Unknown',
+          contact_name: contact?.name || 'Unknown',
           status: 'incoming',
           startTime: new Date().toISOString(),
         });
-        call.accept(); // Auto-accept for now
+
+        //set up call log
+        await apiStoreCallLog({
+          id: 0,
+          created_at: new Date().toISOString(),
+          phone: call.parameters.From,
+          contact_name: contact?.name || 'Unknown',
+          direction: 'inbound',
+          status: 'completed',
+          duration: 0,
+          user_id: user?.id || 0,
+          contact_id: contact?.id || 0,
+        });
+
+        // Set up auto-reject timeout (30 seconds)
+        const timeout = setTimeout(() => {
+          console.log('Auto-rejecting incoming call after timeout');
+          rejectIncomingCall();
+        }, 30000);
+        setIncomingCallTimeout(timeout);
       });
 
       // Register the device
@@ -316,7 +353,68 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     }
   };
 
+  const acceptIncomingCall = () => {
+    if (incomingCall) {
+      console.log('Accepting incoming call');
+
+      // Clear timeout
+      if (incomingCallTimeout) {
+        clearTimeout(incomingCallTimeout);
+        setIncomingCallTimeout(null);
+      }
+
+      // Accept the call
+      incomingCall.accept();
+
+      // Set up call event handlers for the accepted call
+      incomingCall.on('accept', () => {
+        console.log('INCOMING CALL ACCEPTED');
+        setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
+        setCallStatus('ACCEPTED');
+      });
+
+      incomingCall.on('disconnect', () => {
+        console.log('INCOMING CALL DISCONNECTED');
+        setActiveCall(null);
+        setCurrentCall(null);
+        setCallDuration(0);
+        setIsMuted(false);
+        setIsOnHold(false);
+        setCallStatus('DISCONNECTED');
+      });
+
+      // Store as current call
+      setCurrentCall(incomingCall);
+      setIncomingCall(null);
+      setCallDuration(0);
+    }
+  };
+
+  const rejectIncomingCall = () => {
+    if (incomingCall) {
+      console.log('Rejecting incoming call');
+
+      // Clear timeout
+      if (incomingCallTimeout) {
+        clearTimeout(incomingCallTimeout);
+        setIncomingCallTimeout(null);
+      }
+
+      // Reject the call
+      incomingCall.reject();
+      setIncomingCall(null);
+      setActiveCall(null);
+      setCallStatus('REJECTED');
+    }
+  };
+
   const endCall = () => {
+    // Clear any incoming call timeout
+    if (incomingCallTimeout) {
+      clearTimeout(incomingCallTimeout);
+      setIncomingCallTimeout(null);
+    }
+
     // Disconnect the specific call if it exists
     if (currentCall) {
       currentCall.disconnect();
@@ -327,6 +425,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     }
     setActiveCall(null);
     setCurrentCall(null);
+    setIncomingCall(null);
     setCallDuration(0);
     setIsMuted(false);
     setIsOnHold(false);
@@ -657,7 +756,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -1060,7 +1159,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                    'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
@@ -1124,6 +1223,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         onEndCall={endCall}
         onToggleMute={toggleMute}
         onToggleHold={toggleHold}
+        onAcceptCall={acceptIncomingCall}
+        onRejectCall={rejectIncomingCall}
         formatDuration={formatDuration}
       />
     </Card>
