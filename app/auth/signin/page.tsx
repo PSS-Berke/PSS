@@ -217,7 +217,7 @@ export default function SignInPage() {
                       {error}
                     </div>
                   )}
-                  <div className='flex flex-col gap-2 justify-start'>
+                  <div className="flex flex-col gap-2 justify-start">
                     <Button
                       type="submit"
                       className="w-full rounded-lg bg-[#C33527] py-2.5 text-base font-medium text-white shadow-md shadow-[#C33527]/20 transition-colors hover:bg-[#a32a1f]"
@@ -225,7 +225,10 @@ export default function SignInPage() {
                     >
                       {isLoading ? 'Signing in…' : 'Sign In'}
                     </Button>
-                    <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:text-muted-foreground/80">
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-sm text-muted-foreground hover:text-muted-foreground/80"
+                    >
                       Forgot password?
                     </Link>
                     <Button
