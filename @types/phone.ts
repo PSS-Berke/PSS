@@ -20,7 +20,7 @@ export type Contact = {
 export type CallLog = {
     id: number
     created_at: string
-    phone: string
+    phone_number: string
     contact_name: string
     direction: 'inbound' | 'outbound'
     status: 'completed' | 'failed' | 'busy' | 'no-answer' | 'missed'
