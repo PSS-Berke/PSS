@@ -758,6 +758,92 @@ export default function GaPage() {
                 </div>
               )}
 
+              {/* New Pie Charts for Top Days by Activity */}
+              {selectedDateRange !== '1day' && topDaysActivity.length > 0 && (
+                <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                  {/* Active Users Pie Chart */}
+                  {topDaysActivity.some(day => day.activeUsers > 0) && (
+                    <div style={{ flex: '1' }}>
+                      <h4>Active Users by Day</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={topDaysActivity.map(day => ({ name: day.date, value: day.activeUsers }))}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            fill="#8884d8"
+                            label={({ name, value }) => `${name}: ${value}`}
+                          >
+                            {topDaysActivity.map((entry, index) => (
+                              <Cell key={`cell-active-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A020F0'][index % 5]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* New Users Pie Chart */}
+                  {topDaysActivity.some(day => day.newUsers > 0) && (
+                    <div style={{ flex: '1' }}>
+                      <h4>New Users by Day</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={topDaysActivity.map(day => ({ name: day.date, value: day.newUsers }))}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            fill="#82ca9d"
+                            label={({ name, value }) => `${name}: ${value}`}
+                          >
+                            {topDaysActivity.map((entry, index) => (
+                              <Cell key={`cell-new-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A020F0'][index % 5]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Screen Page Views Pie Chart */}
+                  {topDaysActivity.some(day => day.screenPageViews > 0) && (
+                    <div style={{ flex: '1' }}>
+                      <h4>Screen Page Views by Day</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={topDaysActivity.map(day => ({ name: day.date, value: day.screenPageViews }))}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            fill="#ffc658"
+                            label={({ name, value }) => `${name}: ${value}`}
+                          >
+                            {topDaysActivity.map((entry, index) => (
+                              <Cell key={`cell-views-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A020F0'][index % 5]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {adMetricsTrend.length > 0 && (
                 <div style={{ marginTop: '20px' }}>
                   <h4>Ad Performance Trend</h4>
