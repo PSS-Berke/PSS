@@ -10,49 +10,34 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   setSelectedDateRange,
 }) => {
   return (
-    <div style={{ marginBottom: '10px', marginTop: '10px' }}>
-      <button
-        onClick={() => setSelectedDateRange('1day')}
-        style={{
-          marginRight: '10px',
-          padding: '8px 15px',
-          backgroundColor: selectedDateRange === '1day' ? '#007bff' : '#f0f0f0',
-          color: selectedDateRange === '1day' ? 'white' : 'black',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        1 Day
-      </button>
-      <button
-        onClick={() => setSelectedDateRange('7days')}
-        style={{
-          marginRight: '10px',
-          padding: '8px 15px',
-          backgroundColor: selectedDateRange === '7days' ? '#007bff' : '#f0f0f0',
-          color: selectedDateRange === '7days' ? 'white' : 'black',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        7 Days
-      </button>
-      <button
-        onClick={() => setSelectedDateRange('28days')}
-        style={{
-          marginRight: '10px',
-          padding: '8px 15px',
-          backgroundColor: selectedDateRange === '28days' ? '#007bff' : '#f0f0f0',
-          color: selectedDateRange === '28days' ? 'white' : 'black',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        28 Days
-      </button>
+    <div className="mb-2 mt-2">
+      {/* Date range buttons */}
+      <div className="flex space-x-2">
+        {[{
+          key: '1day',
+          label: '1 Day'
+        }, {
+          key: '7days',
+          label: '7 Days'
+        }, {
+          key: '28days',
+          label: '28 Days'
+        }].map(range => (
+          <button
+            key={range.key}
+            onClick={() => setSelectedDateRange(range.key as any)}
+            className={`
+              px-4 py-2 rounded-md text-sm font-medium transition-colors
+              ${selectedDateRange === range.key
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+              }
+            `}
+          >
+            {range.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

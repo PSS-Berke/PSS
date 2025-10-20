@@ -308,7 +308,7 @@ export default function GaPage() {
   }
 
   return (
-    <div style={{ padding: '10px' }}>
+    <div className="p-4">
       {/* <h1>Google Analytics</h1>
       <p>Authorized user:</p>
       <p>Name: {user.name || 'Not specified'}</p>
@@ -317,7 +317,7 @@ export default function GaPage() {
       <p>Company name: {user.company || 'Not specified'}</p> */}
 
       {propertiesLoading && <div>Loading properties...</div>}
-      {propertiesError && <div style={{ color: 'red' }}>{propertiesError}</div>}
+      {propertiesError && <div className="text-red-500">{propertiesError}</div>}
       {!propertiesLoading && properties.length === 0 && !propertiesError && (
         <div>Properties not found.</div>
       )}
@@ -380,29 +380,29 @@ export default function GaPage() {
             </div>
           )} */}
 
-          <h3 style={{ marginBottom: '10px' }}>Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
+          <h3 className="mb-2 text-lg font-semibold">Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
 
           {summaryLoading && <div>Loading account summary...</div>}
-          {summaryError && <div style={{ color: 'red' }}>{summaryError}</div>}
+          {summaryError && <div className="text-red-500">{summaryError}</div>}
 
           {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
-            <div style={{ marginTop: '20px' }}>
+            <div className="mt-4 space-y-4">
 
               {countryChartData.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="mt-4">
                   <CountryChartDataTable countryChartData={countryChartData} />
                 </div>
               )}
                 
               {dateChartData.length > 0 && (
-                <div style={{ marginBottom: '20px' }}>
+                <div className="mb-4">
                   <SessionsAndUsersChart dateChartData={dateChartData} />
                 </div>
               )}
 
 
               {kpiSummary && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="mt-4">
                   <KpiSummaryTable kpiSummary={kpiSummary} />
                 </div>
               )}
@@ -415,11 +415,11 @@ export default function GaPage() {
 
               {/* New Pie Charts for Top Days by Activity */}
               {selectedDateRange !== '1day' && topDaysActivity.length > 0 && (
-                <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                <div className="mt-4 flex flex-wrap gap-4">
                   {/* Active Users Pie Chart */}
                   {topDaysActivity.some(day => day.activeUsers > 0) && (
-                    <div style={{ flex: '1' }}>
-                      <h4>Top Days by Activity</h4>
+                    <div className="flex-1">
+                      <h4 className="mb-2 text-md font-semibold">Top Days by Activity</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -445,8 +445,8 @@ export default function GaPage() {
 
                   {/* New Users Pie Chart */}
                   {topDaysActivity.some(day => day.newUsers > 0) && (
-                    <div style={{ flex: '1' }}>
-                      <h4>New Users by Day</h4>
+                    <div className="flex-1">
+                      <h4 className="mb-2 text-md font-semibold">New Users by Day</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -472,8 +472,8 @@ export default function GaPage() {
 
                   {/* Screen Page Views Pie Chart */}
                   {topDaysActivity.some(day => day.screenPageViews > 0) && (
-                    <div style={{ flex: '1' }}>
-                      <h4>Screen Page Views by Day</h4>
+                    <div className="flex-1">
+                      <h4 className="mb-2 text-md font-semibold">Screen Page Views by Day</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -500,36 +500,38 @@ export default function GaPage() {
               )}
 
               {adMetricsTrend.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="mt-4">
                   <AdPerformanceTrendChart adMetricsTrend={adMetricsTrend} />
                 </div>
               )}
 
               {overallSummary.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                  <h4>Overall Metrics Summary Table</h4>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid #ddd' }}>
-                        <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
-                        <th style={{ padding: '8px', textAlign: 'left' }}>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {overallSummary.map((item) => (
-                        <tr key={item.metric} style={{ borderBottom: '1px solid #eee' }}>
-                          <td style={{ padding: '8px' }}>{item.metric}</td>
-                          <td style={{ padding: '8px' }}>{item.value}</td>
+                <div className="mt-4">
+                  <h4 className="mb-2 text-md font-semibold">Overall Metrics Summary Table</h4>
+                  <div className="rounded-md border">
+                    <table className="w-full caption-bottom text-sm">
+                      <thead className="[&_tr]:border-b">
+                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Metric</th>
+                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Value</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {overallSummary.map((item) => (
+                          <tr key={item.metric} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{item.metric}</td>
+                            <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{item.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
               {/* New vs Returning Users Pie Chart */}
               {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="mt-4">
                   <NewVsReturningUsersPieChart
                     newVsReturningPieChartData={newVsReturningPieChartData}
                     selectedDateRange={selectedDateRange}
@@ -539,7 +541,7 @@ export default function GaPage() {
 
               {/* Calculated KPIs */}
               {calculatedKPIs && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="mt-4">
                   <CalculatedKpisDisplay calculatedKPIs={calculatedKPIs} />
                 </div>
               )}

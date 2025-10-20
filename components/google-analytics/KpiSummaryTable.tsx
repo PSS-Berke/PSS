@@ -11,44 +11,46 @@ export const KpiSummaryTable: React.FC<KpiSummaryTableProps> = ({
   if (!kpiSummary) return null;
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <h4>Key Performance Indicators (KPI) Summary Table</h4>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #ddd' }}>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Metric</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Sum</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Average</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Active Users</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.sum}</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.activeUsers.avg}</td>
-          </tr>
-          <tr>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>New Users</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.sum}</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.newUsers.avg}</td>
-          </tr>
-          <tr>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Screen Page Views</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.sum}</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.screenPageViews.avg}</td>
-          </tr>
-          <tr>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Clicks</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.sum}</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdClicks.avg}</td>
-          </tr>
-          <tr>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>Publisher Ad Impressions</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.sum}</td>
-            <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{kpiSummary.publisherAdImpressions.avg}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div className="mt-4">
+      <h4 className="mb-2 text-md font-semibold">Key Performance Indicators (KPI) Summary Table</h4>
+      <div className="rounded-md border">
+        <table className="w-full caption-bottom text-sm">
+          <thead className="[&_tr]:border-b">
+            <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Metric</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Sum</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Average</th>
+            </tr>
+          </thead>
+          <tbody className="[&_tr:last-child]:border-0">
+            <tr>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">Active Users</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.activeUsers.sum}</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.activeUsers.avg}</td>
+            </tr>
+            <tr>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">New Users</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.newUsers.sum}</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.newUsers.avg}</td>
+            </tr>
+            <tr>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">Screen Page Views</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.screenPageViews.sum}</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.screenPageViews.avg}</td>
+            </tr>
+            <tr>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">Publisher Ad Clicks</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.publisherAdClicks.sum}</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.publisherAdClicks.avg}</td>
+            </tr>
+            <tr>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">Publisher Ad Impressions</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.publisherAdImpressions.sum}</td>
+              <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{kpiSummary.publisherAdImpressions.avg}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

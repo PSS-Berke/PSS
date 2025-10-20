@@ -1,11 +1,17 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { NewVsReturningData } from './interfaces';
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../ui/chart';
 
 interface NewVsReturningUsersPieChartProps {
   newVsReturningPieChartData: NewVsReturningData[];
   selectedDateRange: '1day' | '7days' | '28days';
 }
+
+const chartConfig = {
+  'New Users': { label: 'New Users', color: 'hsl(var(--chart-1))' },
+  'Returning Users': { label: 'Returning Users', color: 'hsl(var(--chart-2))' },
+} satisfies ChartConfig;
 
 export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartProps> = ({
   newVsReturningPieChartData,
@@ -14,9 +20,9 @@ export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartPr
   if (newVsReturningPieChartData.length === 0 || selectedDateRange === '1day') return null;
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <h4>New vs. Returning Users Ratio</h4>
-      <ResponsiveContainer width="100%" height={300}>
+    <div className="mt-4">
+      <h4 className="mb-2 text-md font-semibold">New vs. Returning Users Ratio</h4>
+      <ChartContainer config={chartConfig} className="min-h-[300px]">
         <PieChart>
           <Pie
             data={newVsReturningPieChartData}
@@ -25,19 +31,22 @@ export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartPr
             cx="50%"
             cy="50%"
             outerRadius={100}
-            fill="#8884d8"
+            // fill="#8884d8" // Removed inline fill
             label
           >
             {
               newVsReturningPieChartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={index === 0 ? '#8884d8' : '#82ca9d'} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={chartConfig[entry.name as keyof typeof chartConfig]?.color || `hsl(var(--chart-${index + 1}))`}
+                />
               ))
             }
           </Pie>
-          <Tooltip />
-          <Legend />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartLegend content={<ChartLegendContent />} />
         </PieChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 };

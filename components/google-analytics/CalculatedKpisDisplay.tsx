@@ -11,11 +11,13 @@ export const CalculatedKpisDisplay: React.FC<CalculatedKpisDisplayProps> = ({
   if (!calculatedKPIs) return null;
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <h4>Calculated Key Performance Indicators (KPIs)</h4>
-      <p><strong>New User Share:</strong> {calculatedKPIs.newUsersShare}</p>
-      <p><strong>Views per User:</strong> {calculatedKPIs.viewsPerUser}</p>
-      <p><strong>Click-Through Rate (CTR):</strong> {calculatedKPIs.ctr}</p>
+    <div className="mt-4">
+      <h4 className="mb-2 text-md font-semibold">Calculated Key Performance Indicators (KPIs)</h4>
+      <div className="space-y-1">
+        <p className="text-sm text-gray-700 dark:text-gray-300"><strong className="font-semibold">New User Share:</strong> {calculatedKPIs.newUsersShare}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300"><strong className="font-semibold">Views per User:</strong> {calculatedKPIs.viewsPerUser}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300"><strong className="font-semibold">Click-Through Rate (CTR):</strong> {calculatedKPIs.ctr}</p>
+      </div>
     </div>
   );
 };

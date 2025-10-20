@@ -9,31 +9,33 @@ export const CountryChartDataTable: React.FC<CountryChartDataTableProps> = ({
   countryChartData,
 }) => {
   return (
-    <div style={{ marginTop: '20px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #ddd' }}>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Sessions</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Active Users</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Screen Page Views</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Conversions</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Total Revenue</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Transactions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {countryChartData.map((data, index) => (
-            <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '8px' }}>{data.sessions || 0}</td>
-              <td style={{ padding: '8px' }}>{data.activeUsers || 0}</td>
-              <td style={{ padding: '8px' }}>{data.screenPageViews || 0}</td>
-              <td style={{ padding: '8px' }}>{data.conversions || 0}</td>
-              <td style={{ padding: '8px' }}>{data.totalRevenue || 0}</td>
-              <td style={{ padding: '8px' }}>{data.transactions || 0}</td>
+    <div className="mt-4">
+      <div className="rounded-md border">
+        <table className="w-full caption-bottom text-sm">
+          <thead className="[&_tr]:border-b">
+            <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Sessions</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Active Users</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Screen Page Views</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Conversions</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Total Revenue</th>
+              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Transactions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="[&_tr:last-child]:border-0">
+            {countryChartData.map((data, index) => (
+              <tr key={index} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.sessions || 0}</td>
+                <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.activeUsers || 0}</td>
+                <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.screenPageViews || 0}</td>
+                <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.conversions || 0}</td>
+                <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.totalRevenue || 0}</td>
+                <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.transactions || 0}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
