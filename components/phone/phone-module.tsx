@@ -223,7 +223,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         console.log('Incoming call from:', call.parameters.From);
         const from = call.parameters.From;
         // Look up contact by phone number
-        const contact = contactsData?.find((c: Contact) => c.phone_number === from);
+        const contact = contactsData?.find((c: Contact) => String(c.phone_number) === String(from));
 
         // Store the incoming call object for later acceptance/rejection
         setIncomingCall(call);
@@ -280,7 +280,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setCallStatus('RINGING');
 
     try {
-      const contact = contactsData?.find((contact: Contact) => contact.phone_number === number);
+      const contact = contactsData?.find((contact: Contact) => String(contact.phone_number) === String(number));
 
       // Set active call immediately when making the call
       const activeCallData = {
