@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAuth } from '@/lib/xano/auth-context';
-import { authApi } from '@/lib/xano/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiRequestPasswordReset } from '@/lib/services/UserService';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Mail } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// Zod validation schema for forgot password form
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
@@ -49,31 +58,32 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   );
 }
 
-export default function SignInPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+export default function ForgotPasswordPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { login, authenticateWithToken } = useAuth();
-  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    clearErrors,
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
+    },
+  });
 
-
-
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
-      await apiRequestPasswordReset(email)
+      await apiRequestPasswordReset(data.email);
       setSuccessMessage('Password reset link sent to your email');
+      clearErrors();
     } catch (err: any) {
-      setError(err.message || 'Failed to request password reset');
-    } finally {
-      setIsLoading(false);
+      setError('root', {
+        type: 'manual',
+        message: err.message || 'Failed to request password reset',
+      });
     }
   };
 
@@ -114,46 +124,56 @@ export default function SignInPage() {
 
             <Card className="border border-border/50 shadow-lg shadow-[#C33527]/20">
               <CardHeader className="space-y-3 text-center">
-                <CardTitle className="text-3xl font-semibold text-[#C33527]">Reset your password</CardTitle>
+                <CardTitle className="text-3xl font-semibold text-[#C33527]">
+                  Forgot your password
+                </CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Enter your email and we will send you a password reset link.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                  {errors.root && (
+                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+                      {errors.root.message}
+                    </div>
+                  )}
+
                   <div className="space-y-2 text-left">
                     <Label htmlFor="email" className="text-sm font-medium text-muted-foreground/90">
-                      Email
+                      Email <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="border-muted focus-visible:ring-[#C33527] focus-visible:ring-offset-2"
-                    />
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@company.com"
+                        {...register('email')}
+                        className={cn(
+                          'pl-10 border-muted focus-visible:ring-[#C33527] focus-visible:ring-offset-2',
+                          errors.email && 'border-red-500 focus:border-red-500',
+                        )}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                    )}
                   </div>
-                 
+
                   {successMessage && (
                     <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-600">
                       {successMessage}
                     </div>
                   )}
 
-                  {error && (
-                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
-                      {error}
-                    </div>
-                  )}
                   <div className="flex flex-col justify-start gap-1">
                     <Button
                       type="submit"
                       className="w-full rounded-lg bg-[#C33527] py-2.5 text-base font-medium text-white shadow-md shadow-[#C33527]/20 transition-colors hover:bg-[#a32a1f]"
-                      disabled={isLoading}
+                      disabled={isSubmitting}
                     >
-                      {isLoading ? 'Please wait…' : 'Send Reset Link'}
+                      {isSubmitting ? 'Please wait…' : 'Send Reset Link'}
                     </Button>
                   </div>
                 </form>

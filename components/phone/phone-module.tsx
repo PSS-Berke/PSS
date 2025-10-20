@@ -650,7 +650,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                               className={cn(
                                 'text-xs',
                                 log.status === 'completed' &&
-                                'bg-green-100 text-green-700 hover:bg-green-100',
+                                  'bg-green-100 text-green-700 hover:bg-green-100',
                               )}
                             >
                               {log.status}
@@ -1053,7 +1053,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                                 className={cn(
                                   'text-xs',
                                   log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
+                                    'bg-green-100 text-green-700 hover:bg-green-100',
                                 )}
                               >
                                 {log.status}
