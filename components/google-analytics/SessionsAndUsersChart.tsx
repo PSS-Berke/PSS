@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { ChartData } from './interfaces';
 
@@ -15,19 +15,19 @@ export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({
     <div style={{ marginBottom: '20px' }}>
       <h4>Sessions and Users over Time</h4>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={dateChartData}>
+        <BarChart data={dateChartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="sessions" stroke="#8884d8" activeDot={{ r: 8 }} />
-          <Line type="monotone" dataKey="activeUsers" stroke="#82ca9d" />
-          <Line type="monotone" dataKey="screenPageViews" stroke="#ffc658" />
-          <Line type="monotone" dataKey="conversions" stroke="#ff7300" />
-          <Line type="monotone" dataKey="totalRevenue" stroke="#d0ed57" />
-          <Line type="monotone" dataKey="transactions" stroke="#a4de6c" />
-        </LineChart>
+          <Bar type="monotone" dataKey="sessions" fill="#8884d8" />
+          <Bar type="monotone" dataKey="activeUsers" fill="#82ca9d" />
+          <Bar type="monotone" dataKey="screenPageViews" fill="#ffc658" />
+          <Bar type="monotone" dataKey="conversions" fill="#ff7300" />
+          <Bar type="monotone" dataKey="totalRevenue" fill="#d0ed57" />
+          <Bar type="monotone" dataKey="transactions" fill="#a4de6c" />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

@@ -41,6 +41,7 @@ export default function GaPage() {
   const [propertiesError, setPropertiesError] = useState<string | null>(null);
   const [accountDataResponse, setAccountDataResponse] = useState<string | null>(null);
   const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
+  const [selectedPropertyName, setSelectedPropertyName] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryData, setSummaryData] = useState<GoogleAccountSummaryResponse | null>(null);
@@ -134,6 +135,13 @@ export default function GaPage() {
             allProperties.push(...accountSummary.propertySummaries);
           });
           setProperties(allProperties);
+          // Automatically select the first property and set date range to 1 day
+          if (allProperties.length > 0) {
+            const firstProperty = allProperties[0];
+            setExpandedPropertyId(firstProperty.property);
+            setSelectedPropertyName(firstProperty.displayName);
+            setSelectedDateRange('1day');
+          }
         } else {
           setPropertiesError('Failed to retrieve Google Analytics properties.');
         }
@@ -159,6 +167,7 @@ export default function GaPage() {
   const handlePropertyClick = async (propertyId: string, isDateRangeChange: boolean = false) => {
     if (!isDateRangeChange && expandedPropertyId === propertyId) {
       setExpandedPropertyId(null);
+      setSelectedPropertyName(null);
       setSummaryData(null);
       // Reset all data when collapsing
       setDateChartData([]);
@@ -174,6 +183,9 @@ export default function GaPage() {
 
     if (expandedPropertyId !== propertyId) {
       setExpandedPropertyId(propertyId);
+      setSelectedDateRange('1day'); // Reset to 1day when a new property is selected
+      const selectedProperty = properties.find(p => p.property === propertyId);
+      setSelectedPropertyName(selectedProperty ? selectedProperty.displayName : null);
     }
 
     setSummaryLoading(true);
@@ -296,7 +308,7 @@ export default function GaPage() {
   }
 
   return (
-    <div>
+    <div style={{ padding: '10px' }}>
       <h1>Google Analytics</h1>
       <p>Authorized user:</p>
       <p>Name: {user.name || 'Not specified'}</p>
@@ -317,6 +329,7 @@ export default function GaPage() {
           propertiesError={propertiesError}
           apiLoading={apiLoading}
           onPropertyClick={handlePropertyClick}
+          expandedPropertyId={expandedPropertyId}
         />
       )}
 
@@ -368,7 +381,7 @@ export default function GaPage() {
             </div>
           )} */}
 
-          <h3 style={{ marginBottom: '10px' }}>Google Analytics account information for {expandedPropertyId}:</h3>
+          <h3 style={{ marginBottom: '10px' }}>Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
 
           {summaryLoading && <div>Loading account summary...</div>}
           {summaryError && <div style={{ color: 'red' }}>{summaryError}</div>}

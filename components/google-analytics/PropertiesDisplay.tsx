@@ -7,6 +7,7 @@ interface PropertiesDisplayProps {
   propertiesError: string | null;
   apiLoading: boolean;
   onPropertyClick: (propertyId: string, isDateRangeChange: boolean) => void;
+  expandedPropertyId: string | null;
 }
 
 export const PropertiesDisplay: React.FC<PropertiesDisplayProps> = ({
@@ -15,6 +16,7 @@ export const PropertiesDisplay: React.FC<PropertiesDisplayProps> = ({
   propertiesError,
   apiLoading,
   onPropertyClick,
+  expandedPropertyId,
 }) => {
   return (
     <div style={{ marginTop: '20px' }}>
@@ -35,13 +37,13 @@ export const PropertiesDisplay: React.FC<PropertiesDisplayProps> = ({
                 padding: '15px',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                boxShadow: prop.property === expandedPropertyId ? '0 4px 8px rgba(0,0,0,0.1), 0 0 0 2px #007bff' : '0 2px 4px rgba(0,0,0,0.05)',
                 transition: 'all 0.2s ease-in-out',
-                backgroundColor: apiLoading ? '#f0f0f0' : 'white',
+                backgroundColor: prop.property === expandedPropertyId ? '#e6f7ff' : (apiLoading ? '#f0f0f0' : 'white'),
                 opacity: apiLoading ? 0.7 : 1,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)')}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = prop.property === expandedPropertyId ? '0 4px 8px rgba(0,0,0,0.1), 0 0 0 2px #007bff' : '0 4px 8px rgba(0,0,0,0.1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = prop.property === expandedPropertyId ? '0 4px 8px rgba(0,0,0,0.1), 0 0 0 2px #007bff' : '0 2px 4px rgba(0,0,0,0.05)')}
             >
               <h3>{prop.displayName}</h3>
               <p style={{ fontSize: '0.9em', color: '#666' }}>ID: {prop.property.split('/').pop()}</p>

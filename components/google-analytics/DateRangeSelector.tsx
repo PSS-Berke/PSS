@@ -10,7 +10,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   setSelectedDateRange,
 }) => {
   return (
-    <div style={{ marginBottom: '10px' }}>
+    <div style={{ marginBottom: '10px', marginTop: '10px' }}>
       <button
         onClick={() => setSelectedDateRange('1day')}
         style={{
