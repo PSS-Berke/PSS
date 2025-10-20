@@ -149,6 +149,11 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     return () => clearInterval(interval);
   }, [activeCall]);
 
+  // Debug activeCall changes
+  useEffect(() => {
+    console.log('ActiveCall state changed:', activeCall);
+  }, [activeCall]);
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -238,6 +243,19 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setCallStatus('RINGING');
 
     try {
+      const contact = contactsData?.find((contact: Contact) => contact.phone_number === number);
+
+      // Set active call immediately when making the call
+      const activeCallData = {
+        phone_number: number,
+        contact_name: contact?.name || 'Unknown',
+        status: 'ringing',
+        startTime: new Date().toISOString(),
+      };
+      console.log('Setting active call:', activeCallData);
+      setActiveCall(activeCallData);
+      setCallDuration(0);
+
       // Use Twilio Voice SDK to make the call directly to phone number
       const call = await twilioDevice.connect({
         params: {
@@ -247,7 +265,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
       // Store the call object for event handling
       setCurrentCall(call);
-      const contact = contactsData?.find((contact: Contact) => contact.phone_number === number);
+
       //set up call log
       await apiStoreCallLog({
         id: 0,
@@ -293,19 +311,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         setCallDuration(0);
         setCallStatus('REJECTED');
       });
-
-      setActiveCall({
-        phone_number: number,
-        contact_name:
-          contactsData?.find((contact: Contact) => contact.phone_number === number)?.name ||
-          'Unknown',
-        status: 'ringing',
-        startTime: new Date().toISOString(),
-      });
-      setCallDuration(0);
     } catch (error) {
       console.error('Failed to make call:', error);
-      setCallStatus('');
     }
   };
 
