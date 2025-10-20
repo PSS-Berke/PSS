@@ -24,7 +24,7 @@ export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({
   return (
     <div className="mb-4">
       <h4 className="mb-2 text-md font-semibold">Sessions and Users over Time</h4>
-      <ChartContainer config={chartConfig} className="min-h-[300px]">
+      <ChartContainer config={chartConfig} className="h-[375px] w-full">
         <BarChart accessibilityLayer data={dateChartData}>
           <CartesianGrid vertical={false} />
           <XAxis

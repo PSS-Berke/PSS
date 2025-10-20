@@ -22,7 +22,7 @@ export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartPr
   return (
     <div className="mt-4">
       <h4 className="mb-2 text-md font-semibold">New vs. Returning Users Ratio</h4>
-      <ChartContainer config={chartConfig} className="min-h-[300px]">
+      <ChartContainer config={chartConfig} className="h-[200px] w-full">
         <PieChart>
           <Pie
             data={newVsReturningPieChartData}
@@ -30,7 +30,7 @@ export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartPr
             nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={100}
+            outerRadius={50}
             // fill="#8884d8" // Removed inline fill
             label
           >

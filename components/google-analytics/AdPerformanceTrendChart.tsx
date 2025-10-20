@@ -22,7 +22,7 @@ export const AdPerformanceTrendChart: React.FC<AdPerformanceTrendChartProps> = (
   return (
     <div className="mt-4">
       <h4 className="mb-2 text-md font-semibold">Ad Performance Trend</h4>
-      <ChartContainer config={chartConfig} className="min-h-[300px]">
+      <ChartContainer config={chartConfig} className="h-[300px] w-full">
         <LineChart
           accessibilityLayer
           data={adMetricsTrend}
