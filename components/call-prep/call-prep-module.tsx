@@ -4,14 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, ChevronDown, ChevronUp, FileCheck, Plus, Settings } from 'lucide-react';
+import { Building2, ChevronDown, ChevronUp, FileCheck, Plus, Settings, Users } from 'lucide-react';
 import { useCallPrep } from '@/lib/xano/call-prep-context';
 import { CallPrepContent } from './call-prep-content';
 import { CallPrepPromptDialog } from './call-prep-prompt-dialog';
 import { CallPrepSidebar } from './call-prep-sidebar';
-import { KeyDecisionMakersModal } from './key-decision-makers-modal';
 import { CallPrepSettingsDialog } from './call-prep-settings-dialog';
-import { Users } from 'lucide-react';
+import { KeyDecisionMakersModal } from './key-decision-makers-modal';
 
 interface CallPrepModuleProps {
   className?: string;
@@ -21,9 +20,9 @@ interface CallPrepModuleProps {
 export function CallPrepModule({ className, onExpandedChange }: CallPrepModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
-  const [enrichmentDialogOpen, setEnrichmentDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const { state, loadLatestAnalysis, enrichPersonData, generateCallPrep } = useCallPrep();
+  const [enrichmentDialogOpen, setEnrichmentDialogOpen] = useState(false);
+  const { state, loadLatestAnalysis, generateCallPrep, enrichPersonData } = useCallPrep();
   const hasLoadedRef = React.useRef(false);
 
   // Load data when module is expanded
@@ -34,13 +33,6 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
       loadLatestAnalysis();
     }
   }, [isExpanded, state.latestAnalysis, state.isLoading, loadLatestAnalysis]);
-
-  // Close enrichment dialog when switching call preps
-  useEffect(() => {
-    if (enrichmentDialogOpen) {
-      setEnrichmentDialogOpen(false);
-    }
-  }, [state.latestAnalysis?.id, enrichmentDialogOpen]);
 
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
@@ -177,17 +169,17 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-2">
                     {state.latestAnalysis?.keyDecisionMakersWithEnrichment &&
-                      state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
-                        <Button
-                          onClick={() => setEnrichmentDialogOpen(true)}
-                          variant="outline"
-                          disabled={state.isSubmitting}
-                          size="sm"
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          Enrich People
-                        </Button>
-                      )}
+                     state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
+                      <Button
+                        onClick={() => setEnrichmentDialogOpen(true)}
+                        variant="outline"
+                        disabled={state.isSubmitting}
+                        size="sm"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Enrich People
+                      </Button>
+                    )}
                     <Button
                       onClick={() => setPromptDialogOpen(true)}
                       className="bg-[#C33527] hover:bg-[#DA857C]"
@@ -238,16 +230,16 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
                       <Settings className="h-4 w-4" />
                     </Button>
                     {state.latestAnalysis?.keyDecisionMakersWithEnrichment &&
-                      state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
-                        <Button
-                          onClick={() => setEnrichmentDialogOpen(true)}
-                          variant="outline"
-                          disabled={state.isSubmitting}
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          Enrich People
-                        </Button>
-                      )}
+                     state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
+                      <Button
+                        onClick={() => setEnrichmentDialogOpen(true)}
+                        variant="outline"
+                        disabled={state.isSubmitting}
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Enrich People
+                      </Button>
+                    )}
                     <Button
                       onClick={() => setPromptDialogOpen(true)}
                       className="bg-[#C33527] hover:bg-[#DA857C]"
@@ -276,18 +268,18 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
       />
 
       {state.latestAnalysis?.keyDecisionMakersWithEnrichment &&
-        state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
-          <KeyDecisionMakersModal
-            open={enrichmentDialogOpen}
-            onOpenChange={setEnrichmentDialogOpen}
-            decisionMakers={state.latestAnalysis.keyDecisionMakersWithEnrichment}
-            companyName={state.latestAnalysis.prompt || ''}
-            onEnrich={async (person) => {
-              return await enrichPersonData(person, state.latestAnalysis!.prompt || '');
-            }}
-            isSubmitting={state.isSubmitting}
-          />
-        )}
+       state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
+        <KeyDecisionMakersModal
+          open={enrichmentDialogOpen}
+          onOpenChange={setEnrichmentDialogOpen}
+          decisionMakers={state.latestAnalysis.keyDecisionMakersWithEnrichment}
+          companyName={state.latestAnalysis.prompt || ''}
+          onEnrich={async (person) => {
+            return await enrichPersonData(person, state.latestAnalysis!.prompt || '');
+          }}
+          isSubmitting={state.isSubmitting}
+        />
+      )}
 
       {state.latestAnalysis && (
         <CallPrepSettingsDialog
