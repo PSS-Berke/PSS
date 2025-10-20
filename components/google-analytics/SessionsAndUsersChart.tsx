@@ -11,11 +11,11 @@ interface SessionsAndUsersChartProps {
 
 const chartConfig = {
   sessions: { label: 'Sessions', color: 'hsl(var(--chart-1))' },
-  activeUsers: { label: 'Active Users', color: 'hsl(var(--chart-2))' },
-  screenPageViews: { label: 'Screen Page Views', color: 'hsl(var(--chart-3))' },
+  activeUsers: { label: 'Active Users', color: 'hsl(var(--chart-6))' },
+  screenPageViews: { label: 'Screen Page Views', color: 'hsl(var(--chart-2))' },
   conversions: { label: 'Conversions', color: 'hsl(var(--chart-4))' },
   totalRevenue: { label: 'Total Revenue', color: 'hsl(var(--chart-5))' },
-  transactions: { label: 'Transactions', color: 'hsl(var(--chart-6))' },
+  transactions: { label: 'Transactions', color: 'hsl(var(--chart-3))' },
 } satisfies ChartConfig;
 
 export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({

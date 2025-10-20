@@ -380,13 +380,12 @@ export default function GaPage() {
             </div>
           )} */}
 
-          <h3 className="mb-2 text-lg font-semibold">Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
-
           {summaryLoading && <div>Loading account summary...</div>}
           {summaryError && <div className="text-red-500">{summaryError}</div>}
 
           {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
             <div className="mt-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm space-y-4">
+              <h3 className="mb-2 text-lg font-semibold">Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
 
               {countryChartData.length > 0 && (
                 <div className="mt-4">
