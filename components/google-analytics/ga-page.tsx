@@ -386,7 +386,7 @@ export default function GaPage() {
           {summaryError && <div className="text-red-500">{summaryError}</div>}
 
           {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm space-y-4">
 
               {countryChartData.length > 0 && (
                 <div className="mt-4">
