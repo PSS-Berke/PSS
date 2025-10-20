@@ -10,13 +10,25 @@ export const CalculatedKpisDisplay: React.FC<CalculatedKpisDisplayProps> = ({
 }) => {
   if (!calculatedKPIs) return null;
 
+  const kpiItems = [
+    { label: 'New User Share', value: calculatedKPIs.newUsersShare },
+    { label: 'Views per User', value: calculatedKPIs.viewsPerUser },
+    { label: 'Click-Through Rate (CTR)', value: calculatedKPIs.ctr },
+  ];
+
   return (
-    <div className="mt-4">
-      <h4 className="mb-2 text-md font-semibold">Calculated Key Performance Indicators (KPIs)</h4>
-      <div className="space-y-1">
-        <p className="text-sm text-gray-700 dark:text-gray-300"><strong className="font-semibold">New User Share:</strong> {calculatedKPIs.newUsersShare}</p>
-        <p className="text-sm text-gray-700 dark:text-gray-300"><strong className="font-semibold">Views per User:</strong> {calculatedKPIs.viewsPerUser}</p>
-        <p className="text-sm text-gray-700 dark:text-gray-300"><strong className="font-semibold">Click-Through Rate (CTR):</strong> {calculatedKPIs.ctr}</p>
+    <div className="flex flex-col h-full">
+      <h4 className="mb-4 text-md font-semibold">Calculated Key Performance Indicators (KPIs)</h4>
+      <div className="flex flex-wrap justify-center items-center gap-4 flex-grow">
+        {kpiItems.map((kpi, index) => (
+          <div
+            key={index}
+            className="flex flex-col items-center justify-center p-4 rounded-lg border bg-card shadow-sm min-w-[150px] h-[100px] w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1rem)]"
+          >
+            <p className="text-sm text-muted-foreground text-center">{kpi.label}</p>
+            <p className="text-2xl font-bold text-center">{kpi.value}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

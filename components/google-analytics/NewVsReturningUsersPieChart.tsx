@@ -20,7 +20,7 @@ export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartPr
   if (newVsReturningPieChartData.length === 0 || selectedDateRange === '1day') return null;
 
   return (
-    <div className="mt-4">
+    <div className="">
       <h4 className="mb-2 text-md font-semibold">New vs. Returning Users Ratio</h4>
       <ChartContainer config={chartConfig} className="h-[200px] w-full">
         <PieChart>

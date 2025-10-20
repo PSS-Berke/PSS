@@ -599,10 +599,10 @@ export default function GaPage() {
                 </div>
               )}
 
-              <div className="mt-4 flex flex-col md:flex-row md:items-center gap-4">
+              <div className="mt-4 flex flex-col md:flex-row gap-4">
                 {/* New vs Returning Users Pie Chart */}
                 {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
-                  <div className="flex-1">
+                  <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm flex-1">
                     <NewVsReturningUsersPieChart
                       newVsReturningPieChartData={newVsReturningPieChartData}
                       selectedDateRange={selectedDateRange}
@@ -612,7 +612,7 @@ export default function GaPage() {
 
                 {/* Calculated KPIs */}
                 {calculatedKPIs && (
-                  <div className="flex-1">
+                  <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm flex-1">
                     <CalculatedKpisDisplay calculatedKPIs={calculatedKPIs} />
                   </div>
                 )}
