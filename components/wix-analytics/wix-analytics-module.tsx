@@ -76,7 +76,7 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
               className="flex-shrink-0 border-b cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={toggleExpanded}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-col md:flex-row">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <BarChart3 className="h-5 w-5 text-primary" />
