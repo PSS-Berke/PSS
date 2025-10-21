@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { CallLog } from '@/@types/phone';
 
@@ -14,6 +14,7 @@ interface RecentCallsProps {
   missedCallsCount: number;
   formatTimestamp: (timestamp: string) => string;
   formatDuration: (seconds: number) => string;
+  onRefresh?: () => void;
 }
 
 export const RecentCalls = ({
@@ -23,7 +24,14 @@ export const RecentCalls = ({
   missedCallsCount,
   formatTimestamp,
   formatDuration,
+  onRefresh,
 }: RecentCallsProps) => {
+  // Refresh call logs when component mounts
+  useEffect(() => {
+    if (onRefresh) {
+      onRefresh();
+    }
+  }, [onRefresh]);
   const filterButtons = [
     { id: 'all' as CallFilterType, label: 'All' },
     { id: 'missed' as CallFilterType, label: 'Missed', count: missedCallsCount },

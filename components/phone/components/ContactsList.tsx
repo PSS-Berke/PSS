@@ -42,10 +42,7 @@ export const ContactsList = ({
             className="pl-10 h-10"
           />
         </div>
-        <Button
-          onClick={onAddContact}
-          className="bg-[#C33527] hover:bg-[#DA857C] h-10"
-        >
+        <Button onClick={onAddContact} className="bg-[#C33527] hover:bg-[#DA857C] h-10">
           <Plus className="w-4 h-4 mr-2" />
           Add Contact
         </Button>

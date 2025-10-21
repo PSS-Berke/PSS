@@ -51,6 +51,8 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
     reset,
     setError,
     clearErrors,
+    watch,
+    setValue,
   } = useForm<CompanySettingsFormData>({
     resolver: zodResolver(companySettingsSchema),
     defaultValues: {
@@ -60,6 +62,11 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
       record_all_calls: false,
     },
   });
+
+  // Watch checkbox values for controlled components
+  const enableVoiceMail = watch('enable_voice_mail');
+  const blockIncomingCalls = watch('block_incoming_calls');
+  const recordAllCalls = watch('record_all_calls');
 
   // Populate form when company prop changes
   useEffect(() => {
@@ -196,15 +203,22 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
             <div className="flex items-center">
               <input
                 type="checkbox"
-                {...register('enable_voice_mail')}
+                checked={enableVoiceMail}
+                onChange={(e) => setValue('enable_voice_mail', e.target.checked)}
                 className="sr-only peer"
                 id="enable_voice_mail"
               />
               <label
                 htmlFor="enable_voice_mail"
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors cursor-pointer peer-checked:bg-[#C33527]"
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
+                  enableVoiceMail ? "bg-[#C33527]" : "bg-border"
+                )}
               >
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 peer-checked:translate-x-6" />
+                <span className={cn(
+                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                  enableVoiceMail ? "translate-x-6" : "translate-x-1"
+                )} />
               </label>
             </div>
           </div>
@@ -219,15 +233,22 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
             <div className="flex items-center">
               <input
                 type="checkbox"
-                {...register('block_incoming_calls')}
+                checked={blockIncomingCalls}
+                onChange={(e) => setValue('block_incoming_calls', e.target.checked)}
                 className="sr-only peer"
                 id="block_incoming_calls"
               />
               <label
                 htmlFor="block_incoming_calls"
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors cursor-pointer peer-checked:bg-[#C33527]"
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
+                  blockIncomingCalls ? "bg-[#C33527]" : "bg-border"
+                )}
               >
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 peer-checked:translate-x-6" />
+                <span className={cn(
+                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                  blockIncomingCalls ? "translate-x-6" : "translate-x-1"
+                )} />
               </label>
             </div>
           </div>
@@ -240,15 +261,22 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
             <div className="flex items-center">
               <input
                 type="checkbox"
-                {...register('record_all_calls')}
+                checked={recordAllCalls}
+                onChange={(e) => setValue('record_all_calls', e.target.checked)}
                 className="sr-only peer"
                 id="record_all_calls"
               />
               <label
                 htmlFor="record_all_calls"
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors cursor-pointer peer-checked:bg-[#C33527]"
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
+                  recordAllCalls ? "bg-[#C33527]" : "bg-border"
+                )}
               >
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 peer-checked:translate-x-6" />
+                <span className={cn(
+                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                  recordAllCalls ? "translate-x-6" : "translate-x-1"
+                )} />
               </label>
             </div>
           </div>

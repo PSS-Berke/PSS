@@ -193,11 +193,29 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${Math.floor(diffHours)}h ago`;
-    return date.toLocaleDateString();
+    // Less than 1 minute
+    if (diffMinutes < 1) return 'Just now';
+
+    // 1-59 minutes
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    // 1-23 hours
+    if (diffHours < 24) return `${diffHours}h ago`;
+
+    // 1-6 days
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    // More than a week - show full date
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
   };
 
   const addDigit = (digit: string) => {
@@ -206,6 +224,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
   const deleteDigit = () => {
     setDialedNumber((prev) => prev.slice(0, -1));
+  };
+
+  const handleInputChange = (value: string) => {
+    // Only allow digits, +, -, (, ), and spaces for phone numbers
+    const sanitizedValue = value.replace(/[^\d+\-() ]/g, '');
+    setDialedNumber(sanitizedValue);
   };
 
   // Initialize Twilio device
@@ -243,7 +267,21 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         const from = call.parameters.From;
         // Look up contact by phone number
         const contact = contactsData?.find((c: Contact) => String(c.phone_number) === String(from));
-
+        if (company?.block_incoming_calls == true) {
+          call.reject();
+          await apiStoreCallLog({
+            id: 0,
+            created_at: new Date().toISOString(),
+            phone_number: from,
+            contact_name: contact?.name || 'Unknown',
+            direction: 'inbound',
+            status: 'rejected',
+            duration: 0,
+            user_id: user?.id || 0,
+            contact_id: contact?.id || 0,
+          });
+          return;
+        }
         // Store the incoming call object for later acceptance/rejection
         setIncomingCall(call);
 
@@ -582,6 +620,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   onDigitClick={addDigit}
                   onDelete={deleteDigit}
                   onCall={() => makeCall(dialedNumber)}
+                  onInputChange={handleInputChange}
                 />
               )}
 
@@ -605,6 +644,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   missedCallsCount={missedCallsCount}
                   formatTimestamp={formatTimestamp}
                   formatDuration={formatDuration}
+                  onRefresh={mutateCallLogs}
                 />
               )}
             </div>
@@ -676,6 +716,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     onDigitClick={addDigit}
                     onDelete={deleteDigit}
                     onCall={() => makeCall(dialedNumber)}
+                    onInputChange={handleInputChange}
                   />
                 )}
 
@@ -699,6 +740,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     missedCallsCount={missedCallsCount}
                     formatTimestamp={formatTimestamp}
                     formatDuration={formatDuration}
+                    onRefresh={mutateCallLogs}
                   />
                 )}
               </div>
