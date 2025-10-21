@@ -23,10 +23,9 @@ import {
 import { processSummaryDataForCharts } from './data-processing';
 import { DateRangeSelector } from './DateRangeSelector';
 import { PropertiesDisplay } from './PropertiesDisplay';
-import { CountryChartDataTable } from './CountryChartDataTable';
+import { TopChartDataTable } from './TopChartDataTable';
 import { SessionsAndUsersChart } from './SessionsAndUsersChart';
 import { KpiSummaryTable } from './KpiSummaryTable';
-/* import { TopDaysActivityTable } from './TopDaysActivityTable'; */
 import { AdPerformanceTrendChart } from './AdPerformanceTrendChart';
 import { NewVsReturningUsersPieChart } from './NewVsReturningUsersPieChart';
 import { CalculatedKpisDisplay } from './CalculatedKpisDisplay';
@@ -65,11 +64,9 @@ export default function GaPage() {
   const [newVsReturningPieChartData, setNewVsReturningPieChartData] = useState<NewVsReturningData[]>([]);
   const [calculatedKPIs, setCalculatedKPIs] = useState<CalculatedKPIs | null>(null);
 
-  type DateRangeKey = '1day' | '7days' | '28days'; // Removed 'custom' from DateRangeKey
+  type DateRangeKey = '1day' | '7days' | '28days';
 
   const [selectedDateRange, setSelectedDateRange] = useState<DateRangeKey>('28days');
-  // const [customStartDate, setCustomStartDate] = useState<Date | null>(null); // Removed customStartDate state
-  // const [customEndDate, setCustomEndDate] = useState<Date | null>(null); // Removed customEndDate state
 
   const calculateDateRange = (range: DateRangeKey, start: Date | null, end: Date | null) => {
     const today = startOfDay(new Date());
@@ -86,10 +83,6 @@ export default function GaPage() {
       case '28days':
         startDate = subDays(today, 27);
         break;
-      // case 'custom': // Removed custom case
-      //   startDate = start;
-      //   endDate = end;
-      //   break;
       default:
         startDate = subDays(today, 27); // Default to 28 days
         break;
@@ -97,29 +90,6 @@ export default function GaPage() {
 
     return { startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null, endDate: endDate ? format(endDate, 'yyyy-MM-dd') : null };
   };
-
-  // const renderEventContent = (eventInfo: any) => { // Removed renderEventContent function
-  //   return (
-  //     <>
-  //       <b>{eventInfo.event.title}</b>
-  //       <p>{format(eventInfo.event.start, 'yyyy-MM-dd')}</p>
-  //     </>
-  //   );
-  // };
-
-  // const calendarEvents = useMemo(() => { // Removed calendarEvents useMemo
-  //   const events: EventInput[] = [];
-  //   if (customStartDate) {
-  //     events.push({ title: 'Start', start: customStartDate });
-  //   }
-  //   if (customEndDate) {
-  //     events.push({ title: 'End', start: customEndDate });
-  //   }
-  //   if (customStartDate && customEndDate && customStartDate < customEndDate) {
-  //     events.push({ start: customStartDate, end: customEndDate, display: 'background', color: '#e6ffe6' });
-  //   }
-  //   return events;
-  // }, [customStartDate, customEndDate]);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -287,29 +257,6 @@ export default function GaPage() {
     }
   };
 
-  const handleTestApiCall = async () => {
-    // Existing test API call logic (kept for reference, but new logic for properties is above)
-    setApiLoading(true);
-    setApiError(null);
-    setApiResponse(null);
-
-    if (!token) {
-      setApiError('User not authenticated. Token missing.');
-      setApiLoading(false);
-      return;
-    }
-
-    try {
-      const response = await apiRequest('/test-endpoint', { method: 'GET' }, token);
-      setApiResponse(JSON.stringify(response, null, 2));
-    } catch (error: any) {
-      console.error('Xano API call failed:', error);
-      setApiError(`Error while calling API: ${error.message || 'Unknown error'}`);
-    } finally {
-      setApiLoading(false);
-    }
-  };
-
   if (isLoading) {
     return <div>Loading user data...</div>;
   }
@@ -350,47 +297,6 @@ export default function GaPage() {
             setSelectedDateRange={setSelectedDateRange}
           />
 
-          {/* Calendar for custom range will go here */}
-          {/* {selectedDateRange === 'custom' && (
-            <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
-              <h4 style={{ marginBottom: '10px' }}>Select Custom Date Range</h4>
-              <FullCalendar
-                plugins={[dayGridPlugin]}
-                initialView="dayGridMonth"
-                headerToolbar={{
-                  left: 'prev,next today',
-                  center: 'title',
-                  right: '',
-                }}
-                dateClick={(info) => {
-                  const clickedDate = new Date(info.dateStr);
-                  if (!customStartDate || (customStartDate && customEndDate)) {
-                    // If no start date or both dates are already selected, start a new selection
-                    setCustomStartDate(clickedDate);
-                    setCustomEndDate(null);
-                  } else if (customStartDate && clickedDate > customStartDate) {
-                    // If start date is selected and clicked date is after, set end date
-                    setCustomEndDate(clickedDate);
-                  } else if (customStartDate && clickedDate < customStartDate) {
-                    // If clicked date is before start date, reset and set new start date
-                    setCustomStartDate(clickedDate);
-                    setCustomEndDate(null);
-                  }
-                }}
-                eventContent={renderEventContent} // Render custom event content
-                events={calendarEvents}
-              />
-              {customStartDate && customEndDate && (
-                <p style={{ marginTop: '10px' }}>
-                  Selected: {format(customStartDate, 'yyyy-MM-dd')} to {format(customEndDate, 'yyyy-MM-dd')}
-                </p>
-              )}
-              {!customStartDate && !customEndDate && (
-                <p style={{ marginTop: '10px' }}>Please select a start date and an end date.</p>
-              )}
-            </div>
-          )} */}
-
           {summaryLoading && <div>Loading account summary...</div>}
           {summaryError && <div className="text-red-500">{summaryError}</div>}
 
@@ -400,7 +306,7 @@ export default function GaPage() {
 
               {countryChartData.length > 0 && (
                 <div className="mt-4">
-                  <CountryChartDataTable countryChartData={countryChartData} />
+                  <TopChartDataTable countryChartData={countryChartData} />
                 </div>
               )}
                 
@@ -416,12 +322,6 @@ export default function GaPage() {
                   <KpiSummaryTable kpiSummary={kpiSummary} />
                 </div>
               )}
-
-              {/* {topDaysActivity.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                  <TopDaysActivityTable topDaysActivity={topDaysActivity} />
-                </div>
-              )} */}
 
               {/* Pie Charts for Top Days by Activity */}
               {selectedDateRange !== '1day' && topDaysActivity.length > 0 && (
