@@ -356,6 +356,9 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       const call = await twilioDevice.connect({
         params: {
           To: number,
+          record: company?.record_all_calls == true ? 'true' : 'false',
+          user_id: String(user?.id || 0),
+          company_id: String(company?.company_id || 0),
         },
       });
 
