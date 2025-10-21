@@ -67,7 +67,7 @@ export function ActiveModulesView() {
           {
             method: 'GET',
             headers: getAuthHeaders(token),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -254,7 +254,7 @@ export function ActiveModulesView() {
         {
           method: 'GET',
           headers: getAuthHeaders(token),
-        }
+        },
       );
 
       if (response.ok) {
@@ -288,7 +288,7 @@ export function ActiveModulesView() {
           body: JSON.stringify({
             social_intergrations_id: accountToDisconnect.id,
           }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -321,7 +321,7 @@ export function ActiveModulesView() {
     }
   };
 
-  const selectedModule = userModules.find(m => m.id === selectedModuleId);
+  const selectedModule = userModules.find((m) => m.id === selectedModuleId);
   const selectedModuleName = selectedModule?.name || 'Module';
 
   // Fetch Twitter accounts when Social Media module is selected
@@ -355,9 +355,7 @@ export function ActiveModulesView() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-muted-foreground">No active modules found</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Add modules to get started
-          </p>
+          <p className="text-sm text-muted-foreground mt-2">Add modules to get started</p>
         </div>
       </div>
     );
@@ -383,35 +381,36 @@ export function ActiveModulesView() {
             selectedModule ? (
               <div className="space-y-4 mt-4">
                 {/* Show Google Analytics button for Web Analytics module */}
-                {selectedModuleName.toLowerCase().includes('analytics') && user?.ga_access?.access && (
-                  <div className="flex gap-2 items-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 px-3"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (!user?.ga_access?.connected) {
-                          handleConnectGoogleAnalytics();
-                        }
-                      }}
-                      disabled={isConnectingGoogleAnalytics || user?.ga_access?.connected}
-                    >
-                      {isConnectingGoogleAnalytics ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <FaGoogle className="h-4 w-4" />
-                      )}
-                      <span className="hidden lg:inline">
-                        {user?.ga_access?.connected
-                          ? 'Google Analytics Connected'
-                          : isConnectingGoogleAnalytics
-                            ? 'Connecting...'
-                            : 'Connect Google Analytics'}
-                      </span>
-                    </Button>
-                  </div>
-                )}
+                {selectedModuleName.toLowerCase().includes('analytics') &&
+                  user?.ga_access?.access && (
+                    <div className="flex gap-2 items-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 px-3"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (!user?.ga_access?.connected) {
+                            handleConnectGoogleAnalytics();
+                          }
+                        }}
+                        disabled={isConnectingGoogleAnalytics || user?.ga_access?.connected}
+                      >
+                        {isConnectingGoogleAnalytics ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FaGoogle className="h-4 w-4" />
+                        )}
+                        <span className="hidden lg:inline">
+                          {user?.ga_access?.connected
+                            ? 'Google Analytics Connected'
+                            : isConnectingGoogleAnalytics
+                              ? 'Connecting...'
+                              : 'Connect Google Analytics'}
+                        </span>
+                      </Button>
+                    </div>
+                  )}
 
                 {/* Show X (Twitter) section for Social Media module */}
                 {selectedModuleName.toLowerCase().includes('social') && (
@@ -446,7 +445,9 @@ export function ActiveModulesView() {
                       </div>
                     ) : twitterAccounts.length > 0 ? (
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Connected Accounts:</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Connected Accounts:
+                        </p>
                         {twitterAccounts.map((account) => (
                           <div
                             key={account.id}
@@ -456,7 +457,9 @@ export function ActiveModulesView() {
                               <FaXTwitter className="h-5 w-5" />
                               <div>
                                 <p className="text-sm font-medium">{account.twitter_name}</p>
-                                <p className="text-xs text-muted-foreground">@{account.twitter_username}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  @{account.twitter_username}
+                                </p>
                               </div>
                             </div>
                             <Button
@@ -484,7 +487,10 @@ export function ActiveModulesView() {
       </div>
 
       {/* Disconnect Confirmation Modal */}
-      <Dialog open={accountToDisconnect !== null} onOpenChange={(open) => !open && closeDisconnectModal()}>
+      <Dialog
+        open={accountToDisconnect !== null}
+        onOpenChange={(open) => !open && closeDisconnectModal()}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Disconnect X Account</DialogTitle>
@@ -498,7 +504,9 @@ export function ActiveModulesView() {
               <FaXTwitter className="h-8 w-8" />
               <div>
                 <p className="text-sm font-medium">{accountToDisconnect.twitter_name}</p>
-                <p className="text-xs text-muted-foreground">@{accountToDisconnect.twitter_username}</p>
+                <p className="text-xs text-muted-foreground">
+                  @{accountToDisconnect.twitter_username}
+                </p>
               </div>
             </div>
           )}

@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   PhoneCall,
+  PhoneMissedIcon,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,16 +24,29 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth, useUser } from '@/lib/xano/auth-context';
 import { Device } from '@twilio/voice-sdk';
-import { apiGetCallLogs, apiGetContacts, apiStoreCallLog } from '@/lib/services/PhoneService';
+import {
+  apiGetCallLogs,
+  apiGetContacts,
+  apiGetRecordings,
+  apiStoreCallLog,
+  apiUpdateCallLog,
+} from '@/lib/services/PhoneService';
 import { AxiosError } from 'axios';
 import useSWR from 'swr';
-import { CallLog, Contact } from '@/@types/phone';
+import { CallLog, Contact, Recording, RecordingsResponse } from '@/@types/phone';
 import { AddContact } from './components/AddContact';
 import { ContactCard } from './components/ContactCard';
 import { SettingsModal } from './components/SettingsModal';
 import { ActiveCallOverlay } from './components/ActiveCallOverlay';
 import { EditContact } from './components/EditContact';
 import DeleteContact from './components/DeleteContact';
+import { Dialer } from './components/Dialer';
+import { RecentCalls } from './components/RecentCalls';
+import { ContactsList } from './components/ContactsList';
+import { NavigationTabs } from './components/NavigationTabs';
+import { PhoneHeader } from './components/PhoneHeader';
+import { CompanyRedacted } from '@/@types/company';
+import { apiGetCompanyDetails } from '@/lib/services/CompanyService';
 
 type TwilioError = {
   code: string;
@@ -99,14 +113,19 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const [dialedNumber, setDialedNumber] = useState('');
   const [activeCall, setActiveCall] = useState<any>(null);
   const [currentCall, setCurrentCall] = useState<any>(null);
+  const [incomingCall, setIncomingCall] = useState<any>(null);
   const [callStatus, setCallStatus] = useState<
     '' | 'RINGING' | 'ACCEPTED' | 'DISCONNECTED' | 'CANCELLED' | 'REJECTED'
   >('');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
+  const [incomingCallTimeout, setIncomingCallTimeout] = useState<NodeJS.Timeout | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [callFilter, setCallFilter] = useState<CallFilterType>('all');
+  const [isDNDEnabled, setIsDNDEnabled] = useState(false);
+  const [dndStartTime, setDndStartTime] = useState<string>('');
+  const [dndEndTime, setDndEndTime] = useState<string>('');
   const [leftNavExpanded, setLeftNavExpanded] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -131,6 +150,22 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     mutate: mutateCallLogs,
   } = useSWR<CallLog[]>('/api:mDRLMGRq/call_logs', apiGetCallLogs);
 
+  const {
+    data: companyData,
+    error: companyError,
+    isLoading: companyIsLoading,
+    mutate: mutateCompany,
+  } = useSWR<CompanyRedacted[]>('/api:ZKUwjF5k/company_details', apiGetCompanyDetails);
+
+  const {
+    data: recordingsData,
+    error: recordingsError,
+    isLoading: recordingsIsLoading,
+    mutate: mutateRecordings,
+  } = useSWR<RecordingsResponse>('/api:mDRLMGRq/call_recordings', apiGetRecordings);
+
+  const company = companyData?.find((c: CompanyRedacted) => c.company_id === user?.company_id);
+
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
     setIsExpanded(newExpandedState);
@@ -148,6 +183,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     return () => clearInterval(interval);
   }, [activeCall]);
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (incomingCallTimeout) {
+        clearTimeout(incomingCallTimeout);
+      }
+    };
+  }, [incomingCallTimeout]);
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -157,11 +201,29 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${Math.floor(diffHours)}h ago`;
-    return date.toLocaleDateString();
+    // Less than 1 minute
+    if (diffMinutes < 1) return 'Just now';
+
+    // 1-59 minutes
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    // 1-23 hours
+    if (diffHours < 24) return `${diffHours}h ago`;
+
+    // 1-6 days
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    // More than a week - show full date
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
   };
 
   const addDigit = (digit: string) => {
@@ -170,6 +232,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
 
   const deleteDigit = () => {
     setDialedNumber((prev) => prev.slice(0, -1));
+  };
+
+  const handleInputChange = (value: string) => {
+    // Only allow digits, +, -, (, ), and spaces for phone numbers
+    const sanitizedValue = value.replace(/[^\d+\-() ]/g, '');
+    setDialedNumber(sanitizedValue);
   };
 
   // Initialize Twilio device
@@ -202,16 +270,60 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         console.error('Twilio device error:', error);
       });
 
-      device.on('incoming', (call) => {
-        console.log('Incoming call from:', call.parameters.From);
-        // Handle incoming call
+      device.on('incoming', async (call) => {
+        const from = call.parameters.From;
+        const callSid = call.parameters.CallSid;
+        // Look up contact by phone number
+        const contact = contactsData?.find((c: Contact) => String(c.phone_number) === String(from));
+        if (company?.block_incoming_calls == true) {
+          call.reject();
+          await apiStoreCallLog({
+            id: 0,
+            created_at: new Date().toISOString(),
+            phone_number: from,
+            contact_name: contact?.name || 'Unknown',
+            direction: 'inbound',
+            status: 'rejected',
+            duration: 0,
+            user_id: user?.id || 0,
+            contact_id: contact?.id || 0,
+            call_sid: callSid,
+            disconnected_at: null,
+          });
+          return;
+        }
+        // Store the incoming call object for later acceptance/rejection
+        setIncomingCall(call);
+
+        // Set active call for overlay display
         setActiveCall({
-          phone_number: call.parameters.From,
-          contact_name: 'Unknown',
+          phone_number: from,
+          contact_name: contact?.name || 'Unknown',
           status: 'incoming',
           startTime: new Date().toISOString(),
         });
-        call.accept(); // Auto-accept for now
+
+        //set up call log
+        await apiStoreCallLog({
+          id: 0,
+          created_at: new Date().toISOString(),
+          phone_number: from,
+          contact_name: contact?.name || 'Unknown',
+          direction: 'inbound',
+          status: 'completed',
+          duration: 0,
+          user_id: user?.id || 0,
+          contact_id: contact?.id || 0,
+          call_sid: callSid,
+          disconnected_at: null,
+        });
+
+        // Set up auto-reject timeout (30 seconds)
+        const timeout = setTimeout(() => {
+          console.log('Auto-rejecting incoming call after timeout');
+          rejectIncomingCall();
+        }, 30000);
+        setIncomingCallTimeout(timeout);
       });
 
       // Register the device
@@ -237,38 +349,115 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setCallStatus('RINGING');
 
     try {
+      const contact = contactsData?.find(
+        (contact: Contact) => String(contact.phone_number) === String(number),
+      );
+
+      // Set active call immediately when making the call
+      const activeCallData = {
+        phone_number: number,
+        contact_name: contact?.name || 'Unknown',
+        status: 'ringing',
+        startTime: new Date().toISOString(),
+      };
+
+      setActiveCall(activeCallData);
+      setCallDuration(0);
+
       // Use Twilio Voice SDK to make the call directly to phone number
       const call = await twilioDevice.connect({
         params: {
           To: number,
+          record: company?.record_all_calls == true ? 'true' : 'false',
+          user_id: String(user?.id || 0),
+          company_id: String(company?.company_id || 0),
         },
       });
 
+      console.log('OUTBOUND CALL SID:', call.parameters.CallSid);
+      console.log('OUTBOUND CALL', call);
+
       // Store the call object for event handling
       setCurrentCall(call);
-      const contact = contactsData?.find((contact: Contact) => contact.phone_number === number);
-      //set up call log
-      await apiStoreCallLog({
-        id: 0,
-        created_at: new Date().toISOString(),
-        phone: number,
-        contact_name: contact?.name || 'Unknown',
-        direction: 'outbound',
-        status: 'completed',
-        duration: 0,
-        user_id: user?.id || 0,
-        contact_id: contact?.id || 0,
-      });
 
       // Set up call event handlers
-      call.on('accept', () => {
+      call.on('accept', async () => {
         console.log('CALL STATUS - ACCEPTED');
+        setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
+        setCallStatus('ACCEPTED');
+
+        // Store call log after call is accepted (when CallSid is available)
+        await apiStoreCallLog({
+          id: 0,
+          created_at: new Date().toISOString(),
+          phone_number: number,
+          contact_name: contact?.name || 'Unknown',
+          direction: 'outbound',
+          status: 'completed',
+          duration: 0,
+          user_id: user?.id || 0,
+          contact_id: contact?.id || 0,
+          call_sid: call.parameters?.CallSid || '',
+          disconnected_at: null,
+        });
+      });
+
+      const handleCallEnd = (reason: string) => {
+        console.log(`CALL STATUS -> ${reason.toUpperCase()}`);
+        setActiveCall(null);
+        setCurrentCall(null);
+        setCallDuration(0);
+        setIsMuted(false);
+        setIsOnHold(false);
+        setCallStatus(reason.toUpperCase() as any);
+      };
+
+      // Triggered when the media stream ends
+      call.on('disconnect', async () => {
+        const call_sid = call.parameters?.CallSid || '';
+        await apiUpdateCallLog(call_sid, new Date().toISOString());
+        handleCallEnd('DISCONNECTED');
+        mutateCallLogs();
+      });
+
+      // Triggered when the call is cancelled
+      call.on('cancel', async () => {
+        handleCallEnd('CANCELLED');
+        mutateCallLogs();
+      });
+
+      // Triggered when the call is rejected
+      call.on('reject', async () => {
+        handleCallEnd('REJECTED');
+        mutateCallLogs();
+      });
+    } catch (error) {
+      console.error('Failed to make call:', error);
+    }
+  };
+
+  const acceptIncomingCall = () => {
+    if (incomingCall) {
+      console.log('Accepting incoming call');
+
+      // Clear timeout
+      if (incomingCallTimeout) {
+        clearTimeout(incomingCallTimeout);
+        setIncomingCallTimeout(null);
+      }
+
+      // Accept the call
+      incomingCall.accept();
+
+      // Set up call event handlers for the accepted call
+      incomingCall.on('accept', () => {
+        console.log('INCOMING CALL ACCEPTED');
         setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
         setCallStatus('ACCEPTED');
       });
 
-      call.on('disconnect', () => {
-        console.log('CALL STATUS - DISCONNECTED');
+      incomingCall.on('disconnect', () => {
+        console.log('INCOMING CALL DISCONNECTED');
         setActiveCall(null);
         setCurrentCall(null);
         setCallDuration(0);
@@ -277,38 +466,38 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         setCallStatus('DISCONNECTED');
       });
 
-      call.on('cancel', () => {
-        console.log('CALL STATUS - CANCELLED');
-        setActiveCall(null);
-        setCurrentCall(null);
-        setCallDuration(0);
-        setCallStatus('CANCELLED');
-      });
-
-      call.on('reject', () => {
-        console.log('CALL STATUS - REJECTED');
-        setActiveCall(null);
-        setCurrentCall(null);
-        setCallDuration(0);
-        setCallStatus('REJECTED');
-      });
-
-      setActiveCall({
-        phone_number: number,
-        contact_name:
-          contactsData?.find((contact: Contact) => contact.phone_number === number)?.name ||
-          'Unknown',
-        status: 'ringing',
-        startTime: new Date().toISOString(),
-      });
+      // Store as current call
+      setCurrentCall(incomingCall);
+      setIncomingCall(null);
       setCallDuration(0);
-    } catch (error) {
-      console.error('Failed to make call:', error);
-      setCallStatus('');
+    }
+  };
+
+  const rejectIncomingCall = () => {
+    if (incomingCall) {
+      console.log('Rejecting incoming call');
+
+      // Clear timeout
+      if (incomingCallTimeout) {
+        clearTimeout(incomingCallTimeout);
+        setIncomingCallTimeout(null);
+      }
+
+      // Reject the call
+      incomingCall.reject();
+      setIncomingCall(null);
+      setActiveCall(null);
+      setCallStatus('REJECTED');
     }
   };
 
   const endCall = () => {
+    // Clear any incoming call timeout
+    if (incomingCallTimeout) {
+      clearTimeout(incomingCallTimeout);
+      setIncomingCallTimeout(null);
+    }
+
     // Disconnect the specific call if it exists
     if (currentCall) {
       currentCall.disconnect();
@@ -319,6 +508,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     }
     setActiveCall(null);
     setCurrentCall(null);
+    setIncomingCall(null);
     setCallDuration(0);
     setIsMuted(false);
     setIsOnHold(false);
@@ -417,7 +607,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 {contactsData?.length}
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
+                <PhoneMissedIcon className="h-4 w-4" />
                 {callLogs?.length || 0}
               </div>
             </div>
@@ -449,277 +639,48 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             <div className="h-[500px] w-full overflow-y-auto p-4 pb-20">
               {/* Mobile Content */}
               {currentView === 'dialer' && (
-                <div className="max-w-md mx-auto">
-                  <div className="mb-6 text-center">
-                    <input
-                      type="tel"
-                      value={dialedNumber}
-                      onChange={(e) => setDialedNumber(e.target.value)}
-                      placeholder="Enter phone number"
-                      className="w-full text-center text-2xl font-light border-b-2 border-border focus:border-[#C33527] outline-none py-3 font-mono bg-transparent"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    {[
-                      { digit: '1', letters: '' },
-                      { digit: '2', letters: 'ABC' },
-                      { digit: '3', letters: 'DEF' },
-                      { digit: '4', letters: 'GHI' },
-                      { digit: '5', letters: 'JKL' },
-                      { digit: '6', letters: 'MNO' },
-                      { digit: '7', letters: 'PQRS' },
-                      { digit: '8', letters: 'TUV' },
-                      { digit: '9', letters: 'WXYZ' },
-                      { digit: '*', letters: '' },
-                      { digit: '0', letters: '+' },
-                      { digit: '#', letters: '' },
-                    ].map((button) => (
-                      <button
-                        key={button.digit}
-                        onClick={() => addDigit(button.digit)}
-                        className="h-16 flex flex-col items-center justify-center border-2 border-border rounded-xl hover:bg-muted active:bg-muted/80 transition-colors"
-                      >
-                        <span className="text-2xl font-light">{button.digit}</span>
-                        {button.letters && (
-                          <span className="text-xs text-muted-foreground mt-0.5">
-                            {button.letters}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={deleteDigit}
-                      disabled={dialedNumber.length === 0}
-                      className="flex-1 h-12"
-                    >
-                      Delete
-                    </Button>
-                    <Button
-                      onClick={() => makeCall(dialedNumber)}
-                      disabled={dialedNumber.length === 0}
-                      className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Call
-                    </Button>
-                  </div>
-                </div>
+                <Dialer
+                  dialedNumber={dialedNumber}
+                  onDigitClick={addDigit}
+                  onDelete={deleteDigit}
+                  onCall={() => makeCall(dialedNumber)}
+                  onInputChange={handleInputChange}
+                />
               )}
 
               {currentView === 'contacts' && (
-                <div>
-                  <div className="mb-4 flex flex-col gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="Search contacts..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 h-10"
-                      />
-                    </div>
-                    <Button
-                      onClick={() => setShowAddContact(true)}
-                      className="bg-[#C33527] hover:bg-[#DA857C] h-10"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Contact
-                    </Button>
-                  </div>
-
-                  {filteredContacts && filteredContacts.filter((c) => c.is_favorite).length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-                        Favorites
-                      </h3>
-                      <div className="space-y-2">
-                        {filteredContacts
-                          .filter((c) => c.is_favorite)
-                          .map((contact) => (
-                            <ContactCard
-                              key={contact.id}
-                              contact={contact}
-                              makeCall={makeCall}
-                              onEdit={() => setEditingContact(contact)}
-                              onDelete={() => setDeletingContact(contact)}
-                            />
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-                      All Contacts
-                    </h3>
-                    <div className="space-y-2">
-                      {filteredContacts
-                        .filter((c) => !c.is_favorite)
-                        .map((contact) => (
-                          <ContactCard
-                            key={contact.id}
-                            contact={contact}
-                            makeCall={makeCall}
-                            onEdit={() => setEditingContact(contact)}
-                            onDelete={() => setDeletingContact(contact)}
-                          />
-                        ))}
-                    </div>
-                  </div>
-                </div>
+                <ContactsList
+                  filteredContacts={filteredContacts}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  onAddContact={() => setShowAddContact(true)}
+                  onMakeCall={makeCall}
+                  onEditContact={setEditingContact}
+                  onDeleteContact={setDeletingContact}
+                />
               )}
 
               {currentView === 'recent' && (
-                <div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {[
-                      { id: 'all' as CallFilterType, label: 'All' },
-                      { id: 'missed' as CallFilterType, label: 'Missed', count: missedCallsCount },
-                      { id: 'inbound' as CallFilterType, label: 'Incoming' },
-                      { id: 'outbound' as CallFilterType, label: 'Outgoing' },
-                    ].map((filter) => (
-                      <button
-                        key={filter.id}
-                        onClick={() => setCallFilter(filter.id)}
-                        className={cn(
-                          'px-3 py-2 rounded-lg transition-colors font-medium text-xs',
-                          callFilter === filter.id
-                            ? 'bg-[#C33527] text-white'
-                            : 'bg-muted text-foreground hover:bg-muted/80',
-                        )}
-                      >
-                        {filter.label}
-                        {filter.count !== undefined && filter.count > 0 && (
-                          <span
-                            className={cn(
-                              'ml-2 px-2 py-0.5 rounded-full text-xs',
-                              callFilter === filter.id ? 'bg-white/20' : 'bg-background',
-                            )}
-                          >
-                            {filter.count}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    {filteredCallLogs.map((log) => {
-                      const Icon =
-                        log.status === 'missed'
-                          ? PhoneMissed
-                          : log.direction === 'inbound'
-                            ? PhoneIncoming
-                            : PhoneOutgoing;
-                      const iconColor =
-                        log.status === 'missed'
-                          ? 'text-red-500'
-                          : log.direction === 'inbound'
-                            ? 'text-blue-500'
-                            : 'text-green-500';
-
-                      return (
-                        <div
-                          key={log.id}
-                          className="flex items-center justify-between gap-3 p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <Icon className={cn('w-4 h-4 flex-shrink-0', iconColor)} />
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm text-foreground truncate">
-                                {log.contact_name}
-                              </p>
-                              <p className="text-xs text-muted-foreground font-mono truncate">
-                                {log.phone}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatTimestamp(log.created_at)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <Badge
-                              variant={log.status === 'completed' ? 'default' : 'destructive'}
-                              className={cn(
-                                'text-xs',
-                                log.status === 'completed' &&
-                                  'bg-green-100 text-green-700 hover:bg-green-100',
-                              )}
-                            >
-                              {log.status}
-                            </Badge>
-                            {log.duration > 0 && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {formatDuration(log.duration)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <RecentCalls
+                  filteredCallLogs={filteredCallLogs}
+                  callFilter={callFilter}
+                  onFilterChange={setCallFilter}
+                  missedCallsCount={missedCallsCount}
+                  formatTimestamp={formatTimestamp}
+                  formatDuration={formatDuration}
+                  onRefresh={mutateCallLogs}
+                />
               )}
             </div>
 
             {/* Mobile Bottom Navigation */}
-            <div className="border-t border-border bg-card">
-              <div className="grid grid-cols-3 gap-1 p-2">
-                <button
-                  onClick={() => setCurrentView('dialer')}
-                  className={cn(
-                    'flex flex-col items-center justify-center py-2 rounded-lg transition-colors',
-                    currentView === 'dialer'
-                      ? 'bg-[#C33527] text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )}
-                >
-                  <Phone className="w-5 h-5 mb-1" />
-                  <span className="text-xs font-medium">Dial</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('contacts')}
-                  className={cn(
-                    'flex flex-col items-center justify-center py-2 rounded-lg transition-colors relative',
-                    currentView === 'contacts'
-                      ? 'bg-[#C33527] text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )}
-                >
-                  <Users className="w-5 h-5 mb-1" />
-                  <span className="text-xs font-medium">Contacts</span>
-                  <Badge
-                    className="absolute top-0 right-2 h-5 min-w-5 px-1 text-[10px]"
-                    variant="secondary"
-                  >
-                    {contactsData?.length}
-                  </Badge>
-                </button>
-                <button
-                  onClick={() => setCurrentView('recent')}
-                  className={cn(
-                    'flex flex-col items-center justify-center py-2 rounded-lg transition-colors relative',
-                    currentView === 'recent'
-                      ? 'bg-[#C33527] text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )}
-                >
-                  <Clock className="w-5 h-5 mb-1" />
-                  <span className="text-xs font-medium">Recent</span>
-                  {missedCallsCount > 0 && (
-                    <Badge className="absolute top-0 right-2 h-5 min-w-5 px-1 text-[10px] bg-red-500 hover:bg-red-600 text-white">
-                      {missedCallsCount}
-                    </Badge>
-                  )}
-                </button>
-              </div>
-            </div>
+            <NavigationTabs
+              currentView={currentView}
+              onViewChange={setCurrentView}
+              contactsCount={contactsData?.length || 0}
+              missedCallsCount={missedCallsCount}
+              isMobile={true}
+            />
           </div>
 
           {/* Desktop Layout: Side by side with sidebar */}
@@ -752,322 +713,59 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                 </div>
 
                 {leftNavExpanded && (
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => setCurrentView('dialer')}
-                      className={cn(
-                        'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
-                        currentView === 'dialer'
-                          ? 'bg-[#C33527] text-white'
-                          : 'text-foreground hover:bg-muted',
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Phone className="w-5 h-5" />
-                        <span className="font-medium text-sm">Dial Pad</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setCurrentView('contacts')}
-                      className={cn(
-                        'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
-                        currentView === 'contacts'
-                          ? 'bg-[#C33527] text-white'
-                          : 'text-foreground hover:bg-muted',
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Users className="w-5 h-5" />
-                        <span className="font-medium text-sm">Contacts</span>
-                      </div>
-                      <Badge
-                        variant={currentView === 'contacts' ? 'secondary' : 'outline'}
-                        className="text-xs"
-                      >
-                        {contactsData?.length}
-                      </Badge>
-                    </button>
-
-                    <button
-                      onClick={() => setCurrentView('recent')}
-                      className={cn(
-                        'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
-                        currentView === 'recent'
-                          ? 'bg-[#C33527] text-white'
-                          : 'text-foreground hover:bg-muted',
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Clock className="w-5 h-5" />
-                        <span className="font-medium text-sm">Recent Calls</span>
-                      </div>
-                      {missedCallsCount > 0 && (
-                        <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">
-                          {missedCallsCount}
-                        </Badge>
-                      )}
-                    </button>
-                  </div>
+                  <NavigationTabs
+                    currentView={currentView}
+                    onViewChange={setCurrentView}
+                    contactsCount={contactsData?.length || 0}
+                    missedCallsCount={missedCallsCount}
+                    isMobile={false}
+                  />
                 )}
               </div>
             </div>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0">
-              <div className="h-16 border-b border-border flex items-center justify-between px-6">
-                <div>
-                  <h2 className="font-semibold text-xl text-foreground">
-                    {currentView === 'dialer' && 'Dial Pad'}
-                    {currentView === 'contacts' && 'Contacts'}
-                    {currentView === 'recent' && 'Recent Calls'}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {currentView === 'dialer' && 'Enter a number to make a call'}
-                    {currentView === 'contacts' &&
-                      `${filteredContacts?.length || 0} contacts available`}
-                    {currentView === 'recent' &&
-                      `${filteredCallLogs?.length || 0} calls in history`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    Online
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowSettings(true)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Settings className="w-5 h-5 text-muted-foreground" />
-                  </Button>
-                </div>
-              </div>
+              <PhoneHeader
+                currentView={currentView}
+                contactsCount={filteredContacts?.length || 0}
+                callLogsCount={filteredCallLogs?.length || 0}
+                onSettingsClick={() => setShowSettings(true)}
+              />
 
               <div className="flex-1 overflow-y-auto p-6">
                 {currentView === 'dialer' && (
-                  <div className="max-w-md mx-auto">
-                    <div className="mb-8 text-center">
-                      <input
-                        type="tel"
-                        value={dialedNumber}
-                        onChange={(e) => setDialedNumber(e.target.value)}
-                        placeholder="Enter phone number"
-                        className="w-full text-center text-3xl font-light border-b-2 border-border focus:border-[#C33527] outline-none py-4 font-mono bg-transparent"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      {[
-                        { digit: '1', letters: '' },
-                        { digit: '2', letters: 'ABC' },
-                        { digit: '3', letters: 'DEF' },
-                        { digit: '4', letters: 'GHI' },
-                        { digit: '5', letters: 'JKL' },
-                        { digit: '6', letters: 'MNO' },
-                        { digit: '7', letters: 'PQRS' },
-                        { digit: '8', letters: 'TUV' },
-                        { digit: '9', letters: 'WXYZ' },
-                        { digit: '*', letters: '' },
-                        { digit: '0', letters: '+' },
-                        { digit: '#', letters: '' },
-                      ].map((button) => (
-                        <button
-                          key={button.digit}
-                          onClick={() => addDigit(button.digit)}
-                          className="h-20 flex flex-col items-center justify-center border-2 border-border rounded-xl hover:bg-muted active:bg-muted/80 transition-colors"
-                        >
-                          <span className="text-3xl font-light">{button.digit}</span>
-                          {button.letters && (
-                            <span className="text-xs text-muted-foreground mt-1">
-                              {button.letters}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={deleteDigit}
-                        disabled={dialedNumber.length === 0}
-                        className="flex-1 h-14"
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        onClick={() => makeCall(dialedNumber)}
-                        disabled={dialedNumber.length === 0}
-                        className="flex-1 h-14 bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <Phone className="w-5 h-5 mr-2" />
-                        Call
-                      </Button>
-                    </div>
-                  </div>
+                  <Dialer
+                    dialedNumber={dialedNumber}
+                    onDigitClick={addDigit}
+                    onDelete={deleteDigit}
+                    onCall={() => makeCall(dialedNumber)}
+                    onInputChange={handleInputChange}
+                  />
                 )}
 
                 {currentView === 'contacts' && (
-                  <div>
-                    <div className="mb-6 flex gap-3">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                          type="search"
-                          placeholder="Search contacts..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-12 h-11"
-                        />
-                      </div>
-                      <Button
-                        onClick={() => setShowAddContact(true)}
-                        className="bg-[#C33527] hover:bg-[#DA857C] whitespace-nowrap h-11"
-                      >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Add Contact
-                      </Button>
-                    </div>
-
-                    {filteredContacts?.filter((c: Contact) => c.is_favorite).length > 0 && (
-                      <div className="mb-8">
-                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-                          Favorites
-                        </h3>
-                        <div className="space-y-2">
-                          {filteredContacts
-                            .filter((c) => c.is_favorite)
-                            .map((contact) => (
-                              <ContactCard
-                                key={contact.id}
-                                contact={contact}
-                                makeCall={makeCall}
-                                onEdit={() => setEditingContact(contact)}
-                                onDelete={() => setDeletingContact(contact)}
-                              />
-                            ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-                        All Contacts
-                      </h3>
-                      <div className="space-y-2">
-                        {filteredContacts
-                          .filter((c) => !c.is_favorite)
-                          .map((contact) => (
-                            <ContactCard
-                              key={contact.id}
-                              contact={contact}
-                              makeCall={makeCall}
-                              onEdit={() => setEditingContact(contact)}
-                              onDelete={() => setDeletingContact(contact)}
-                            />
-                          ))}
-                      </div>
-                    </div>
-                  </div>
+                  <ContactsList
+                    filteredContacts={filteredContacts}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onAddContact={() => setShowAddContact(true)}
+                    onMakeCall={makeCall}
+                    onEditContact={setEditingContact}
+                    onDeleteContact={setDeletingContact}
+                  />
                 )}
 
                 {currentView === 'recent' && (
-                  <div>
-                    <div className="flex gap-2 mb-6">
-                      {[
-                        { id: 'all' as CallFilterType, label: 'All' },
-                        {
-                          id: 'missed' as CallFilterType,
-                          label: 'Missed',
-                          count: missedCallsCount,
-                        },
-                        { id: 'inbound' as CallFilterType, label: 'Incoming' },
-                        { id: 'outbound' as CallFilterType, label: 'Outgoing' },
-                      ].map((filter) => (
-                        <button
-                          key={filter.id}
-                          onClick={() => setCallFilter(filter.id)}
-                          className={cn(
-                            'px-4 py-2 rounded-lg transition-colors font-medium text-sm',
-                            callFilter === filter.id
-                              ? 'bg-[#C33527] text-white'
-                              : 'bg-muted text-foreground hover:bg-muted/80',
-                          )}
-                        >
-                          {filter.label}
-                          {filter.count !== undefined && filter.count > 0 && (
-                            <span
-                              className={cn(
-                                'ml-2 px-2 py-0.5 rounded-full text-xs',
-                                callFilter === filter.id ? 'bg-white/20' : 'bg-background',
-                              )}
-                            >
-                              {filter.count}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="space-y-2">
-                      {filteredCallLogs.map((log) => {
-                        const Icon =
-                          log.status === 'missed'
-                            ? PhoneMissed
-                            : log.direction === 'inbound'
-                              ? PhoneIncoming
-                              : PhoneOutgoing;
-                        const iconColor =
-                          log.status === 'missed'
-                            ? 'text-red-500'
-                            : log.direction === 'inbound'
-                              ? 'text-blue-500'
-                              : 'text-green-500';
-
-                        return (
-                          <div
-                            key={log.id}
-                            className="flex items-center justify-between gap-4 p-4 border border-border rounded-xl hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-4 min-w-0 flex-1">
-                              <Icon className={cn('w-5 h-5 flex-shrink-0', iconColor)} />
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-base text-foreground truncate">
-                                  {log.contact_name}
-                                </p>
-                                <p className="text-sm text-muted-foreground font-mono truncate">
-                                  {log.phone}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatTimestamp(log.created_at)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <Badge
-                                variant={log.status === 'completed' ? 'default' : 'destructive'}
-                                className={cn(
-                                  'text-xs',
-                                  log.status === 'completed' &&
-                                    'bg-green-100 text-green-700 hover:bg-green-100',
-                                )}
-                              >
-                                {log.status}
-                              </Badge>
-                              {log.duration > 0 && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {formatDuration(log.duration)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <RecentCalls
+                    filteredCallLogs={filteredCallLogs}
+                    callFilter={callFilter}
+                    onFilterChange={setCallFilter}
+                    missedCallsCount={missedCallsCount}
+                    formatTimestamp={formatTimestamp}
+                    formatDuration={formatDuration}
+                    onRefresh={mutateCallLogs}
+                  />
                 )}
               </div>
             </div>
@@ -1105,7 +803,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       />
 
       {/* Settings Modal */}
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        company={company}
+        onSuccess={() => mutateCompany()}
+      />
 
       {/* Active Call Overlay */}
       <ActiveCallOverlay
@@ -1116,6 +819,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         onEndCall={endCall}
         onToggleMute={toggleMute}
         onToggleHold={toggleHold}
+        onAcceptCall={acceptIncomingCall}
+        onRejectCall={rejectIncomingCall}
         formatDuration={formatDuration}
       />
     </Card>

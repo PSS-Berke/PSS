@@ -177,9 +177,7 @@ export function ActiveModulesSidebar({
                         {isSelected && <div className="w-2 h-2 bg-primary rounded-full" />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium line-clamp-2">
-                          {module.name}
-                        </p>
+                        <p className="text-sm font-medium line-clamp-2">{module.name}</p>
                         {module.description && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                             {module.description}

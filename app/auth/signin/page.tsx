@@ -217,26 +217,33 @@ export default function SignInPage() {
                       {error}
                     </div>
                   )}
-
-                  <Button
-                    type="submit"
-                    className="w-full rounded-lg bg-[#C33527] py-2.5 text-base font-medium text-white shadow-md shadow-[#C33527]/20 transition-colors hover:bg-[#a32a1f]"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Signing in…' : 'Sign In'}
-                  </Button>
-                  <Button
-                    type="button"
-                    className="w-full rounded-lg bg-white py-2.5 text-base font-medium text-black shadow-md shadow-[#C33527]/20 transition-colors hover:bg-white/90"
-                    disabled={isLoading}
-                    onClick={() => generateGoogleSignInUrl()}
-                  >
-                    {' '}
-                    <div className="flex items-center justify-center gap-3">
-                      <Image src="/img/google.png" alt="Google" width={20} height={20} />
-                      Sign in with Google
-                    </div>
-                  </Button>
+                  <div className="flex flex-col gap-2 justify-start">
+                    <Button
+                      type="submit"
+                      className="w-full rounded-lg bg-[#C33527] py-2.5 text-base font-medium text-white shadow-md shadow-[#C33527]/20 transition-colors hover:bg-[#a32a1f]"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Signing in…' : 'Sign In'}
+                    </Button>
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-sm text-muted-foreground hover:text-muted-foreground/80"
+                    >
+                      Forgot password?
+                    </Link>
+                    <Button
+                      type="button"
+                      className="w-full rounded-lg bg-white py-2.5 text-base font-medium text-black shadow-md shadow-[#C33527]/20 transition-colors hover:bg-white/90"
+                      disabled={isLoading}
+                      onClick={() => generateGoogleSignInUrl()}
+                    >
+                      {' '}
+                      <div className="flex items-center justify-center gap-3">
+                        <Image src="/img/google.png" alt="Google" width={20} height={20} />
+                        Sign in with Google
+                      </div>
+                    </Button>
+                  </div>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">

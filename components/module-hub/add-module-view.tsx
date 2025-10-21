@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Linkedin, ShieldCheck, Building2, Share2, BarChart3, Zap, Loader2 } from 'lucide-react';
+import {
+  Search,
+  Linkedin,
+  ShieldCheck,
+  Building2,
+  Share2,
+  BarChart3,
+  Zap,
+  Loader2,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -107,7 +116,7 @@ export function AddModuleView() {
   const [error, setError] = useState<string | null>(null);
   const [addingModuleId, setAddingModuleId] = useState<number | null>(null);
 
-  const userModuleIds = userModules.map(m => m.id);
+  const userModuleIds = userModules.map((m) => m.id);
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -127,7 +136,7 @@ export function AddModuleView() {
           {
             method: 'GET',
             headers: getAuthHeaders(token),
-          }
+          },
         );
 
         if (!userModulesResponse.ok) {
@@ -143,7 +152,7 @@ export function AddModuleView() {
           {
             method: 'GET',
             headers: getAuthHeaders(token),
-          }
+          },
         );
 
         if (!allModulesResponse.ok) {
@@ -179,7 +188,7 @@ export function AddModuleView() {
           method: 'POST',
           headers: getAuthHeaders(token),
           body: JSON.stringify({ module_id: moduleId }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -195,7 +204,7 @@ export function AddModuleView() {
         {
           method: 'GET',
           headers: getAuthHeaders(token),
-        }
+        },
       );
 
       if (userModulesResponse.ok) {
@@ -212,17 +221,17 @@ export function AddModuleView() {
 
   // Merge all modules with user modules to ensure we show everything
   // Start with all available modules from the API
-  const allModulesMap = new Map(allModules.map(m => [m.id, m]));
+  const allModulesMap = new Map(allModules.map((m) => [m.id, m]));
 
   // Add user modules that might not be in all_modules
-  userModules.forEach(um => {
+  userModules.forEach((um) => {
     if (!allModulesMap.has(um.id)) {
       allModulesMap.set(um.id, um);
     }
   });
 
   // Convert back to array and enrich with UI properties
-  const enrichedModules = Array.from(allModulesMap.values()).map(module => ({
+  const enrichedModules = Array.from(allModulesMap.values()).map((module) => ({
     ...module,
     icon: getModuleIcon(module.name),
     category: getModuleCategory(module.name),
@@ -331,14 +340,18 @@ export function AddModuleView() {
                   >
                     <div className="flex flex-col gap-4">
                       <div className="flex items-start justify-between">
-                        <div className={`p-2 sm:p-3 rounded-lg transition-colors ${
-                          isActive
-                            ? 'bg-gray-200 dark:bg-gray-700'
-                            : 'bg-[#C33527]/10 group-hover:bg-[#C33527]/20'
-                        }`}>
-                          <Icon className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 ${
-                            isActive ? 'text-gray-400' : 'text-[#C33527]'
-                          }`} />
+                        <div
+                          className={`p-2 sm:p-3 rounded-lg transition-colors ${
+                            isActive
+                              ? 'bg-gray-200 dark:bg-gray-700'
+                              : 'bg-[#C33527]/10 group-hover:bg-[#C33527]/20'
+                          }`}
+                        >
+                          <Icon
+                            className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 ${
+                              isActive ? 'text-gray-400' : 'text-[#C33527]'
+                            }`}
+                          />
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {module.category}
@@ -346,14 +359,18 @@ export function AddModuleView() {
                       </div>
 
                       <div>
-                        <h3 className={`font-semibold text-base sm:text-lg mb-2 transition-colors ${
-                          isActive ? 'text-gray-400' : 'group-hover:text-[#C33527]'
-                        }`}>
+                        <h3
+                          className={`font-semibold text-base sm:text-lg mb-2 transition-colors ${
+                            isActive ? 'text-gray-400' : 'group-hover:text-[#C33527]'
+                          }`}
+                        >
                           {module.name}
                         </h3>
-                        <p className={`text-sm line-clamp-2 ${
-                          isActive ? 'text-gray-400' : 'text-muted-foreground'
-                        }`}>
+                        <p
+                          className={`text-sm line-clamp-2 ${
+                            isActive ? 'text-gray-400' : 'text-muted-foreground'
+                          }`}
+                        >
                           {module.description || 'No description available'}
                         </p>
                       </div>
@@ -365,9 +382,7 @@ export function AddModuleView() {
                             Adding...
                           </Badge>
                         ) : isActive ? (
-                          <Badge className="bg-green-500/10 text-green-500">
-                            Active
-                          </Badge>
+                          <Badge className="bg-green-500/10 text-green-500">Active</Badge>
                         ) : (
                           <Badge className="bg-[#C33527]/10 text-[#C33527] hover:bg-[#C33527]/20">
                             Click to Add

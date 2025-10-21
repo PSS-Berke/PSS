@@ -169,17 +169,17 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-2">
                     {state.latestAnalysis?.keyDecisionMakersWithEnrichment &&
-                     state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
-                      <Button
-                        onClick={() => setEnrichmentDialogOpen(true)}
-                        variant="outline"
-                        disabled={state.isSubmitting}
-                        size="sm"
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        Enrich People
-                      </Button>
-                    )}
+                      state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
+                        <Button
+                          onClick={() => setEnrichmentDialogOpen(true)}
+                          variant="outline"
+                          disabled={state.isSubmitting}
+                          size="sm"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Enrich People
+                        </Button>
+                      )}
                     <Button
                       onClick={() => setPromptDialogOpen(true)}
                       className="bg-[#C33527] hover:bg-[#DA857C]"
@@ -230,16 +230,16 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
                       <Settings className="h-4 w-4" />
                     </Button>
                     {state.latestAnalysis?.keyDecisionMakersWithEnrichment &&
-                     state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
-                      <Button
-                        onClick={() => setEnrichmentDialogOpen(true)}
-                        variant="outline"
-                        disabled={state.isSubmitting}
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        Enrich People
-                      </Button>
-                    )}
+                      state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
+                        <Button
+                          onClick={() => setEnrichmentDialogOpen(true)}
+                          variant="outline"
+                          disabled={state.isSubmitting}
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Enrich People
+                        </Button>
+                      )}
                     <Button
                       onClick={() => setPromptDialogOpen(true)}
                       className="bg-[#C33527] hover:bg-[#DA857C]"
@@ -268,18 +268,18 @@ export function CallPrepModule({ className, onExpandedChange }: CallPrepModulePr
       />
 
       {state.latestAnalysis?.keyDecisionMakersWithEnrichment &&
-       state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
-        <KeyDecisionMakersModal
-          open={enrichmentDialogOpen}
-          onOpenChange={setEnrichmentDialogOpen}
-          decisionMakers={state.latestAnalysis.keyDecisionMakersWithEnrichment}
-          companyName={state.latestAnalysis.prompt || ''}
-          onEnrich={async (person) => {
-            return await enrichPersonData(person, state.latestAnalysis!.prompt || '');
-          }}
-          isSubmitting={state.isSubmitting}
-        />
-      )}
+        state.latestAnalysis.keyDecisionMakersWithEnrichment.length > 0 && (
+          <KeyDecisionMakersModal
+            open={enrichmentDialogOpen}
+            onOpenChange={setEnrichmentDialogOpen}
+            decisionMakers={state.latestAnalysis.keyDecisionMakersWithEnrichment}
+            companyName={state.latestAnalysis.prompt || ''}
+            onEnrich={async (person) => {
+              return await enrichPersonData(person, state.latestAnalysis!.prompt || '');
+            }}
+            isSubmitting={state.isSubmitting}
+          />
+        )}
 
       {state.latestAnalysis && (
         <CallPrepSettingsDialog

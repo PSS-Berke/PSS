@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Users, Building2, Phone, Mail, Star, Pencil } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Pencil, Users, Building2, Phone, Mail, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,8 @@ import { apiEditContact } from '@/lib/services/PhoneService';
 import { AxiosError } from 'axios';
 import { z } from 'zod';
 import { Contact } from '@/@types/phone';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 // Zod validation schema for contact form
 const contactSchema = z.object({
@@ -28,7 +30,7 @@ const contactSchema = z.object({
     .regex(/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number'),
   email: z.string().email('Please enter a valid email address').or(z.literal('')),
   company: z.string().max(100, 'Company name must be less than 100 characters').or(z.literal('')),
-  is_favorite: z.boolean().default(false),
+  is_favorite: z.boolean(),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -41,20 +43,28 @@ interface EditContactProps {
 }
 
 export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContactProps) => {
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newContact, setNewContact] = useState<ContactFormData>({
-    name: '',
-    company: '',
-    phone_number: '',
-    email: '',
-    is_favorite: false,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setError,
+    clearErrors,
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: '',
+      company: '',
+      phone_number: '',
+      email: '',
+      is_favorite: false,
+    },
   });
 
   // Populate form when contact prop changes
   useEffect(() => {
     if (contact) {
-      setNewContact({
+      reset({
         name: contact.name || '',
         company: contact.company || '',
         phone_number: contact.phone_number || '',
@@ -62,73 +72,28 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
         is_favorite: contact.is_favorite || false,
       });
     }
-  }, [contact]);
+  }, [contact, reset]);
 
-  const handleNewContactChange = (key: string, value: any) => {
-    setNewContact((prev) => ({ ...prev, [key]: value }));
-
-    // Clear error for this field when user starts typing
-    if (formErrors[key]) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[key];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleEditContact = async () => {
-    setIsSubmitting(true);
-    setFormErrors({});
+  const onSubmit = async (data: ContactFormData) => {
+    if (!contact?.id) return;
 
     try {
-      // Validate form data with Zod
-      const validatedData = contactSchema.parse(newContact);
-
-      if (contact?.id) {
-        await apiEditContact(contact.id, validatedData);
-      }
-
-      // Reset form on success
-      setNewContact({
-        name: '',
-        company: '',
-        phone_number: '',
-        email: '',
-        is_favorite: false,
-      });
-
+      await apiEditContact(contact.id, data);
+      reset(); // Reset form on success
       onSuccess?.();
       onClose();
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle Zod validation errors
-        const errors: Record<string, string> = {};
-        error.issues.forEach((err: z.ZodIssue) => {
-          if (err.path[0]) {
-            errors[err.path[0] as string] = err.message;
-          }
-        });
-        setFormErrors(errors);
-      } else {
-        console.error('Failed to add contact:', (error as AxiosError).message);
-        setFormErrors({ general: 'Failed to add contact. Please try again.' });
-      }
-    } finally {
-      setIsSubmitting(false);
+      console.error('Failed to edit contact:', (error as AxiosError).message);
+      setError('root', {
+        type: 'manual',
+        message: 'Failed to edit contact. Please try again.',
+      });
     }
   };
 
   const handleClose = () => {
-    // Reset form when closing
-    setNewContact({
-      name: '',
-      company: '',
-      phone_number: '',
-      email: '',
-      is_favorite: false,
-    });
-    setFormErrors({});
+    reset(); // Reset form when closing
+    clearErrors();
     onClose();
   };
 
@@ -142,15 +107,15 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
             </div>
             <div>
               <DialogTitle>Edit Contact</DialogTitle>
-              <DialogDescription>Edit contact information</DialogDescription>
+              <DialogDescription>Update contact information</DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {formErrors.general && (
+        <form id="edit-contact-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          {errors.root && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{formErrors.general}</p>
+              <p className="text-sm text-red-600">{errors.root.message}</p>
             </div>
           )}
 
@@ -163,13 +128,12 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
               <Input
                 id="name"
                 type="text"
-                value={newContact.name}
-                onChange={(e) => handleNewContactChange('name', e.target.value)}
+                {...register('name')}
                 placeholder="John Doe"
-                className={cn('pl-10', formErrors.name && 'border-red-500 focus:border-red-500')}
+                className={cn('pl-10', errors.name && 'border-red-500 focus:border-red-500')}
               />
             </div>
-            {formErrors.name && <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>}
+            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
           </div>
 
           <div>
@@ -181,14 +145,13 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
               <Input
                 id="company"
                 type="text"
-                value={newContact.company}
-                onChange={(e) => handleNewContactChange('company', e.target.value)}
+                {...register('company')}
                 placeholder="Acme Corp"
-                className={cn('pl-10', formErrors.company && 'border-red-500 focus:border-red-500')}
+                className={cn('pl-10', errors.company && 'border-red-500 focus:border-red-500')}
               />
             </div>
-            {formErrors.company && (
-              <p className="text-sm text-red-500 mt-1">{formErrors.company}</p>
+            {errors.company && (
+              <p className="text-sm text-red-500 mt-1">{errors.company.message}</p>
             )}
           </div>
 
@@ -201,17 +164,16 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
               <Input
                 id="phone"
                 type="tel"
-                value={newContact.phone_number}
-                onChange={(e) => handleNewContactChange('phone_number', e.target.value)}
+                {...register('phone_number')}
                 placeholder="+1 (555) 123-4567"
                 className={cn(
                   'pl-10 font-mono',
-                  formErrors.phone_number && 'border-red-500 focus:border-red-500',
+                  errors.phone_number && 'border-red-500 focus:border-red-500',
                 )}
               />
             </div>
-            {formErrors.phone_number && (
-              <p className="text-sm text-red-500 mt-1">{formErrors.phone_number}</p>
+            {errors.phone_number && (
+              <p className="text-sm text-red-500 mt-1">{errors.phone_number.message}</p>
             )}
           </div>
 
@@ -224,13 +186,12 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
               <Input
                 id="email"
                 type="email"
-                value={newContact.email}
-                onChange={(e) => handleNewContactChange('email', e.target.value)}
+                {...register('email')}
                 placeholder="john@acme.com"
-                className={cn('pl-10', formErrors.email && 'border-red-500 focus:border-red-500')}
+                className={cn('pl-10', errors.email && 'border-red-500 focus:border-red-500')}
               />
             </div>
-            {formErrors.email && <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>}
+            {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
           </div>
 
           <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
@@ -241,34 +202,35 @@ export const EditContact = ({ isOpen, contact, onClose, onSuccess }: EditContact
                 <p className="text-xs text-muted-foreground">Quick access to this contact</p>
               </div>
             </div>
-            <button
-              onClick={() => handleNewContactChange('is_favorite', !newContact.is_favorite)}
-              className={cn(
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                newContact.is_favorite ? 'bg-[#C33527]' : 'bg-border',
-              )}
-            >
-              <span
-                className={cn(
-                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                  newContact.is_favorite ? 'translate-x-6' : 'translate-x-1',
-                )}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                {...register('is_favorite')}
+                className="sr-only peer"
+                id="is_favorite"
               />
-            </button>
+              <label
+                htmlFor="is_favorite"
+                className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors cursor-pointer peer-checked:bg-[#C33527]"
+              >
+                <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 peer-checked:translate-x-6" />
+              </label>
+            </div>
           </div>
-        </div>
+        </form>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto">
             Cancel
           </Button>
           <Button
-            onClick={handleEditContact}
+            type="submit"
+            form="edit-contact-form"
             disabled={isSubmitting}
             className="w-full sm:w-auto bg-[#C33527] hover:bg-[#DA857C] disabled:opacity-50"
           >
             <Pencil className="w-4 h-4 mr-2" />
-            {isSubmitting ? 'Editing...' : 'Edit Contact'}
+            {isSubmitting ? 'Updating...' : 'Update Contact'}
           </Button>
         </DialogFooter>
       </DialogContent>

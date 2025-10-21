@@ -157,53 +157,12 @@ export function SocialMediaModule({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [isConnectingX, setIsConnectingX] = useState(false);
   const [isScheduleChoiceModalOpen, setIsScheduleChoiceModalOpen] = useState(false);
   const [isPlatformSelectionModalOpen, setIsPlatformSelectionModalOpen] = useState(false);
   const [pendingPublishState, setPendingPublishState] = useState<boolean>(false);
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-
-  // Twitter OAuth callback handler
-  React.useEffect(() => {
-    const handleTwitterCallback = async () => {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-
-      if (code && state && token) {
-        try {
-          console.log('Twitter OAuth callback detected:', { code, state });
-
-          // Send GET request to Twitter callback API
-          const callbackUrl = `https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
-
-          const response = await fetch(callbackUrl, {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            console.log('Twitter OAuth callback successful:', result);
-
-            // Refresh user data to update X access status
-            await refreshUser();
-          } else {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('Twitter OAuth callback failed:', response.status, errorData);
-          }
-        } catch (error) {
-          console.error('Twitter OAuth callback error:', error);
-        }
-      }
-    };
-
-    handleTwitterCallback();
-  }, [searchParams, token, refreshUser]);
 
   const activeFormData = React.useMemo<Partial<SocialPost>>(() => {
     if (isCreating) {
@@ -297,20 +256,6 @@ export function SocialMediaModule({
   }, [state.posts]);
 
   const isMutatingSelected = selectedPost ? state.mutatingPostIds.includes(selectedPost.id) : false;
-
-  // Check if user just returned from OAuth (e.g., URL has success param)
-  React.useEffect(() => {
-    const checkOAuthReturn = async () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('x_connected') === 'true') {
-        // Refresh user data to get updated x_access status
-        await refreshUser();
-        // Clean up the URL
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    };
-    checkOAuthReturn();
-  }, [refreshUser]);
 
   React.useEffect(() => {
     if (!isModalOpen) {
@@ -862,55 +807,6 @@ export function SocialMediaModule({
     setFormState((prev) => ({ ...prev, published: nextStatus }));
   };
 
-  const handleConnectXAccount = async () => {
-    if (!token) {
-      console.error('No authentication token available');
-      return;
-    }
-
-    setIsConnectingX(true);
-
-    try {
-      const company_id = user?.company_id;
-      // Step 1: Call request_oauth_url to get OAuth parameters and auto-associate user to state
-      const authStartResponse = await fetch(
-        `https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/request_oauth_url?company_id=${company_id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!authStartResponse.ok) {
-        console.error(
-          'request_oauth_url failed:',
-          authStartResponse.status,
-          authStartResponse.statusText,
-        );
-        setIsConnectingX(false);
-        return;
-      }
-
-      // Step 2: Parse the JSON response
-      const authData = await authStartResponse.json();
-
-      if (!authData.authorization_url) {
-        console.error('No authorization_url in response:', authData);
-        setIsConnectingX(false);
-        return;
-      }
-
-      // Step 3: Redirect to Twitter OAuth URL - cookies will follow automatically
-      window.open(authData.authorization_url, '_blank');
-    } catch (error) {
-      console.error('Error connecting X account:', error);
-      setIsConnectingX(false);
-    }
-  };
-
   const renderPostSummary = (post: SocialPost) => {
     const scheduledDate = new Date(post.scheduled_date);
     const isMutating = state.mutatingPostIds.includes(post.id);
@@ -1214,33 +1110,6 @@ export function SocialMediaModule({
               />
               <span className="hidden lg:inline">Refresh</span>
             </Button>
-            {user?.x_access?.access && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 px-3"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (!user?.x_access?.connected) {
-                    handleConnectXAccount();
-                  }
-                }}
-                disabled={isConnectingX || user?.x_access?.connected}
-              >
-                {isConnectingX ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Twitter className="h-4 w-4" />
-                )}
-                <span className="hidden lg:inline">
-                  {user?.x_access?.connected
-                    ? 'X Connected'
-                    : isConnectingX
-                      ? 'Connecting...'
-                      : 'Connect X Account'}
-                </span>
-              </Button>
-            )}
           </div>
 
           {/* Expand button - always visible */}

@@ -1,7 +1,17 @@
 'use client';
 
 import React from 'react';
-import { PlusCircle, X, Zap, BarChart4, Trash2, Loader2, ArrowLeft, GitBranch, Plus } from 'lucide-react';
+import {
+  PlusCircle,
+  X,
+  Zap,
+  BarChart4,
+  Trash2,
+  Loader2,
+  ArrowLeft,
+  GitBranch,
+  Plus,
+} from 'lucide-react';
 
 import {
   Dialog,
@@ -33,11 +43,11 @@ type ModuleManagerProps = {
   onClose: () => void;
 };
 
-type ViewMode = "landing" | "active" | "add";
+type ViewMode = 'landing' | 'active' | 'add';
 
 export function ModuleManager({ open, onClose }: ModuleManagerProps) {
   const { user, token, refreshUser, isLoading } = useAuth();
-  const [viewMode, setViewMode] = React.useState<ViewMode>("landing");
+  const [viewMode, setViewMode] = React.useState<ViewMode>('landing');
   const [allModules, setAllModules] = React.useState<ModuleOption[]>([]);
   const [userModules, setUserModules] = React.useState<UserModule[]>([]);
   const [isFetching, setIsFetching] = React.useState(false);
@@ -47,12 +57,12 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
   // Get user's current module IDs
-  const userModuleIds = React.useMemo(() => userModules.map(m => m.id), [userModules]);
+  const userModuleIds = React.useMemo(() => userModules.map((m) => m.id), [userModules]);
 
   // Reset view mode when dialog closes
   React.useEffect(() => {
     if (!open) {
-      setViewMode("landing");
+      setViewMode('landing');
       setError(null);
       setSuccessMessage(null);
     }
@@ -63,7 +73,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
     console.log('fetchUserModules called');
     if (!token) {
       console.log('No token available');
-      setError("You must be signed in to manage modules.");
+      setError('You must be signed in to manage modules.');
       return;
     }
 
@@ -73,11 +83,11 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
       console.log('Fetching user modules from API...');
       const userModulesResponse = await fetch(
-        "https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/get_my_modules",
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/get_my_modules',
         {
-          method: "GET",
+          method: 'GET',
           headers: getAuthHeaders(token),
-        }
+        },
       );
 
       console.log('Response status:', userModulesResponse.status);
@@ -85,7 +95,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       if (!userModulesResponse.ok) {
         const message = await userModulesResponse.text();
         console.log('Error response:', message);
-        throw new Error(message || "Failed to fetch your modules.");
+        throw new Error(message || 'Failed to fetch your modules.');
       }
 
       const userModulesData: UserModule[] = await userModulesResponse.json();
@@ -93,9 +103,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       setUserModules(userModulesData);
     } catch (err) {
       console.error('Error fetching user modules:', err);
-      setError(
-        err instanceof Error ? err.message : "Something went wrong loading modules."
-      );
+      setError(err instanceof Error ? err.message : 'Something went wrong loading modules.');
     } finally {
       setIsFetching(false);
     }
@@ -106,7 +114,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
     console.log('fetchAllModules called');
     if (!token) {
       console.log('No token available');
-      setError("You must be signed in to manage modules.");
+      setError('You must be signed in to manage modules.');
       return;
     }
 
@@ -117,11 +125,11 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       // Fetch user's modules first
       console.log('Fetching user modules from API...');
       const userModulesResponse = await fetch(
-        "https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/get_my_modules",
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/get_my_modules',
         {
-          method: "GET",
+          method: 'GET',
           headers: getAuthHeaders(token),
-        }
+        },
       );
 
       console.log('User modules response status:', userModulesResponse.status);
@@ -129,7 +137,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       if (!userModulesResponse.ok) {
         const message = await userModulesResponse.text();
         console.log('Error response:', message);
-        throw new Error(message || "Failed to fetch your modules.");
+        throw new Error(message || 'Failed to fetch your modules.');
       }
 
       const userModulesData: UserModule[] = await userModulesResponse.json();
@@ -138,11 +146,11 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       // Fetch all available modules
       console.log('Fetching all modules from API...');
       const allModulesResponse = await fetch(
-        "https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/all_modules",
+        'https://xnpm-iauo-ef2d.n7e.xano.io/api:yeS5OlQH/all_modules',
         {
-          method: "GET",
+          method: 'GET',
           headers: getAuthHeaders(token),
-        }
+        },
       );
 
       console.log('All modules response status:', allModulesResponse.status);
@@ -150,7 +158,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       if (!allModulesResponse.ok) {
         const message = await allModulesResponse.text();
         console.log('Error response:', message);
-        throw new Error(message || "Failed to fetch available modules.");
+        throw new Error(message || 'Failed to fetch available modules.');
       }
 
       const allModulesData: ModuleOption[] = await allModulesResponse.json();
@@ -160,9 +168,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
       setAllModules(allModulesData);
     } catch (err) {
       console.error('Error fetching modules:', err);
-      setError(
-        err instanceof Error ? err.message : "Something went wrong loading modules."
-      );
+      setError(err instanceof Error ? err.message : 'Something went wrong loading modules.');
     } finally {
       setIsFetching(false);
     }
@@ -170,26 +176,26 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
   const handleViewActiveModules = () => {
     console.log('handleViewActiveModules called, token:', token ? 'exists' : 'missing');
-    setViewMode("active");
+    setViewMode('active');
     if (token) {
       void fetchUserModules();
     } else {
-      setError("Authentication required. Please sign in.");
+      setError('Authentication required. Please sign in.');
     }
   };
 
   const handleViewAddModule = () => {
     console.log('handleViewAddModule called, token:', token ? 'exists' : 'missing');
-    setViewMode("add");
+    setViewMode('add');
     if (token) {
       void fetchAllModules();
     } else {
-      setError("Authentication required. Please sign in.");
+      setError('Authentication required. Please sign in.');
     }
   };
 
   const handleBack = () => {
-    setViewMode("landing");
+    setViewMode('landing');
     setError(null);
     setSuccessMessage(null);
   };
@@ -278,17 +284,17 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
 
   const getModuleIcon = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes("automatio")) return <Zap className="h-6 w-6 text-[#C33527]" />;
-    if (n.includes("analytic")) return <BarChart4 className="h-6 w-6 text-muted-foreground" />;
+    if (n.includes('automatio')) return <Zap className="h-6 w-6 text-[#C33527]" />;
+    if (n.includes('analytic')) return <BarChart4 className="h-6 w-6 text-muted-foreground" />;
     return <PlusCircle className="h-6 w-6 text-muted-foreground" />;
   };
 
   const getModuleDescription = (module: ModuleOption | UserModule) => {
     if (module.description) return module.description;
     const n = module.name.toLowerCase();
-    if (n.includes("automatio")) return "Set up automated workflows";
-    if (n.includes("analytic")) return "View insights and metrics";
-    return "Module for your workspace";
+    if (n.includes('automatio')) return 'Set up automated workflows';
+    if (n.includes('analytic')) return 'View insights and metrics';
+    return 'Module for your workspace';
   };
 
   // Debug logging
@@ -311,7 +317,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
         </DialogClose>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {viewMode !== "landing" && (
+            {viewMode !== 'landing' && (
               <button
                 onClick={handleBack}
                 className="rounded-md p-1 hover:bg-muted/60 transition"
@@ -321,11 +327,11 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
               </button>
             )}
             <PlusCircle className="h-5 w-5 text-[#C33527]" />
-            {viewMode === "landing" && "Module Hub"}
-            {viewMode === "active" && "Active Modules"}
-            {viewMode === "add" && "Add Module"}
+            {viewMode === 'landing' && 'Module Hub'}
+            {viewMode === 'active' && 'Active Modules'}
+            {viewMode === 'add' && 'Add Module'}
           </DialogTitle>
-          {viewMode === "landing" && (
+          {viewMode === 'landing' && (
             <DialogDescription>
               Manage your workspace modules. Add new modules or remove existing ones.
             </DialogDescription>
@@ -346,7 +352,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
           ) : null}
 
           {/* Landing Page - Two Navigation Buttons */}
-          {viewMode === "landing" && (
+          {viewMode === 'landing' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               <button
                 onClick={handleViewActiveModules}
@@ -377,7 +383,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
           )}
 
           {/* Active Modules View */}
-          {viewMode === "active" && (
+          {viewMode === 'active' && (
             <div>
               {isFetching ? (
                 <div className="text-sm text-muted-foreground">Loading modules…</div>
@@ -425,7 +431,7 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
           )}
 
           {/* Add Module View */}
-          {viewMode === "add" && (
+          {viewMode === 'add' && (
             <div>
               {isFetching ? (
                 <div className="text-sm text-muted-foreground">Loading modules…</div>
@@ -445,8 +451,8 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
                         onClick={() => !isActive && void addModule(module.id)}
                         className={`w-full flex items-center gap-3 p-3 border-2 rounded-xl transition-all text-left group ${
                           isActive
-                            ? "border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed"
-                            : "border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer"
+                            ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer'
                         }`}
                         disabled={isSaving || isActive}
                         aria-label={`Add ${module.name}`}
@@ -456,14 +462,18 @@ export function ModuleManager({ open, onClose }: ModuleManagerProps) {
                         </span>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h4 className={`font-semibold ${isActive ? "text-gray-400" : "text-gray-800 group-hover:text-blue-600"}`}>
+                            <h4
+                              className={`font-semibold ${isActive ? 'text-gray-400' : 'text-gray-800 group-hover:text-blue-600'}`}
+                            >
                               {module.name}
                             </h4>
                             <span className="text-sm text-muted-foreground">
-                              {isActive ? "Active" : isSaving ? "Adding…" : ""}
+                              {isActive ? 'Active' : isSaving ? 'Adding…' : ''}
                             </span>
                           </div>
-                          <p className={`text-sm ${isActive ? "text-gray-400" : "text-gray-500"}`}>{description}</p>
+                          <p className={`text-sm ${isActive ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {description}
+                          </p>
                         </div>
                       </button>
                     );
