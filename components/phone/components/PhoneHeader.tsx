@@ -57,12 +57,7 @@ export const PhoneHeader = ({
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           Online
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onSettingsClick}
-          className="h-8 w-8 p-0"
-        >
+        <Button variant="ghost" size="sm" onClick={onSettingsClick} className="h-8 w-8 p-0">
           <Settings className="w-5 h-5 text-muted-foreground" />
         </Button>
       </div>

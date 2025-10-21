@@ -9,9 +9,10 @@ interface DialerProps {
   onDigitClick: (digit: string) => void;
   onDelete: () => void;
   onCall: () => void;
+  onInputChange: (value: string) => void;
 }
 
-export const Dialer = ({ dialedNumber, onDigitClick, onDelete, onCall }: DialerProps) => {
+export const Dialer = ({ dialedNumber, onDigitClick, onDelete, onCall, onInputChange }: DialerProps) => {
   const dialButtons = [
     { digit: '1', letters: '' },
     { digit: '2', letters: 'ABC' },
@@ -35,7 +36,7 @@ export const Dialer = ({ dialedNumber, onDigitClick, onDelete, onCall }: DialerP
           value={dialedNumber}
           placeholder="Enter phone number"
           className="w-full text-center text-3xl font-light border-b-2 border-border focus:border-[#C33527] outline-none py-4 font-mono bg-transparent"
-          readOnly
+          onChange={(e) => onInputChange(e.target.value)}
         />
       </div>
 
@@ -48,9 +49,7 @@ export const Dialer = ({ dialedNumber, onDigitClick, onDelete, onCall }: DialerP
           >
             <span className="text-3xl font-light">{button.digit}</span>
             {button.letters && (
-              <span className="text-xs text-muted-foreground mt-1">
-                {button.letters}
-              </span>
+              <span className="text-xs text-muted-foreground mt-1">{button.letters}</span>
             )}
           </button>
         ))}

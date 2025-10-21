@@ -85,9 +85,7 @@ export const NavigationTabs = ({
         onClick={() => onViewChange('dialer')}
         className={cn(
           'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
-          currentView === 'dialer'
-            ? 'bg-[#C33527] text-white'
-            : 'text-foreground hover:bg-muted',
+          currentView === 'dialer' ? 'bg-[#C33527] text-white' : 'text-foreground hover:bg-muted',
         )}
       >
         <div className="flex items-center gap-3">
@@ -100,19 +98,14 @@ export const NavigationTabs = ({
         onClick={() => onViewChange('contacts')}
         className={cn(
           'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
-          currentView === 'contacts'
-            ? 'bg-[#C33527] text-white'
-            : 'text-foreground hover:bg-muted',
+          currentView === 'contacts' ? 'bg-[#C33527] text-white' : 'text-foreground hover:bg-muted',
         )}
       >
         <div className="flex items-center gap-3">
           <Users className="w-5 h-5" />
           <span className="font-medium text-sm">Contacts</span>
         </div>
-        <Badge
-          variant={currentView === 'contacts' ? 'secondary' : 'outline'}
-          className="text-xs"
-        >
+        <Badge variant={currentView === 'contacts' ? 'secondary' : 'outline'} className="text-xs">
           {contactsCount}
         </Badge>
       </button>
@@ -121,9 +114,7 @@ export const NavigationTabs = ({
         onClick={() => onViewChange('recent')}
         className={cn(
           'w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors',
-          currentView === 'recent'
-            ? 'bg-[#C33527] text-white'
-            : 'text-foreground hover:bg-muted',
+          currentView === 'recent' ? 'bg-[#C33527] text-white' : 'text-foreground hover:bg-muted',
         )}
       >
         <div className="flex items-center gap-3">

@@ -208,6 +208,12 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     setDialedNumber((prev) => prev.slice(0, -1));
   };
 
+  const handleInputChange = (value: string) => {
+    // Only allow digits, +, -, (, ), and spaces for phone numbers
+    const sanitizedValue = value.replace(/[^\d+\-() ]/g, '');
+    setDialedNumber(sanitizedValue);
+  };
+
   // Initialize Twilio device
   const initializeTwilioDevice = async () => {
     if (twilioDevice) return;
@@ -582,6 +588,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   onDigitClick={addDigit}
                   onDelete={deleteDigit}
                   onCall={() => makeCall(dialedNumber)}
+                  onInputChange={handleInputChange}
                 />
               )}
 
@@ -605,6 +612,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                   missedCallsCount={missedCallsCount}
                   formatTimestamp={formatTimestamp}
                   formatDuration={formatDuration}
+                  onRefresh={mutateCallLogs}
                 />
               )}
             </div>
@@ -676,6 +684,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     onDigitClick={addDigit}
                     onDelete={deleteDigit}
                     onCall={() => makeCall(dialedNumber)}
+                    onInputChange={handleInputChange}
                   />
                 )}
 
@@ -699,6 +708,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
                     missedCallsCount={missedCallsCount}
                     formatTimestamp={formatTimestamp}
                     formatDuration={formatDuration}
+                    onRefresh={mutateCallLogs}
                   />
                 )}
               </div>
