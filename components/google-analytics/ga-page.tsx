@@ -222,7 +222,6 @@ export default function GaPage() {
       };
 
       const apiUrl = getGoogleAnalyticsApiUrl(XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.ACCOUNT_SUMMARY);
-      console.log('Sending POST request to Account Summary:', apiUrl, payload);
 
       const response = await apiRequest<GoogleAccountSummaryResponse>(
         apiUrl,
@@ -345,8 +344,8 @@ export default function GaPage() {
                   <div className="rounded-md border p-4">
                     {overallSummary.map((item) => (
                       <div key={item.metric} className="flex flex-col sm:flex-row justify-between border-b last:border-b-0 py-2">
-                        <div className="font-medium sm:w-1/2">{item.metric}</div>
-                        <div className="sm:w-1/2 text-right sm:text-left lg:text-center">{item.value}</div>
+                        <div className="font-normal text-sm sm:w-1/2">{item.metric}</div>
+                        <div className="text-sm sm:w-1/2 text-right sm:text-left lg:text-center">{item.value}</div>
                       </div>
                     ))}
                   </div>
