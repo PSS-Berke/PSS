@@ -578,23 +578,13 @@ export default function GaPage() {
               {overallSummary.length > 0 && (
                 <div className="mt-4">
                   <h4 className="mb-2 text-md font-semibold">Overall Metrics Summary Table</h4>
-                  <div className="rounded-md border">
-                    <table className="w-full caption-bottom text-sm">
-                      <thead className="[&_tr]:border-b">
-                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Metric</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody className="[&_tr:last-child]:border-0">
-                        {overallSummary.map((item) => (
-                          <tr key={item.metric} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                            <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{item.metric}</td>
-                            <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{item.value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="rounded-md border p-4">
+                    {overallSummary.map((item) => (
+                      <div key={item.metric} className="flex flex-col sm:flex-row justify-between border-b last:border-b-0 py-2">
+                        <div className="font-medium sm:w-1/2">{item.metric}</div>
+                        <div className="sm:w-1/2 text-right sm:text-left lg:text-center">{item.value}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
