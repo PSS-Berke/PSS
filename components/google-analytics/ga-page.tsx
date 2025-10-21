@@ -56,7 +56,7 @@ export default function GaPage() {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryData, setSummaryData] = useState<GoogleAccountSummaryResponse | null>(null);
   const [dateChartData, setDateChartData] = useState<ChartData[]>([]);
-  const [countryChartData, setCountryChartData] = useState<ChartData[]>([]);
+  const [topChartData, setTopChartData] = useState<ChartData[]>([]);
   const [kpiSummary, setKpiSummary] = useState<KpiSummary | null>(null);
   const [topDaysActivity, setTopDaysActivity] = useState<TopDayActivity[]>([]);
   const [adMetricsTrend, setAdMetricsTrend] = useState<AdMetricsTrend[]>([]);
@@ -152,7 +152,7 @@ export default function GaPage() {
       setSummaryData(null);
       // Reset all data when collapsing
       setDateChartData([]);
-      setCountryChartData([]);
+      setTopChartData([]);
       setKpiSummary(null);
       setTopDaysActivity([]);
       setAdMetricsTrend([]);
@@ -173,7 +173,7 @@ export default function GaPage() {
     setSummaryError(null);
     setSummaryData(null);
     setDateChartData([]);
-    setCountryChartData([]);
+    setTopChartData([]);
     setKpiSummary(null);
     setTopDaysActivity([]);
     setAdMetricsTrend([]);
@@ -240,13 +240,13 @@ export default function GaPage() {
         payload.dimensions,
       );
       setDateChartData(processedData.dateChartData);
-      setCountryChartData(processedData.countryChartData);
       setKpiSummary(processedData.kpiSummary);
       setTopDaysActivity(processedData.topDaysActivity);
       setAdMetricsTrend(processedData.adMetricsTrend);
       setOverallSummary(processedData.overallSummary);
       setNewVsReturningPieChartData(processedData.newVsReturningPieChartData);
       setCalculatedKPIs(processedData.calculatedKPIs);
+      setTopChartData(processedData.topChartData);
     } catch (error: any) {
       console.error('Error retrieving Google Analytics account summary:', error);
       setSummaryError(
@@ -300,13 +300,13 @@ export default function GaPage() {
           {summaryLoading && <div>Loading account summary...</div>}
           {summaryError && <div className="text-red-500">{summaryError}</div>}
 
-          {!summaryLoading && !summaryError && (dateChartData.length > 0 || countryChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
+          {!summaryLoading && !summaryError && (dateChartData.length > 0 || topChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
             <div className="mt-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm space-y-4">
               <h3 className="mb-2 text-lg font-semibold">Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
 
-              {countryChartData.length > 0 && (
+              {topChartData.length > 0 && (
                 <div className="mt-4">
-                  <TopChartDataTable countryChartData={countryChartData} />
+                  <TopChartDataTable topChartData={topChartData} />
                 </div>
               )}
                 

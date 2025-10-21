@@ -18,7 +18,7 @@ export const processSummaryDataForCharts = (
 ): ProcessedSummaryData => {
   if (!summary || !summary.rows) return {
     dateChartData: [],
-    countryChartData: [],
+    topChartData: [],
     kpiSummary: { activeUsers: { sum: 0, avg: 0 }, newUsers: { sum: 0, avg: 0 }, screenPageViews: { sum: 0, avg: 0 }, publisherAdClicks: { sum: 0, avg: 0 }, publisherAdImpressions: { sum: 0, avg: 0 } },
     topDaysActivity: [],
     adMetricsTrend: [], // Added adMetricsTrend initialization
@@ -28,7 +28,7 @@ export const processSummaryDataForCharts = (
   };
 
   const dateChartMap = new Map<string, ChartData>();
-  const countryChartMap = new Map<string, ChartData>();
+  const topChartMap = new Map<string, ChartData>();
 
   let totalActiveUsers = 0;
   let totalNewUsers = 0;
@@ -84,10 +84,10 @@ export const processSummaryDataForCharts = (
 
     // Aggregate for Country Chart
     if (countryIndex !== -1) {
-      if (!countryChartMap.has(country)) {
-        countryChartMap.set(country, { name: country } as ChartData);
+      if (!topChartMap.has(country)) {
+        topChartMap.set(country, { name: country } as ChartData);
       }
-      const currentData = countryChartMap.get(country)!;
+      const currentData = topChartMap.get(country)!;
       metrics.forEach((metric, idx) => {
         currentData[metric.name] = (currentData[metric.name] || 0) + (metricValues[idx] || 0);
       });
@@ -95,7 +95,7 @@ export const processSummaryDataForCharts = (
   });
 
   const dateChartData = Array.from(dateChartMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  const countryChartData = Array.from(countryChartMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  const topChartData = Array.from(topChartMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
   // Calculate KPIs
   const avgActiveUsers = daysWithData > 0 ? totalActiveUsers / daysWithData : 0;
@@ -152,7 +152,7 @@ export const processSummaryDataForCharts = (
 
   return {
     dateChartData,
-    countryChartData,
+    topChartData,
     kpiSummary,
     topDaysActivity,
     adMetricsTrend,

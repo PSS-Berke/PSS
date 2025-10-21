@@ -83,11 +83,11 @@ export interface CalculatedKPIs {
 
 export interface ProcessedSummaryData {
   dateChartData: ChartData[];
-  countryChartData: ChartData[];
   kpiSummary: KpiSummary;
   topDaysActivity: TopDayActivity[];
   adMetricsTrend: AdMetricsTrend[];
   overallSummary: OverallSummaryItem[];
   newVsReturningPieChartData: NewVsReturningData[];
   calculatedKPIs: CalculatedKPIs;
+  topChartData: ChartData[];
 }

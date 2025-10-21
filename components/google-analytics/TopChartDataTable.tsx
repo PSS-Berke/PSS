@@ -2,11 +2,11 @@ import React from 'react';
 import { ChartData } from './interfaces';
 
 interface TopChartDataTableProps {
-  countryChartData: ChartData[];
+  topChartData: ChartData[];
 }
 
 export const TopChartDataTable: React.FC<TopChartDataTableProps> = ({
-  countryChartData,
+  topChartData,
 }) => {
   const metrics = [
     { label: 'Sessions', key: 'sessions' },
@@ -34,7 +34,7 @@ export const TopChartDataTable: React.FC<TopChartDataTableProps> = ({
             </tr>
           </thead>
           <tbody className="[&_tr:last-child]:border-0">
-            {countryChartData.map((data, index) => (
+            {topChartData.map((data, index) => (
               <tr key={index} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.sessions || 0}</td>
                 <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">{data.activeUsers || 0}</td>
@@ -46,12 +46,12 @@ export const TopChartDataTable: React.FC<TopChartDataTableProps> = ({
             ))}
           </tbody>
         </table>
-        {countryChartData.length === 0 && <p className="p-4">No country data available.</p>}
+        {topChartData.length === 0 && <p className="p-4">No country data available.</p>}
       </div>
 
       {/* Mobile View */}
       <div className="md:hidden rounded-md border p-4">
-        {countryChartData.map((data, index) => (
+        {topChartData.map((data, index) => (
           <div key={index} className="mb-4 last:mb-0 rounded-md border p-4 shadow-sm">
             {metrics.map((metric) => (
               <div key={metric.key} className="flex flex-col sm:flex-row justify-between border-b last:border-b-0 py-2">
