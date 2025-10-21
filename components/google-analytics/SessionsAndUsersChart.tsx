@@ -21,6 +21,21 @@ const chartConfig = {
 export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({
   dateChartData,
 }) => {
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkIsMobile);
+    };
+  }, []);
+
   return (
     <div className="mb-4">
       <h4 className="mb-2 text-md font-semibold">Sessions and Users over Time</h4>
@@ -40,7 +55,12 @@ export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({
             axisLine={false}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent />} />
+          <ChartLegend
+            verticalAlign="bottom"
+            layout={isMobile ? 'vertical' : 'horizontal'}
+            wrapperStyle={isMobile ? { minHeight: 80, paddingLeft: 10, paddingRight: 10 } : {}}
+            content={<ChartLegendContent className={isMobile ? 'gap-1 flex-col' : ''} />}
+          />
           <Bar dataKey="sessions" fill="var(--color-sessions)" radius={4} />
           <Bar dataKey="activeUsers" fill="var(--color-activeUsers)" radius={4} />
           <Bar dataKey="screenPageViews" fill="var(--color-screenPageViews)" radius={4} />
