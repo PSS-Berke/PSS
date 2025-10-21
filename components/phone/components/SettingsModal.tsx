@@ -43,7 +43,6 @@ interface SettingsModalProps {
 
 export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsModalProps) => {
   const [copiedNumber, setCopiedNumber] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -154,6 +153,7 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
               <Input
                 id="company_name"
                 type="text"
+                readOnly
                 value={company?.company_name || ''}
                 disabled
                 className="pl-10 bg-muted"
@@ -171,6 +171,7 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
                 <Input
                   id="phone_number"
                   type="tel"
+                  readOnly
                   {...register('phone_number')}
                   placeholder="+1 (555) 123-4567"
                   className={cn(
@@ -211,14 +212,16 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
               <label
                 htmlFor="enable_voice_mail"
                 className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
-                  enableVoiceMail ? "bg-[#C33527]" : "bg-border"
+                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer',
+                  enableVoiceMail ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
-                <span className={cn(
-                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                  enableVoiceMail ? "translate-x-6" : "translate-x-1"
-                )} />
+                <span
+                  className={cn(
+                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                    enableVoiceMail ? 'translate-x-6' : 'translate-x-1',
+                  )}
+                />
               </label>
             </div>
           </div>
@@ -241,14 +244,16 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
               <label
                 htmlFor="block_incoming_calls"
                 className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
-                  blockIncomingCalls ? "bg-[#C33527]" : "bg-border"
+                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer',
+                  blockIncomingCalls ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
-                <span className={cn(
-                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                  blockIncomingCalls ? "translate-x-6" : "translate-x-1"
-                )} />
+                <span
+                  className={cn(
+                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                    blockIncomingCalls ? 'translate-x-6' : 'translate-x-1',
+                  )}
+                />
               </label>
             </div>
           </div>
@@ -269,14 +274,16 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
               <label
                 htmlFor="record_all_calls"
                 className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer",
-                  recordAllCalls ? "bg-[#C33527]" : "bg-border"
+                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer',
+                  recordAllCalls ? 'bg-[#C33527]' : 'bg-border',
                 )}
               >
-                <span className={cn(
-                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                  recordAllCalls ? "translate-x-6" : "translate-x-1"
-                )} />
+                <span
+                  className={cn(
+                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                    recordAllCalls ? 'translate-x-6' : 'translate-x-1',
+                  )}
+                />
               </label>
             </div>
           </div>

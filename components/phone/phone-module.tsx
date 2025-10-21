@@ -24,10 +24,16 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth, useUser } from '@/lib/xano/auth-context';
 import { Device } from '@twilio/voice-sdk';
-import { apiGetCallLogs, apiGetContacts, apiStoreCallLog } from '@/lib/services/PhoneService';
+import {
+  apiGetCallLogs,
+  apiGetContacts,
+  apiGetRecordings,
+  apiStoreCallLog,
+  apiUpdateCallLog,
+} from '@/lib/services/PhoneService';
 import { AxiosError } from 'axios';
 import useSWR from 'swr';
-import { CallLog, Contact } from '@/@types/phone';
+import { CallLog, Contact, Recording, RecordingsResponse } from '@/@types/phone';
 import { AddContact } from './components/AddContact';
 import { ContactCard } from './components/ContactCard';
 import { SettingsModal } from './components/SettingsModal';
@@ -151,6 +157,13 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     mutate: mutateCompany,
   } = useSWR<CompanyRedacted[]>('/api:ZKUwjF5k/company_details', apiGetCompanyDetails);
 
+  const {
+    data: recordingsData,
+    error: recordingsError,
+    isLoading: recordingsIsLoading,
+    mutate: mutateRecordings,
+  } = useSWR<RecordingsResponse>('/api:mDRLMGRq/call_recordings', apiGetRecordings);
+
   const company = companyData?.find((c: CompanyRedacted) => c.company_id === user?.company_id);
 
   const toggleExpanded = () => {
@@ -168,11 +181,6 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeCall]);
-
-  // Debug activeCall changes
-  useEffect(() => {
-    console.log('ActiveCall state changed:', activeCall);
   }, [activeCall]);
 
   // Cleanup timeouts on unmount
@@ -214,7 +222,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
   };
 
@@ -263,8 +271,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       });
 
       device.on('incoming', async (call) => {
-        console.log('Incoming call from:', call.parameters.From);
         const from = call.parameters.From;
+        const callSid = call.parameters.CallSid;
         // Look up contact by phone number
         const contact = contactsData?.find((c: Contact) => String(c.phone_number) === String(from));
         if (company?.block_incoming_calls == true) {
@@ -279,6 +287,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
             duration: 0,
             user_id: user?.id || 0,
             contact_id: contact?.id || 0,
+            call_sid: callSid,
+            disconnected_at: null,
           });
           return;
         }
@@ -304,6 +314,8 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
           duration: 0,
           user_id: user?.id || 0,
           contact_id: contact?.id || 0,
+          call_sid: callSid,
+          disconnected_at: null,
         });
 
         // Set up auto-reject timeout (30 seconds)
@@ -348,7 +360,7 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
         status: 'ringing',
         startTime: new Date().toISOString(),
       };
-      console.log('Setting active call:', activeCallData);
+
       setActiveCall(activeCallData);
       setCallDuration(0);
 
@@ -356,56 +368,68 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
       const call = await twilioDevice.connect({
         params: {
           To: number,
+          record: company?.record_all_calls == true ? 'true' : 'false',
+          user_id: String(user?.id || 0),
+          company_id: String(company?.company_id || 0),
         },
       });
+
+      console.log('OUTBOUND CALL SID:', call.parameters.CallSid);
+      console.log('OUTBOUND CALL', call);
 
       // Store the call object for event handling
       setCurrentCall(call);
 
-      //set up call log
-      await apiStoreCallLog({
-        id: 0,
-        created_at: new Date().toISOString(),
-        phone_number: number,
-        contact_name: contact?.name || 'Unknown',
-        direction: 'outbound',
-        status: 'completed',
-        duration: 0,
-        user_id: user?.id || 0,
-        contact_id: contact?.id || 0,
-      });
-
       // Set up call event handlers
-      call.on('accept', () => {
+      call.on('accept', async () => {
         console.log('CALL STATUS - ACCEPTED');
         setActiveCall((prev: any) => (prev ? { ...prev, status: 'in-progress' } : null));
         setCallStatus('ACCEPTED');
+
+        // Store call log after call is accepted (when CallSid is available)
+        await apiStoreCallLog({
+          id: 0,
+          created_at: new Date().toISOString(),
+          phone_number: number,
+          contact_name: contact?.name || 'Unknown',
+          direction: 'outbound',
+          status: 'completed',
+          duration: 0,
+          user_id: user?.id || 0,
+          contact_id: contact?.id || 0,
+          call_sid: call.parameters?.CallSid || '',
+          disconnected_at: null,
+        });
       });
 
-      call.on('disconnect', () => {
-        console.log('CALL STATUS - DISCONNECTED');
+      const handleCallEnd = (reason: string) => {
+        console.log(`CALL STATUS -> ${reason.toUpperCase()}`);
         setActiveCall(null);
         setCurrentCall(null);
         setCallDuration(0);
         setIsMuted(false);
         setIsOnHold(false);
-        setCallStatus('DISCONNECTED');
+        setCallStatus(reason.toUpperCase() as any);
+      };
+
+      // Triggered when the media stream ends
+      call.on('disconnect', async () => {
+        const call_sid = call.parameters?.CallSid || '';
+        await apiUpdateCallLog(call_sid, new Date().toISOString());
+        handleCallEnd('DISCONNECTED');
+        mutateCallLogs();
       });
 
-      call.on('cancel', () => {
-        console.log('CALL STATUS - CANCELLED');
-        setActiveCall(null);
-        setCurrentCall(null);
-        setCallDuration(0);
-        setCallStatus('CANCELLED');
+      // Triggered when the call is cancelled
+      call.on('cancel', async () => {
+        handleCallEnd('CANCELLED');
+        mutateCallLogs();
       });
 
-      call.on('reject', () => {
-        console.log('CALL STATUS - REJECTED');
-        setActiveCall(null);
-        setCurrentCall(null);
-        setCallDuration(0);
-        setCallStatus('REJECTED');
+      // Triggered when the call is rejected
+      call.on('reject', async () => {
+        handleCallEnd('REJECTED');
+        mutateCallLogs();
       });
     } catch (error) {
       console.error('Failed to make call:', error);

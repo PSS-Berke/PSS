@@ -12,7 +12,13 @@ interface DialerProps {
   onInputChange: (value: string) => void;
 }
 
-export const Dialer = ({ dialedNumber, onDigitClick, onDelete, onCall, onInputChange }: DialerProps) => {
+export const Dialer = ({
+  dialedNumber,
+  onDigitClick,
+  onDelete,
+  onCall,
+  onInputChange,
+}: DialerProps) => {
   const dialButtons = [
     { digit: '1', letters: '' },
     { digit: '2', letters: 'ABC' },
