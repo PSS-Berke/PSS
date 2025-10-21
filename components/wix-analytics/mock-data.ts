@@ -216,4 +216,11 @@ export const PLATFORMS = [
       { id: 'seo-content', label: 'SEO & Content', key: 'gsc-seo-content' },
     ],
   },
+  {
+    id: 'google-analytics',
+    label: 'Google Analytics',
+    categories: [
+      { id: 'analytics-tracking', label: 'Analytics & Tracking', key: 'google-analytics-tracking' },
+    ],
+  },
 ];

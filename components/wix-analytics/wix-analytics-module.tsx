@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, ChevronDown, ChevronUp, X, Radio, Globe } from 'lucide-react';
 import { PlatformSidebar } from './platform-sidebar';
 import { AnalyticsDashboard } from './analytics-dashboard';
+import GaPage from '@/components/google-analytics/ga-page';
 import { MOCK_ANALYTICS_DATA, PLATFORMS } from './mock-data';
 
 interface WixAnalyticsModuleProps {
@@ -75,7 +76,7 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
               className="flex-shrink-0 border-b cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={toggleExpanded}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-col md:flex-row">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <BarChart3 className="h-5 w-5 text-primary" />
@@ -113,7 +114,12 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
                   onSelectCategory={handleSelectCategory}
                 />
                 <div className="flex-1 overflow-auto p-6 w-full">
-                  <AnalyticsDashboard categoryData={getCurrentCategoryData()} />
+                  {selectedPlatform === 'google-analytics' &&
+                  selectedCategory === 'google-analytics-tracking' ? (
+                    <GaPage />
+                  ) : (
+                    <AnalyticsDashboard categoryData={getCurrentCategoryData()} />
+                  )}
                 </div>
               </div>
 
@@ -134,7 +140,12 @@ export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalytics
                   />
                 </div>
                 <div className="flex-1 min-w-0 h-full overflow-auto">
-                  <AnalyticsDashboard categoryData={getCurrentCategoryData()} className="h-full" />
+                  {selectedPlatform === 'google-analytics' &&
+                  selectedCategory === 'google-analytics-tracking' ? (
+                    <GaPage />
+                  ) : (
+                    <AnalyticsDashboard categoryData={getCurrentCategoryData()} className="h-full" />
+                  )}
                 </div>
               </div>
             </CardContent>
