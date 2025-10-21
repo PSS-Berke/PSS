@@ -24,10 +24,10 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth, useUser } from '@/lib/xano/auth-context';
 import { Device } from '@twilio/voice-sdk';
-import { apiGetCallLogs, apiGetContacts, apiStoreCallLog } from '@/lib/services/PhoneService';
+import { apiGetCallLogs, apiGetContacts, apiGetRecordings, apiStoreCallLog } from '@/lib/services/PhoneService';
 import { AxiosError } from 'axios';
 import useSWR from 'swr';
-import { CallLog, Contact } from '@/@types/phone';
+import { CallLog, Contact, Recording, RecordingsResponse } from '@/@types/phone';
 import { AddContact } from './components/AddContact';
 import { ContactCard } from './components/ContactCard';
 import { SettingsModal } from './components/SettingsModal';
@@ -150,6 +150,15 @@ export function PhoneModule({ className, onExpandedChange }: PhoneModuleProps) {
     isLoading: companyIsLoading,
     mutate: mutateCompany,
   } = useSWR<CompanyRedacted[]>('/api:ZKUwjF5k/company_details', apiGetCompanyDetails);
+
+  const {
+    data: recordingsData,
+    error: recordingsError,
+    isLoading: recordingsIsLoading,
+    mutate: mutateRecordings,
+  } = useSWR<RecordingsResponse>('/api:mDRLMGRq/call_recordings', apiGetRecordings);
+
+
 
   const company = companyData?.find((c: CompanyRedacted) => c.company_id === user?.company_id);
 

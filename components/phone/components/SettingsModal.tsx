@@ -43,7 +43,6 @@ interface SettingsModalProps {
 
 export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsModalProps) => {
   const [copiedNumber, setCopiedNumber] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -154,6 +153,7 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
               <Input
                 id="company_name"
                 type="text"
+                readOnly
                 value={company?.company_name || ''}
                 disabled
                 className="pl-10 bg-muted"
@@ -171,6 +171,7 @@ export const SettingsModal = ({ isOpen, onClose, company, onSuccess }: SettingsM
                 <Input
                   id="phone_number"
                   type="tel"
+                  readOnly
                   {...register('phone_number')}
                   placeholder="+1 (555) 123-4567"
                   className={cn(

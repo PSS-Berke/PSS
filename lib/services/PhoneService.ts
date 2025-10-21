@@ -1,4 +1,4 @@
-import type { AddContactRequest, CallLog, Contact } from '@/@types/phone';
+import type { AddContactRequest, CallLog, Contact, Recording, RecordingsResponse } from '@/@types/phone';
 import ApiService from './ApiService';
 
 export const apiAddContact = (data: AddContactRequest) => {
@@ -31,6 +31,14 @@ export const apiGetCallLogs = () => {
   });
 };
 
+
+export const apiGetRecordings = () => {
+  return ApiService.fetchDataWithAxios<RecordingsResponse>({
+    url: '/api:mDRLMGRq/call_recordings',
+    method: 'get',
+  });
+};
+
 export const apiDeleteContact = (id: number) => {
   return ApiService.fetchDataWithAxios<Contact>({
     url: `/api:GqG2MSGo/contacts/${id}`,
@@ -45,3 +53,6 @@ export const apiStoreCallLog = (data: CallLog) => {
     data,
   });
 };
+
+
+
