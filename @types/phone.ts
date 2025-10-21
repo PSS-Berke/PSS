@@ -27,6 +27,8 @@ export type CallLog = {
     duration: number
     user_id: number
     contact_id: number
+    call_sid: string
+    disconnected_at: string | null
 }
 
 export type Recording = {
