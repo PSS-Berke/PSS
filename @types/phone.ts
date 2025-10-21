@@ -23,7 +23,7 @@ export type CallLog = {
     phone_number: string
     contact_name: string
     direction: 'inbound' | 'outbound'
-    status: 'completed' | 'failed' | 'busy' | 'no-answer' | 'missed'
+    status: 'completed' | 'failed' | 'busy' | 'no-answer' | 'missed' | 'rejected'
     duration: number
     user_id: number
     contact_id: number
