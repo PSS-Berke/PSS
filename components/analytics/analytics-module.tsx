@@ -11,12 +11,12 @@ import { AnalyticsDashboard } from './analytics-dashboard';
 import GaPage from '@/components/google-analytics/ga-page';
 import { MOCK_ANALYTICS_DATA, PLATFORMS } from './mock-data';
 
-interface WixAnalyticsModuleProps {
+interface AnalyticsModuleProps {
   className?: string;
   onExpandedChange?: (isExpanded: boolean) => void;
 }
 
-export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalyticsModuleProps) {
+export function AnalyticsModule({ className, onExpandedChange }: AnalyticsModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('google-analytics');

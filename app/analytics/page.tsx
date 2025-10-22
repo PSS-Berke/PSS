@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { WixAnalyticsModule } from '@/components/wix-analytics/wix-analytics-module';
+import { AnalyticsModule } from '@/components/analytics/analytics-module';
 import { WixAnalyticsProvider } from '@/lib/xano/wix-analytics-context';
 
 export default function AnalyticsPage() {
@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
             </p>
           </div>
           <div className="w-full px-2">
-            <WixAnalyticsModule className="w-full" />
+            <AnalyticsModule className="w-full" />
           </div>
         </div>
       </main>
