@@ -19,8 +19,8 @@ interface WixAnalyticsModuleProps {
 export function WixAnalyticsModule({ className, onExpandedChange }: WixAnalyticsModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>('wix');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>('wix-overview');
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>('google-analytics');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>('google-analytics-tracking');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
