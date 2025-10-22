@@ -20,7 +20,7 @@ import { CallPrepModule } from '@/components/call-prep/call-prep-module';
 import { BattleCardModule } from '@/components/battle-card/battle-card-module';
 import { LinkedInModule } from '@/components/linkedin/linkedin-module';
 import { SocialMediaModule } from '@/components/social/social-media-module';
-import { WixAnalyticsModule } from '@/components/wix-analytics/wix-analytics-module';
+import { AnalyticsModule } from '@/components/analytics/analytics-module';
 import { CallPrepProvider } from '@/lib/xano/call-prep-context';
 import { BattleCardProvider } from '@/lib/xano/battle-card-context';
 import { LinkedInProvider } from '@/lib/xano/linkedin-context';
@@ -42,7 +42,7 @@ interface ModuleConfig {
 }
 
 const ALL_MODULES: ModuleConfig[] = [
-  { id: 1, sortId: 'wixanalytics', Component: WixAnalyticsModule, Provider: WixAnalyticsProvider },
+  { id: 1, sortId: 'wixanalytics', Component: AnalyticsModule, Provider: WixAnalyticsProvider },
   { id: 4, sortId: 'linkedin', Component: LinkedInModule, Provider: LinkedInProvider },
   { id: 5, sortId: 'social', Component: SocialMediaModule, Provider: SocialMediaProvider },
   { id: 6, sortId: 'callprep', Component: CallPrepModule, Provider: CallPrepProvider },
