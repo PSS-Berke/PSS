@@ -20,7 +20,9 @@ export function AnalyticsModule({ className, onExpandedChange }: AnalyticsModule
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('google-analytics');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>('google-analytics-tracking');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    'google-analytics-tracking',
+  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -144,7 +146,10 @@ export function AnalyticsModule({ className, onExpandedChange }: AnalyticsModule
                   selectedCategory === 'google-analytics-tracking' ? (
                     <GaPage />
                   ) : (
-                    <AnalyticsDashboard categoryData={getCurrentCategoryData()} className="h-full" />
+                    <AnalyticsDashboard
+                      categoryData={getCurrentCategoryData()}
+                      className="h-full"
+                    />
                   )}
                 </div>
               </div>

@@ -17,6 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { apiDisconnectGoogleAnalytics } from '@/lib/services/AnalyticsService';
+import { AxiosError } from 'axios';
 
 type UserModule = {
   id: number;
@@ -48,6 +50,9 @@ export function ActiveModulesView() {
   const [disconnectingAccountId, setDisconnectingAccountId] = useState<number | null>(null);
   const [accountToDisconnect, setAccountToDisconnect] = useState<TwitterAccount | null>(null);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
+  const [isDisconnectingGoogleAnalytics, setIsDisconnectingGoogleAnalytics] = useState(false);
+  const [showDisconnectGAModal, setShowDisconnectGAModal] = useState(false);
+  const [gaDisconnectError, setGaDisconnectError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserModules = async () => {
@@ -321,6 +326,41 @@ export function ActiveModulesView() {
     }
   };
 
+  const handleDisconnectGoogleAnalytics = async () => {
+    if (!token) return;
+
+    setIsDisconnectingGoogleAnalytics(true);
+    setGaDisconnectError(null);
+
+    try {
+      if (!user?.company_id) {
+        setGaDisconnectError('Company ID not found');
+        return;
+      }
+      await apiDisconnectGoogleAnalytics({ company_id: user?.company_id });
+
+      await refreshUser();
+      setShowDisconnectGAModal(false);
+    } catch (error) {
+      console.error('Error disconnecting Google Analytics:', error);
+      setGaDisconnectError((error as AxiosError).message);
+    } finally {
+      setIsDisconnectingGoogleAnalytics(false);
+    }
+  };
+
+  const openDisconnectGAModal = () => {
+    setShowDisconnectGAModal(true);
+    setGaDisconnectError(null);
+  };
+
+  const closeDisconnectGAModal = () => {
+    if (!isDisconnectingGoogleAnalytics) {
+      setShowDisconnectGAModal(false);
+      setGaDisconnectError(null);
+    }
+  };
+
   const selectedModule = userModules.find((m) => m.id === selectedModuleId);
   const selectedModuleName = selectedModule?.name || 'Module';
 
@@ -380,35 +420,69 @@ export function ActiveModulesView() {
           oauthSection={
             selectedModule ? (
               <div className="space-y-4 mt-4">
-                {/* Show Google Analytics button for Web Analytics module */}
+                {/* Show Google Analytics section for Web Analytics module */}
                 {selectedModuleName.toLowerCase().includes('analytics') &&
                   user?.ga_access?.access && (
-                    <div className="flex gap-2 items-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 px-3"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (!user?.ga_access?.connected) {
-                            handleConnectGoogleAnalytics();
-                          }
-                        }}
-                        disabled={isConnectingGoogleAnalytics || user?.ga_access?.connected}
-                      >
-                        {isConnectingGoogleAnalytics ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <FaGoogle className="h-4 w-4" />
-                        )}
-                        <span className="hidden lg:inline">
-                          {user?.ga_access?.connected
-                            ? 'Google Analytics Connected'
-                            : isConnectingGoogleAnalytics
-                              ? 'Connecting...'
-                              : 'Connect Google Analytics'}
-                        </span>
-                      </Button>
+                    <div className="space-y-3">
+                      <div className="flex gap-2 items-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 px-3"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (!user?.ga_access?.connected) {
+                              handleConnectGoogleAnalytics();
+                            }
+                          }}
+                          disabled={isConnectingGoogleAnalytics || user?.ga_access?.connected}
+                        >
+                          {isConnectingGoogleAnalytics ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FaGoogle className="h-4 w-4" />
+                          )}
+                          <span className="hidden lg:inline">
+                            {user?.ga_access?.connected
+                              ? 'Google Analytics Connected'
+                              : isConnectingGoogleAnalytics
+                                ? 'Connecting...'
+                                : 'Connect Google Analytics'}
+                          </span>
+                        </Button>
+                      </div>
+
+                      {/* Google Analytics Connection Status */}
+                      {user?.ga_access?.connected && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Connected Accounts:
+                          </p>
+                          <div className="flex items-center justify-between p-3 border rounded-lg bg-background/50">
+                            <div className="flex items-center gap-3">
+                              <FaGoogle className="h-5 w-5" />
+                              <div>
+                                <p className="text-sm font-medium">Google Analytics</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Analytics account connected
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={openDisconnectGAModal}
+                              disabled={isDisconnectingGoogleAnalytics}
+                            >
+                              {isDisconnectingGoogleAnalytics ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Disconnect'
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -537,6 +611,60 @@ export function ActiveModulesView() {
                 </>
               ) : (
                 'Disconnect Account'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Google Analytics Disconnect Confirmation Modal */}
+      <Dialog
+        open={showDisconnectGAModal}
+        onOpenChange={(open) => !open && closeDisconnectGAModal()}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Disconnect Google Analytics</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to disconnect Google Analytics? This will remove access to your
+              analytics data.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/30">
+            <FaGoogle className="h-8 w-8" />
+            <div>
+              <p className="text-sm font-medium">Google Analytics</p>
+              <p className="text-xs text-muted-foreground">Analytics account connected</p>
+            </div>
+          </div>
+
+          {gaDisconnectError && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+              <p className="text-sm text-destructive">{gaDisconnectError}</p>
+            </div>
+          )}
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={closeDisconnectGAModal}
+              disabled={isDisconnectingGoogleAnalytics}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDisconnectGoogleAnalytics}
+              disabled={isDisconnectingGoogleAnalytics}
+            >
+              {isDisconnectingGoogleAnalytics ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Disconnecting...
+                </>
+              ) : (
+                'Disconnect Analytics'
               )}
             </Button>
           </DialogFooter>

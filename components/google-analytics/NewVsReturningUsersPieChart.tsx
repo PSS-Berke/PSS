@@ -1,7 +1,14 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { NewVsReturningData } from './interfaces';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../ui/chart';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '../ui/chart';
 
 interface NewVsReturningUsersPieChartProps {
   newVsReturningPieChartData: NewVsReturningData[];
@@ -34,14 +41,15 @@ export const NewVsReturningUsersPieChart: React.FC<NewVsReturningUsersPieChartPr
             // fill="#8884d8" // Removed inline fill
             label
           >
-            {
-              newVsReturningPieChartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={chartConfig[entry.name as keyof typeof chartConfig]?.color || `hsl(var(--chart-${index + 1}))`}
-                />
-              ))
-            }
+            {newVsReturningPieChartData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={
+                  chartConfig[entry.name as keyof typeof chartConfig]?.color ||
+                  `hsl(var(--chart-${index + 1}))`
+                }
+              />
+            ))}
           </Pie>
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />

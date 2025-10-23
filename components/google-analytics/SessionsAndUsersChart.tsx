@@ -1,9 +1,23 @@
 import React from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import { ChartData } from './interfaces';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../ui/chart';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '../ui/chart';
 
 interface SessionsAndUsersChartProps {
   dateChartData: ChartData[];
@@ -18,9 +32,7 @@ const chartConfig = {
   transactions: { label: 'Transactions', color: 'hsl(var(--chart-3))' },
 } satisfies ChartConfig;
 
-export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({
-  dateChartData,
-}) => {
+export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({ dateChartData }) => {
   const [isMobile, setIsMobile] = React.useState(false);
 
   React.useEffect(() => {
@@ -47,13 +59,11 @@ export const SessionsAndUsersChart: React.FC<SessionsAndUsersChartProps> = ({
             tickLine={false}
             tickMargin={10}
             axisLine={false}
-            tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            tickFormatter={(value) =>
+              new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            }
           />
-          <YAxis
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-          />
+          <YAxis tickLine={false} tickMargin={10} axisLine={false} />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend
             verticalAlign="bottom"

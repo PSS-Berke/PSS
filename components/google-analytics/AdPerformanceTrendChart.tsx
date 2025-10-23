@@ -1,9 +1,23 @@
 import React from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import { AdMetricsTrend } from './interfaces';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../ui/chart';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '../ui/chart';
 
 interface AdPerformanceTrendChartProps {
   adMetricsTrend: AdMetricsTrend[];
@@ -23,18 +37,16 @@ export const AdPerformanceTrendChart: React.FC<AdPerformanceTrendChartProps> = (
     <div className="mt-4">
       <h4 className="mb-2 text-md font-semibold">Ad Performance Trend</h4>
       <ChartContainer config={chartConfig} className="h-[300px] w-full">
-        <LineChart
-          accessibilityLayer
-          data={adMetricsTrend}
-          margin={{ left: 12, right: 12 }}
-        >
+        <LineChart accessibilityLayer data={adMetricsTrend} margin={{ left: 12, right: 12 }}>
           <CartesianGrid vertical={false} />
           <XAxis
             dataKey="date"
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            tickFormatter={(value) =>
+              new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            }
           />
           <YAxis
             tickLine={false}

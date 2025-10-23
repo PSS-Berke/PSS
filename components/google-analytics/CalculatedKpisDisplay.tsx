@@ -5,9 +5,7 @@ interface CalculatedKpisDisplayProps {
   calculatedKPIs: CalculatedKPIs | null;
 }
 
-export const CalculatedKpisDisplay: React.FC<CalculatedKpisDisplayProps> = ({
-  calculatedKPIs,
-}) => {
+export const CalculatedKpisDisplay: React.FC<CalculatedKpisDisplayProps> = ({ calculatedKPIs }) => {
   if (!calculatedKPIs) return null;
 
   const kpiItems = [

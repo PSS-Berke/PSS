@@ -26,7 +26,7 @@ export const TopDaysPieCharts: React.FC<TopDaysPieChartsProps> = ({
   return (
     <div className="mt-4 flex flex-wrap gap-4 justify-center">
       {/* Active Users Pie Chart */}
-      {topDaysActivity.some(day => day.activeUsers > 0) && (
+      {topDaysActivity.some((day) => day.activeUsers > 0) && (
         <div className="w-full md:flex-1 flex flex-col items-center justify-center p-4">
           <h4 className="mb-2 text-md font-semibold">Top Days by Activity</h4>
           <div className="flex flex-col items-center w-full md:flex-row md:items-center">
@@ -36,7 +36,7 @@ export const TopDaysPieCharts: React.FC<TopDaysPieChartsProps> = ({
                   data={topDaysActivity
                     .sort((a, b) => b.activeUsers - a.activeUsers)
                     .slice(0, selectedDateRange === '28days' ? 5 : 3)
-                    .map(day => ({ name: day.date, value: day.activeUsers }))}
+                    .map((day) => ({ name: day.date, value: day.activeUsers }))}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -48,7 +48,10 @@ export const TopDaysPieCharts: React.FC<TopDaysPieChartsProps> = ({
                     .sort((a, b) => b.activeUsers - a.activeUsers)
                     .slice(0, selectedDateRange === '28days' ? 5 : 3)
                     .map((entry, index) => (
-                      <Cell key={`cell-${entry.date}-active`} fill={`hsl(var(--chart-${(index % 6) + 1}))`} />
+                      <Cell
+                        key={`cell-${entry.date}-active`}
+                        fill={`hsl(var(--chart-${(index % 6) + 1}))`}
+                      />
                     ))}
                 </Pie>
                 <Tooltip content={<ChartTooltipContent />} />
@@ -73,7 +76,7 @@ export const TopDaysPieCharts: React.FC<TopDaysPieChartsProps> = ({
       )}
 
       {/* Screen Page Views Pie Chart */}
-      {topDaysActivity.some(day => day.screenPageViews > 0) && (
+      {topDaysActivity.some((day) => day.screenPageViews > 0) && (
         <div className="w-full md:flex-1 flex flex-col items-center justify-center p-4">
           <h4 className="mb-2 text-md font-semibold">Screen Page Views by Day</h4>
           <div className="flex flex-col items-center w-full md:flex-row md:items-center">
@@ -83,7 +86,7 @@ export const TopDaysPieCharts: React.FC<TopDaysPieChartsProps> = ({
                   data={topDaysActivity
                     .sort((a, b) => b.screenPageViews - a.screenPageViews)
                     .slice(0, selectedDateRange === '28days' ? 5 : 3)
-                    .map(day => ({ name: day.date, value: day.screenPageViews }))}
+                    .map((day) => ({ name: day.date, value: day.screenPageViews }))}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -95,7 +98,10 @@ export const TopDaysPieCharts: React.FC<TopDaysPieChartsProps> = ({
                     .sort((a, b) => b.screenPageViews - a.screenPageViews)
                     .slice(0, selectedDateRange === '28days' ? 5 : 3)
                     .map((entry, index) => (
-                      <Cell key={`cell-${entry.date}-views`} fill={`hsl(var(--chart-${(index % 6) + 1}))`} />
+                      <Cell
+                        key={`cell-${entry.date}-views`}
+                        fill={`hsl(var(--chart-${(index % 6) + 1}))`}
+                      />
                     ))}
                 </Pie>
                 <Tooltip content={<ChartTooltipContent />} />
