@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { PlatformSidebar } from './platform-sidebar';
 import { AnalyticsDashboard } from './analytics-dashboard';
 import GaPage from '@/components/google-analytics/ga-page';
 import { MOCK_ANALYTICS_DATA, PLATFORMS } from './mock-data';
+import { useAuth } from '@/lib/xano/auth-context';
 
 interface AnalyticsModuleProps {
   className?: string;
@@ -17,6 +19,9 @@ interface AnalyticsModuleProps {
 }
 
 export function AnalyticsModule({ className, onExpandedChange }: AnalyticsModuleProps) {
+  const { token, refreshUser } = useAuth();
+  const searchParams = useSearchParams();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>('google-analytics');
@@ -28,6 +33,44 @@ export function AnalyticsModule({ className, onExpandedChange }: AnalyticsModule
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Google Analytics OAuth callback handler
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+      const scope = searchParams.get('scope');
+
+      if (code && state && token && scope) {
+        try {
+          console.log('Google Analytics OAuth callback detected:', { code, state, scope });
+
+          const callbackUrl = `https://xnpm-iauo-ef2d.n7e.xano.io/api:_dzvItLQ/google/exchange_token?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scope)}`;
+
+          const response = await fetch(callbackUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Google Analytics OAuth callback successful:', result);
+            await refreshUser();
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Google Analytics OAuth callback failed:', response.status, errorData);
+          }
+        } catch (error) {
+          console.error('Google Analytics OAuth callback error:', error);
+        }
+      }
+    };
+
+    handleGoogleCallback();
+  }, [searchParams, token, refreshUser]);
 
   const toggleExpanded = () => {
     const newExpandedState = !isExpanded;
