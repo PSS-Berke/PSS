@@ -16,7 +16,8 @@ export const XANO_CONFIG = {
   ABSOLUTE_BASE_URL:
     process.env.NEXT_PUBLIC_ABSOLUTE_BASE_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io',
   GOOGLE_ANALYTICS_BASE_URL:
-    process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_API_URL || 'https://xnpm-iauo-ef2d.n7e.xano.io/api:_dzvItLQ',
+    process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_API_URL ||
+    'https://xnpm-iauo-ef2d.n7e.xano.io/api:_dzvItLQ',
   // API Endpoints - configured for your Xano setup
   ENDPOINTS: {
     AUTH: {

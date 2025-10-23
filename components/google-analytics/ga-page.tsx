@@ -3,7 +3,19 @@ import { useAuth } from '@/lib/xano/auth-context';
 import { apiRequest } from '@/lib/xano/api';
 import { XANO_CONFIG, getGoogleAnalyticsApiUrl } from '@/lib/xano/config';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 import { format, subDays, startOfDay, endOfDay, parse } from 'date-fns';
 import {
@@ -62,7 +74,9 @@ export default function GaPage() {
   const [topDaysActivity, setTopDaysActivity] = useState<TopDayActivity[]>([]);
   const [adMetricsTrend, setAdMetricsTrend] = useState<AdMetricsTrend[]>([]);
   const [overallSummary, setOverallSummary] = useState<OverallSummaryItem[]>([]);
-  const [newVsReturningPieChartData, setNewVsReturningPieChartData] = useState<NewVsReturningData[]>([]);
+  const [newVsReturningPieChartData, setNewVsReturningPieChartData] = useState<
+    NewVsReturningData[]
+  >([]);
   const [calculatedKPIs, setCalculatedKPIs] = useState<CalculatedKPIs | null>(null);
 
   type DateRangeKey = '1day' | '7days' | '28days';
@@ -89,7 +103,10 @@ export default function GaPage() {
         break;
     }
 
-    return { startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null, endDate: endDate ? format(endDate, 'yyyy-MM-dd') : null };
+    return {
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null,
+      endDate: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+    };
   };
 
   useEffect(() => {
@@ -103,10 +120,9 @@ export default function GaPage() {
       setPropertiesError(null);
 
       try {
-        const response = await apiRequest<
-          GooglePropertiesResponse
-        >(
-          getGoogleAnalyticsApiUrl(XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.PROPERTIES) + `?user_id=${user.id}`,
+        const response = await apiRequest<GooglePropertiesResponse>(
+          getGoogleAnalyticsApiUrl(XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.PROPERTIES) +
+            `?user_id=${user.id}`,
           { method: 'GET' },
           token,
         );
@@ -129,9 +145,7 @@ export default function GaPage() {
         }
       } catch (error: any) {
         console.error('Error retrieving Google Analytics properties:', error);
-        setPropertiesError(
-          `Error getting properties: ${error.message || 'Unknown error'}`,
-        );
+        setPropertiesError(`Error getting properties: ${error.message || 'Unknown error'}`);
       } finally {
         setPropertiesLoading(false);
       }
@@ -166,7 +180,7 @@ export default function GaPage() {
     if (expandedPropertyId !== propertyId) {
       setExpandedPropertyId(propertyId);
       setSelectedDateRange('1day'); // Reset to 1day when a new property is selected
-      const selectedProperty = properties.find(p => p.property === propertyId);
+      const selectedProperty = properties.find((p) => p.property === propertyId);
       setSelectedPropertyName(selectedProperty ? selectedProperty.displayName : null);
     }
 
@@ -196,7 +210,11 @@ export default function GaPage() {
         return;
       }
 
-      const { startDate: formattedStartDate, endDate: formattedEndDate } = calculateDateRange(selectedDateRange, null, null); // Updated call to calculateDateRange
+      const { startDate: formattedStartDate, endDate: formattedEndDate } = calculateDateRange(
+        selectedDateRange,
+        null,
+        null,
+      ); // Updated call to calculateDateRange
 
       const payload = {
         company_id: user.company_id,
@@ -221,7 +239,9 @@ export default function GaPage() {
         ],
       };
 
-      const apiUrl = getGoogleAnalyticsApiUrl(XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.ACCOUNT_SUMMARY);
+      const apiUrl = getGoogleAnalyticsApiUrl(
+        XANO_CONFIG.ENDPOINTS.GOOGLE_ANALYTICS.ACCOUNT_SUMMARY,
+      );
 
       const response = await apiRequest<GoogleAccountSummaryResponse>(
         apiUrl,
@@ -249,9 +269,7 @@ export default function GaPage() {
       setTopChartData(processedData.topChartData);
     } catch (error: any) {
       console.error('Error retrieving Google Analytics account summary:', error);
-      setSummaryError(
-        `Error retrieving account summary: ${error.message || 'Unknown error'}`,
-      );
+      setSummaryError(`Error retrieving account summary: ${error.message || 'Unknown error'}`);
     } finally {
       setSummaryLoading(false);
     }
@@ -300,78 +318,94 @@ export default function GaPage() {
           {summaryLoading && <div>Loading account summary...</div>}
           {summaryError && <div className="text-red-500">{summaryError}</div>}
 
-          {!summaryLoading && !summaryError && (dateChartData.length > 0 || topChartData.length > 0 || kpiSummary || topDaysActivity.length > 0 || adMetricsTrend.length > 0 || overallSummary.length > 0 || newVsReturningPieChartData.length > 0 || calculatedKPIs) && (
-            <div className="mt-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm space-y-4">
-              <h3 className="mb-2 text-lg font-semibold">Google Analytics account information for {selectedPropertyName || expandedPropertyId}:</h3>
+          {!summaryLoading &&
+            !summaryError &&
+            (dateChartData.length > 0 ||
+              topChartData.length > 0 ||
+              kpiSummary ||
+              topDaysActivity.length > 0 ||
+              adMetricsTrend.length > 0 ||
+              overallSummary.length > 0 ||
+              newVsReturningPieChartData.length > 0 ||
+              calculatedKPIs) && (
+              <div className="mt-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm space-y-4">
+                <h3 className="mb-2 text-lg font-semibold">
+                  Google Analytics account information for{' '}
+                  {selectedPropertyName || expandedPropertyId}:
+                </h3>
 
-              {topChartData.length > 0 && (
-                <div className="mt-4">
-                  <TopChartDataTable topChartData={topChartData} />
-                </div>
-              )}
-                
-              {dateChartData.length > 0 && (
-                <div className="mb-4">
-                  <SessionsAndUsersChart dateChartData={dateChartData} />
-                </div>
-              )}
-
-
-              {kpiSummary && (
-                <div className="mt-4">
-                  <KpiSummaryTable kpiSummary={kpiSummary} />
-                </div>
-              )}
-
-              {/* Pie Charts for Top Days by Activity */}
-              {selectedDateRange !== '1day' && topDaysActivity.length > 0 && (
-                <TopDaysPieCharts
-                  topDaysActivity={topDaysActivity}
-                  selectedDateRange={selectedDateRange}
-                  pieChartConfig={pieChartConfig}
-                />
-              )}
-
-              {adMetricsTrend.length > 0 && (
-                <div className="mt-4">
-                  <AdPerformanceTrendChart adMetricsTrend={adMetricsTrend} />
-                </div>
-              )}
-
-              {overallSummary.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="mb-2 text-md font-semibold">Overall Metrics Summary Table</h4>
-                  <div className="rounded-md border p-4">
-                    {overallSummary.map((item) => (
-                      <div key={item.metric} className="flex flex-col sm:flex-row justify-between border-b last:border-b-0 py-2">
-                        <div className="font-normal text-sm sm:w-1/2">{item.metric}</div>
-                        <div className="text-sm sm:w-1/2 text-right sm:text-left lg:text-center">{item.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-4 flex flex-col md:flex-row gap-4">
-                {/* New vs Returning Users Pie Chart */}
-                {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
-                  <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm flex-1">
-                    <NewVsReturningUsersPieChart
-                      newVsReturningPieChartData={newVsReturningPieChartData}
-                      selectedDateRange={selectedDateRange}
-                    />
+                {topChartData.length > 0 && (
+                  <div className="mt-4">
+                    <TopChartDataTable topChartData={topChartData} />
                   </div>
                 )}
 
-                {/* Calculated KPIs */}
-                {calculatedKPIs && (
-                  <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm flex-1">
-                    <CalculatedKpisDisplay calculatedKPIs={calculatedKPIs} />
+                {dateChartData.length > 0 && (
+                  <div className="mb-4">
+                    <SessionsAndUsersChart dateChartData={dateChartData} />
                   </div>
                 )}
+
+                {kpiSummary && (
+                  <div className="mt-4">
+                    <KpiSummaryTable kpiSummary={kpiSummary} />
+                  </div>
+                )}
+
+                {/* Pie Charts for Top Days by Activity */}
+                {selectedDateRange !== '1day' && topDaysActivity.length > 0 && (
+                  <TopDaysPieCharts
+                    topDaysActivity={topDaysActivity}
+                    selectedDateRange={selectedDateRange}
+                    pieChartConfig={pieChartConfig}
+                  />
+                )}
+
+                {adMetricsTrend.length > 0 && (
+                  <div className="mt-4">
+                    <AdPerformanceTrendChart adMetricsTrend={adMetricsTrend} />
+                  </div>
+                )}
+
+                {overallSummary.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="mb-2 text-md font-semibold">Overall Metrics Summary Table</h4>
+                    <div className="rounded-md border p-4">
+                      {overallSummary.map((item) => (
+                        <div
+                          key={item.metric}
+                          className="flex flex-col sm:flex-row justify-between border-b last:border-b-0 py-2"
+                        >
+                          <div className="font-normal text-sm sm:w-1/2">{item.metric}</div>
+                          <div className="text-sm sm:w-1/2 text-right sm:text-left lg:text-center">
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex flex-col md:flex-row gap-4">
+                  {/* New vs Returning Users Pie Chart */}
+                  {newVsReturningPieChartData.length > 0 && selectedDateRange !== '1day' && (
+                    <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm flex-1">
+                      <NewVsReturningUsersPieChart
+                        newVsReturningPieChartData={newVsReturningPieChartData}
+                        selectedDateRange={selectedDateRange}
+                      />
+                    </div>
+                  )}
+
+                  {/* Calculated KPIs */}
+                  {calculatedKPIs && (
+                    <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm flex-1">
+                      <CalculatedKpisDisplay calculatedKPIs={calculatedKPIs} />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </>
       )}
     </div>
