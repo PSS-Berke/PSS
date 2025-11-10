@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { AnalyticsModule } from '@/components/analytics/analytics-module';
+import { TwitterAnalyticsModule } from '@/components/twitter-analytics/twitter-analytics-module';
 import { WixAnalyticsProvider } from '@/lib/xano/wix-analytics-context';
 
 export default function AnalyticsPage() {
@@ -14,8 +15,9 @@ export default function AnalyticsPage() {
               Multi-platform website analytics and insights
             </p>
           </div>
-          <div className="w-full px-2">
+          <div className="w-full px-2 space-y-4">
             <AnalyticsModule className="w-full" />
+            <TwitterAnalyticsModule className="w-full" />
           </div>
         </div>
       </main>

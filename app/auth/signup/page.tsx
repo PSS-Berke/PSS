@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/xano/auth-context';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const isDark = variant === 'dark';
@@ -47,18 +48,34 @@ function BrandMark({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   );
 }
 
-export default function SignUpPage() {
+const tierInfo: Record<string, { name: string; price: string; color: string }> = {
+  pro: { name: 'Pro', price: '$79/mo', color: 'bg-blue-500' },
+  max: { name: 'Max', price: '$199/mo', color: 'bg-primary' },
+  enterprise: { name: 'Enterprise', price: '$499/mo', color: 'bg-purple-500' },
+  agency: { name: 'Agency', price: '$999/mo', color: 'bg-orange-500' },
+};
+
+function SignUpForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [companyCode, setCompanyCode] = useState('');
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   const { register } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const tier = searchParams.get('tier');
+    if (tier && tierInfo[tier.toLowerCase()]) {
+      setSelectedTier(tier.toLowerCase());
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,6 +165,20 @@ export default function SignUpPage() {
                 <CardDescription className="text-base text-muted-foreground">
                   Set up your workspace credentials to begin
                 </CardDescription>
+                {selectedTier && tierInfo[selectedTier] && (
+                  <div className="mt-3 flex items-center gap-2 rounded-md bg-muted p-3">
+                    <Badge className={tierInfo[selectedTier].color}>
+                      {tierInfo[selectedTier].name}
+                    </Badge>
+                    <span className="text-sm font-medium">{tierInfo[selectedTier].price}</span>
+                    <Link
+                      href="/pricing"
+                      className="ml-auto text-xs text-primary hover:underline"
+                    >
+                      Change plan
+                    </Link>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto pr-1 sm:pr-2 lg:pr-3">
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -277,5 +308,13 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SignUpForm />
+    </Suspense>
   );
 }

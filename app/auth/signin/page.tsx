@@ -246,14 +246,24 @@ export default function SignInPage() {
                   </div>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-muted-foreground">
-                  Don&apos;t have an account?{' '}
-                  <Link
-                    href="/auth/signup"
-                    className="font-semibold text-[#C33527] hover:text-[#9E2A1F]"
-                  >
-                    Sign up
-                  </Link>
+                <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+                  <div>
+                    Don&apos;t have an account?{' '}
+                    <Link
+                      href="/auth/signup"
+                      className="font-semibold text-[#C33527] hover:text-[#9E2A1F]"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
+                  <div>
+                    <Link
+                      href="/pricing"
+                      className="text-[#C33527] hover:text-[#9E2A1F] hover:underline"
+                    >
+                      View pricing plans
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
