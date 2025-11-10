@@ -1,6 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Check, Sparkles } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -10,7 +12,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import { apiRequestSubscriptionLink } from '@/lib/services/SubscriptionService';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/xano/auth-context';
 
 type PricingCardProps = {
   title: string;
@@ -18,6 +22,8 @@ type PricingCardProps = {
   annualPrice?: string;
   description: string;
   features: string[];
+  annualPriceID: string;
+  monthlyPriceID: string;
   buttonText: string;
   buttonHref: string;
   isPopular?: boolean;
@@ -28,6 +34,21 @@ type PricingCardProps = {
 export function PricingCard(props: PricingCardProps) {
   const displayPrice = props.isAnnual && props.annualPrice ? props.annualPrice : props.price;
 
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+  console.log(user);
+  const handleSubscriptionLink = async () => {
+    try {
+      const response = await apiRequestSubscriptionLink({
+        price_id: props.isAnnual ? props.annualPriceID : props.monthlyPriceID,
+        company_id: user?.company_id || 0,
+        plan: props.title.toLowerCase() as 'pro' | 'max' | 'enterprise' | 'agency',
+      });
+      window.open(response.url);
+    } catch (error) {
+      console.error('Failed to create subscription link:', error);
+    }
+  };
   return (
     <Card
       className={`w-full max-w-sm relative ${props.isPopular ? 'border-primary border-2 shadow-lg' : ''}`}
@@ -67,14 +88,13 @@ export function PricingCard(props: PricingCardProps) {
         </ul>
       </CardContent>
       <CardFooter>
-        <Link
-          href={props.buttonHref}
-          className={`${buttonVariants({
-            variant: props.isPopular ? 'default' : 'outline',
-          })} w-full`}
+        <Button
+          onClick={handleSubscriptionLink}
+          variant={props.isPopular ? 'default' : 'outline'}
+          className="w-full"
         >
           {props.buttonText}
-        </Link>
+        </Button>
       </CardFooter>
     </Card>
   );

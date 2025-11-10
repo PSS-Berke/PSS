@@ -1,5 +1,8 @@
 import ApiService from './ApiService';
-import { RequestSubscriptionLinkRequest, RequestSubscriptionLinkResponse } from '@/@types/subscription';
+import {
+  RequestSubscriptionLinkRequest,
+  RequestSubscriptionLinkResponse,
+} from '@/@types/subscription';
 
 export const apiRequestSubscriptionLink = (data: RequestSubscriptionLinkRequest) => {
   return ApiService.fetchDataWithAxios<RequestSubscriptionLinkResponse>({
@@ -8,4 +11,3 @@ export const apiRequestSubscriptionLink = (data: RequestSubscriptionLinkRequest)
     data,
   });
 };
-
