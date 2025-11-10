@@ -248,7 +248,7 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
 
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                At your current growth rate, you'll reach{' '}
+                At your current growth rate, you&apos;ll reach{' '}
                 <span className="font-semibold text-foreground">
                   {formatNumber(
                     Math.floor(account_summary.followers_count + netGrowth * 3),
@@ -272,7 +272,7 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
                 <div>
                   <p className="font-medium text-sm">Positive Growth Trend</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    You're gaining more followers than losing over the past 30 days
+                    You&apos;re gaining more followers than losing over the past 30 days
                   </p>
                 </div>
               </div>
