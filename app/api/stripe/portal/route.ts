@@ -25,10 +25,7 @@ export async function POST(request: NextRequest) {
     const { customerId, returnUrl } = body;
 
     if (!customerId) {
-      return NextResponse.json(
-        { error: 'Missing required field: customerId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required field: customerId' }, { status: 400 });
     }
 
     // TODO: Initialize Stripe
@@ -49,16 +46,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Stripe customer portal not yet implemented',
-        message: 'This endpoint will allow users to manage their subscriptions once Stripe is configured',
+        message:
+          'This endpoint will allow users to manage their subscriptions once Stripe is configured',
         receivedData: { customerId, returnUrl },
       },
-      { status: 501 } // 501 Not Implemented
+      { status: 501 }, // 501 Not Implemented
     );
   } catch (error: any) {
     console.error('Portal error:', error);
     return NextResponse.json(
       { error: 'Failed to create portal session', details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

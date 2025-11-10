@@ -49,9 +49,7 @@ export function PricingCard(props: PricingCardProps) {
           <span className="text-4xl font-bold">{displayPrice}</span>
           <span className="text-muted-foreground">/month</span>
           {props.isAnnual && props.annualPrice && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Billed annually (save 2 months)
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Billed annually (save 2 months)</p>
           )}
         </div>
         {props.highlight && (

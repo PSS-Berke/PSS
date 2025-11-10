@@ -67,9 +67,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Account Overview</h2>
-        <p className="text-muted-foreground mt-1">
-          Your Twitter/X account performance at a glance
-        </p>
+        <p className="text-muted-foreground mt-1">Your Twitter/X account performance at a glance</p>
       </div>
 
       {/* Summary Cards Grid */}

@@ -21,43 +21,117 @@ type FeatureRow = {
 
 const features: FeatureRow[] = [
   // Social Media
-  { category: 'Social Media Copilot', feature: 'Platform Coverage', pro: 'Personal accounts', max: 'All 9 platforms', enterprise: 'All 9 platforms', agency: 'All 9 platforms' },
+  {
+    category: 'Social Media Copilot',
+    feature: 'Platform Coverage',
+    pro: 'Personal accounts',
+    max: 'All 9 platforms',
+    enterprise: 'All 9 platforms',
+    agency: 'All 9 platforms',
+  },
   { feature: 'Post Scheduling', pro: true, max: true, enterprise: true, agency: true },
-  { feature: 'AI Content Generation', pro: 'Basic', max: 'Advanced', enterprise: 'Advanced', agency: 'Advanced' },
+  {
+    feature: 'AI Content Generation',
+    pro: 'Basic',
+    max: 'Advanced',
+    enterprise: 'Advanced',
+    agency: 'Advanced',
+  },
 
   // LinkedIn
-  { category: 'LinkedIn Copilot', feature: 'Campaign Management', pro: false, max: '10 campaigns', enterprise: '50 campaigns', agency: 'Unlimited' },
+  {
+    category: 'LinkedIn Copilot',
+    feature: 'Campaign Management',
+    pro: false,
+    max: '10 campaigns',
+    enterprise: '50 campaigns',
+    agency: 'Unlimited',
+  },
   { feature: 'Lead Generation', pro: false, max: true, enterprise: true, agency: true },
   { feature: 'Connection Automation', pro: false, max: true, enterprise: true, agency: true },
 
   // Call Prep
-  { category: 'Call Prep Assistant', feature: 'Call Reports/Month', pro: '25', max: '100', enterprise: '500', agency: 'Unlimited' },
-  { feature: 'AI-Powered Insights', pro: 'Basic', max: 'Advanced', enterprise: 'Advanced', agency: 'Advanced' },
+  {
+    category: 'Call Prep Assistant',
+    feature: 'Call Reports/Month',
+    pro: '25',
+    max: '100',
+    enterprise: '500',
+    agency: 'Unlimited',
+  },
+  {
+    feature: 'AI-Powered Insights',
+    pro: 'Basic',
+    max: 'Advanced',
+    enterprise: 'Advanced',
+    agency: 'Advanced',
+  },
   { feature: 'Custom Templates', pro: false, max: true, enterprise: true, agency: true },
 
   // Battle Cards
-  { category: 'Battle Card Intelligence', feature: 'Battle Cards/Month', pro: false, max: '20', enterprise: '100', agency: 'Unlimited' },
+  {
+    category: 'Battle Card Intelligence',
+    feature: 'Battle Cards/Month',
+    pro: false,
+    max: '20',
+    enterprise: '100',
+    agency: 'Unlimited',
+  },
   { feature: 'Competitor Tracking', pro: false, max: true, enterprise: true, agency: true },
   { feature: 'Auto-Updates', pro: false, max: false, enterprise: true, agency: true },
 
   // VoIP
-  { category: 'Phone/VoIP System', feature: 'Minutes/Month', pro: '500', max: '2,000', enterprise: '5,000', agency: '10,000' },
+  {
+    category: 'Phone/VoIP System',
+    feature: 'Minutes/Month',
+    pro: '500',
+    max: '2,000',
+    enterprise: '5,000',
+    agency: '10,000',
+  },
   { feature: 'Call Recording', pro: true, max: true, enterprise: true, agency: true },
   { feature: 'Team Call Analytics', pro: false, max: false, enterprise: true, agency: true },
 
   // Data
-  { category: 'Data Enrichment', feature: 'Enrichments/Month', pro: '50', max: '250', enterprise: '1,000', agency: '2,500' },
+  {
+    category: 'Data Enrichment',
+    feature: 'Enrichments/Month',
+    pro: '50',
+    max: '250',
+    enterprise: '1,000',
+    agency: '2,500',
+  },
   { feature: 'Premium Data Access', pro: false, max: true, enterprise: true, agency: true },
   { feature: 'Bulk Enrichment', pro: false, max: false, enterprise: true, agency: true },
 
   // Analytics
-  { category: 'Analytics Integration', feature: 'Google Analytics', pro: false, max: true, enterprise: true, agency: true },
+  {
+    category: 'Analytics Integration',
+    feature: 'Google Analytics',
+    pro: false,
+    max: true,
+    enterprise: true,
+    agency: true,
+  },
   { feature: 'Custom Dashboards', pro: false, max: false, enterprise: true, agency: true },
   { feature: 'API Access', pro: false, max: false, enterprise: true, agency: true },
 
   // Team & Support
-  { category: 'Team & Support', feature: 'User Seats', pro: '1', max: '3', enterprise: '10', agency: 'Unlimited' },
-  { feature: 'Client Management', pro: false, max: false, enterprise: false, agency: 'Unlimited clients' },
+  {
+    category: 'Team & Support',
+    feature: 'User Seats',
+    pro: '1',
+    max: '3',
+    enterprise: '10',
+    agency: 'Unlimited',
+  },
+  {
+    feature: 'Client Management',
+    pro: false,
+    max: false,
+    enterprise: false,
+    agency: 'Unlimited clients',
+  },
   { feature: 'White Label Option', pro: false, max: false, enterprise: false, agency: true },
   { feature: 'Priority Support', pro: false, max: false, enterprise: true, agency: true },
   { feature: 'Dedicated Account Manager', pro: false, max: false, enterprise: false, agency: true },
@@ -85,7 +159,9 @@ export function PricingComparisonTable() {
             <TableHead className="text-center font-semibold text-base">
               <div className="flex items-center justify-center gap-2">
                 Max
-                <Badge variant="default" className="text-xs">Popular</Badge>
+                <Badge variant="default" className="text-xs">
+                  Popular
+                </Badge>
               </div>
             </TableHead>
             <TableHead className="text-center font-semibold text-base">Enterprise</TableHead>
@@ -127,10 +203,27 @@ export function PricingComparisonTable() {
 
 export function PricingComparisonMobile() {
   const tiers = [
-    { name: 'Pro', data: features.map(f => ({ feature: f.feature, value: f.pro, category: f.category })) },
-    { name: 'Max', data: features.map(f => ({ feature: f.feature, value: f.max, category: f.category })), isPopular: true },
-    { name: 'Enterprise', data: features.map(f => ({ feature: f.feature, value: f.enterprise, category: f.category })) },
-    { name: 'Agency', data: features.map(f => ({ feature: f.feature, value: f.agency, category: f.category })) },
+    {
+      name: 'Pro',
+      data: features.map((f) => ({ feature: f.feature, value: f.pro, category: f.category })),
+    },
+    {
+      name: 'Max',
+      data: features.map((f) => ({ feature: f.feature, value: f.max, category: f.category })),
+      isPopular: true,
+    },
+    {
+      name: 'Enterprise',
+      data: features.map((f) => ({
+        feature: f.feature,
+        value: f.enterprise,
+        category: f.category,
+      })),
+    },
+    {
+      name: 'Agency',
+      data: features.map((f) => ({ feature: f.feature, value: f.agency, category: f.category })),
+    },
   ];
 
   return (

@@ -41,7 +41,9 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Audience Insights</h2>
-        <p className="text-muted-foreground mt-1">Track your follower growth and audience metrics</p>
+        <p className="text-muted-foreground mt-1">
+          Track your follower growth and audience metrics
+        </p>
       </div>
 
       {/* Growth Summary Cards */}
@@ -97,9 +99,7 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
               {netGrowth >= 0 ? '+' : ''}
               {formatNumber(netGrowth)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Avg {avgDailyGrowth}/day
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Avg {avgDailyGrowth}/day</p>
           </CardContent>
         </Card>
       </div>
@@ -153,9 +153,7 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
       <Card>
         <CardHeader>
           <CardTitle>Daily Follower Activity</CardTitle>
-          <CardDescription>
-            Daily breakdown of followers gained and lost
-          </CardDescription>
+          <CardDescription>Daily breakdown of followers gained and lost</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -223,7 +221,7 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
                 <div
                   className="bg-green-500 h-2 rounded-full"
                   style={{
-                    width: `${Math.min(((netGrowth / audience_growth[0].followers) * 100) * 10, 100)}%`,
+                    width: `${Math.min((netGrowth / audience_growth[0].followers) * 100 * 10, 100)}%`,
                   }}
                 />
               </div>
@@ -250,9 +248,7 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
               <p className="text-sm text-muted-foreground">
                 At your current growth rate, you&apos;ll reach{' '}
                 <span className="font-semibold text-foreground">
-                  {formatNumber(
-                    Math.floor(account_summary.followers_count + netGrowth * 3),
-                  )}
+                  {formatNumber(Math.floor(account_summary.followers_count + netGrowth * 3))}
                 </span>{' '}
                 followers in 90 days.
               </p>
@@ -282,8 +278,8 @@ export function AudienceInsightsTab({ data }: AudienceInsightsTabProps) {
                 <div>
                   <p className="font-medium text-sm">High Retention</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(((totalGained - totalLost) / totalGained) * 100).toFixed(0)}% of new
-                    followers stay engaged with your content
+                    {(((totalGained - totalLost) / totalGained) * 100).toFixed(0)}% of new followers
+                    stay engaged with your content
                   </p>
                 </div>
               </div>

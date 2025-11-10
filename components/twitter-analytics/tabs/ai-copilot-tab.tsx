@@ -5,16 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import {
-  Bot,
-  Send,
-  Sparkles,
-  TrendingUp,
-  Clock,
-  Target,
-  Zap,
-  MessageSquare,
-} from 'lucide-react';
+import { Bot, Send, Sparkles, TrendingUp, Clock, Target, Zap, MessageSquare } from 'lucide-react';
 import type { MockTwitterAnalytics } from '../interfaces';
 
 interface AICopilotTabProps {
@@ -167,9 +158,7 @@ export function AICopilotTab({ data }: AICopilotTabProps) {
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                    message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
                   }`}
                 >
                   {message.role === 'assistant' && (

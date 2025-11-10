@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!priceId || !tier) {
       return NextResponse.json(
         { error: 'Missing required fields: priceId and tier' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -67,13 +67,13 @@ export async function POST(request: NextRequest) {
         message: 'This endpoint will be available once Stripe is configured',
         receivedData: { priceId, email, tier, isAnnual },
       },
-      { status: 501 } // 501 Not Implemented
+      { status: 501 }, // 501 Not Implemented
     );
   } catch (error: any) {
     console.error('Checkout error:', error);
     return NextResponse.json(
       { error: 'Failed to create checkout session', details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

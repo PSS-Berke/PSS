@@ -130,11 +130,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         try {
           const userData = await authApi.getMe(storedToken);
-          console.log('User data fetch result:', !!userData);
 
           if (mounted && userData) {
             setUser(userData);
             setToken(storedToken);
+            if (userData.subscription === 'free') {
+              router.push('/pricing?error=not-subscribed');
+              return;
+            }
           }
         } catch (error) {
           console.error('Auth error:', error);

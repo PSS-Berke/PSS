@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import { PricingGrid } from '@/components/pricing';
-import { PricingComparisonTable, PricingComparisonMobile } from '@/components/pricing-comparison-table';
+import {
+  PricingComparisonTable,
+  PricingComparisonMobile,
+} from '@/components/pricing-comparison-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -17,6 +20,8 @@ export default function PricingPage() {
       title: 'Pro',
       price: '$79',
       annualPrice: '$66',
+      annualPriceID: 'price_1SRuACPqeVBvE9tI0iIo0kKt',
+      monthlyPriceID: 'price_1SRu6RPqeVBvE9tIW2VqQRRx',
       description: 'For individual sales professionals building their personal brand',
       features: [
         'Social Media Copilot (personal accounts)',
@@ -37,6 +42,8 @@ export default function PricingPage() {
       title: 'Max',
       price: '$199',
       annualPrice: '$166',
+      annualPriceID: 'price_1SRu7oPqeVBvE9tIIk6fkDMV',
+      monthlyPriceID: 'price_1SRrsfPqeVBvE9tIcdr37juf',
       description: 'For power users and small teams who need the full suite',
       features: [
         'All 9 social platforms',
@@ -59,6 +66,8 @@ export default function PricingPage() {
       title: 'Enterprise',
       price: '$499',
       annualPrice: '$416',
+      annualPriceID: 'price_1SRu8gPqeVBvE9tIhWixuErG',
+      monthlyPriceID: 'price_1SRrt4PqeVBvE9tIUMSEdV8y',
       description: 'For growing sales teams that need advanced collaboration',
       features: [
         'Everything in Max, plus:',
@@ -84,6 +93,8 @@ export default function PricingPage() {
       title: 'Agency',
       price: '$999',
       annualPrice: '$833',
+      annualPriceID: 'price_1SRu9OPqeVBvE9tILSMDEhzN',
+      monthlyPriceID: 'price_1SRrssPqeVBvE9tIG45qW4gi',
       description: 'For agencies managing multiple clients',
       features: [
         'Everything in Enterprise, plus:',
@@ -145,8 +156,8 @@ export default function PricingPage() {
                 <div>
                   <p className="font-semibold text-lg mb-1">Save 46-71% vs. buying separately</p>
                   <p className="text-sm text-muted-foreground">
-                    Competitors charge $423-708/month for similar tools. Our Max tier is just $199/month
-                    for everything.
+                    Competitors charge $423-708/month for similar tools. Our Max tier is just
+                    $199/month for everything.
                   </p>
                 </div>
               </div>
@@ -155,7 +166,9 @@ export default function PricingPage() {
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 py-4">
-            <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+            <span
+              className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}
+            >
               Monthly
             </span>
             <button
@@ -172,23 +185,18 @@ export default function PricingPage() {
                 }`}
               />
             </button>
-            <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+            <span
+              className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}
+            >
               Annual
             </span>
-            {isAnnual && (
-              <span className="text-sm text-primary font-semibold">Save 2 months!</span>
-            )}
+            {isAnnual && <span className="text-sm text-primary font-semibold">Save 2 months!</span>}
           </div>
         </div>
       </div>
 
       {/* Pricing Cards */}
-      <PricingGrid
-        title=""
-        subtitle=""
-        items={pricingData}
-        className="py-0"
-      />
+      <PricingGrid title="" subtitle="" items={pricingData} className="py-0" />
 
       {/* Feature Comparison */}
       <div className="container mx-auto px-4 py-12 md:py-20">
@@ -223,8 +231,8 @@ export default function PricingPage() {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">Can I change plans later?</h3>
                 <p className="text-muted-foreground">
-                  Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately,
-                  and we&apos;ll prorate the difference.
+                  Yes! You can upgrade or downgrade your plan at any time. Changes take effect
+                  immediately, and we&apos;ll prorate the difference.
                 </p>
               </CardContent>
             </Card>
@@ -233,8 +241,8 @@ export default function PricingPage() {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">Do you offer a free trial?</h3>
                 <p className="text-muted-foreground">
-                  We offer a 14-day money-back guarantee on all plans. Try any tier risk-free,
-                  and if it&apos;s not right for you, we&apos;ll refund your payment.
+                  We offer a 14-day money-back guarantee on all plans. Try any tier risk-free, and
+                  if it&apos;s not right for you, we&apos;ll refund your payment.
                 </p>
               </CardContent>
             </Card>
@@ -243,18 +251,20 @@ export default function PricingPage() {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">What payment methods do you accept?</h3>
                 <p className="text-muted-foreground">
-                  We accept all major credit cards (Visa, Mastercard, American Express) and
-                  ACH bank transfers for annual plans.
+                  We accept all major credit cards (Visa, Mastercard, American Express) and ACH bank
+                  transfers for annual plans.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-2">What happens if I exceed my usage limits?</h3>
+                <h3 className="font-semibold text-lg mb-2">
+                  What happens if I exceed my usage limits?
+                </h3>
                 <p className="text-muted-foreground">
-                  We&apos;ll notify you when you&apos;re approaching your limits. You can either upgrade to a higher tier
-                  or purchase add-on packages for additional capacity.
+                  We&apos;ll notify you when you&apos;re approaching your limits. You can either
+                  upgrade to a higher tier or purchase add-on packages for additional capacity.
                 </p>
               </CardContent>
             </Card>
@@ -263,8 +273,8 @@ export default function PricingPage() {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-2">Is Stripe integration included?</h3>
                 <p className="text-muted-foreground">
-                  Payment processing via Stripe will be integrated soon. For now, you can sign up and
-                  we&apos;ll set up billing manually.
+                  Payment processing via Stripe will be integrated soon. For now, you can sign up
+                  and we&apos;ll set up billing manually.
                 </p>
               </CardContent>
             </Card>
@@ -276,12 +286,10 @@ export default function PricingPage() {
       <div className="container mx-auto px-4 py-12 md:py-20">
         <Card className="max-w-4xl mx-auto bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20">
           <CardContent className="p-8 md:p-12 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to get started?
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to get started?</h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join sales professionals and agencies who are saving thousands while
-              getting more done with our all-in-one platform.
+              Join sales professionals and agencies who are saving thousands while getting more done
+              with our all-in-one platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth/signup">

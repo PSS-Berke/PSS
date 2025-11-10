@@ -36,9 +36,7 @@ export default function RootPage() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-red-950/10">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-primary">
-            PSS
-          </div>
+          <div className="text-2xl font-bold text-primary">PSS</div>
           <div className="flex items-center gap-4">
             <Link href="/pricing">
               <Button variant="ghost">Pricing</Button>
@@ -59,8 +57,8 @@ export default function RootPage() {
             Your All-in-One <span className="text-primary">Sales Platform</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-            Stop juggling multiple tools. Get social media management, sales intelligence,
-            LinkedIn automation, VoIP, and AI assistants in one powerful platform.
+            Stop juggling multiple tools. Get social media management, sales intelligence, LinkedIn
+            automation, VoIP, and AI assistants in one powerful platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link href="/pricing">

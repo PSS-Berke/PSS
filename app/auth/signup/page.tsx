@@ -171,10 +171,7 @@ function SignUpForm() {
                       {tierInfo[selectedTier].name}
                     </Badge>
                     <span className="text-sm font-medium">{tierInfo[selectedTier].price}</span>
-                    <Link
-                      href="/pricing"
-                      className="ml-auto text-xs text-primary hover:underline"
-                    >
+                    <Link href="/pricing" className="ml-auto text-xs text-primary hover:underline">
                       Change plan
                     </Link>
                   </div>
@@ -313,7 +310,9 @@ function SignUpForm() {
 
 export default function SignUpPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}
+    >
       <SignUpForm />
     </Suspense>
   );

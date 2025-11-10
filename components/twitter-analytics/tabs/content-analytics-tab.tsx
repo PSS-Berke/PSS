@@ -15,14 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import {
-  MessageSquare,
-  Image as ImageIcon,
-  Repeat2,
-  Hash,
-  Clock,
-  TrendingUp,
-} from 'lucide-react';
+import { MessageSquare, Image as ImageIcon, Repeat2, Hash, Clock, TrendingUp } from 'lucide-react';
 import type { MockTwitterAnalytics } from '../interfaces';
 
 interface ContentAnalyticsTabProps {
@@ -39,7 +32,12 @@ export function ContentAnalyticsTab({ data }: ContentAnalyticsTabProps) {
   };
 
   // Colors for charts
-  const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
+  const COLORS = [
+    'hsl(var(--chart-1))',
+    'hsl(var(--chart-2))',
+    'hsl(var(--chart-3))',
+    'hsl(var(--chart-4))',
+  ];
 
   // Get best posting times (top 5 by engagement rate)
   const bestPostingTimes = [...posting_times]
@@ -230,9 +228,13 @@ export function ContentAnalyticsTab({ data }: ContentAnalyticsTabProps) {
                     <div className="flex items-center gap-2">
                       <Hash className="h-4 w-4 text-blue-500" />
                       <span className="font-medium">{hashtag.hashtag}</span>
-                      <span className="text-xs text-muted-foreground">({hashtag.usage_count}x)</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({hashtag.usage_count}x)
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold">{hashtag.avg_engagement_rate.toFixed(1)}%</span>
+                    <span className="text-sm font-semibold">
+                      {hashtag.avg_engagement_rate.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{formatNumber(hashtag.total_impressions)} impressions</span>
@@ -310,8 +312,9 @@ export function ContentAnalyticsTab({ data }: ContentAnalyticsTabProps) {
               <div>
                 <p className="font-medium">Leverage Top Hashtags</p>
                 <p className="text-sm text-muted-foreground">
-                  {top_hashtags[0].hashtag} performs best with {top_hashtags[0].avg_engagement_rate.toFixed(1)}%
-                  engagement. Use it strategically in relevant tweets.
+                  {top_hashtags[0].hashtag} performs best with{' '}
+                  {top_hashtags[0].avg_engagement_rate.toFixed(1)}% engagement. Use it strategically
+                  in relevant tweets.
                 </p>
               </div>
             </div>

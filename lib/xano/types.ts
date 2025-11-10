@@ -23,6 +23,7 @@ export interface GoogleAccess {
 
 export interface User {
   id: number;
+  subscription: 'free' | 'pro' | 'max' | 'enterprise' | 'agency';
   email: string;
   name?: string;
   role?: boolean;

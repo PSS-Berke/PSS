@@ -65,7 +65,7 @@ export const MOCK_TWITTER_DATA: MockTwitterAnalytics = {
     },
     {
       id: '5',
-      text: 'Happy Monday! Here\'s your weekly motivation to crush your goals 💪',
+      text: "Happy Monday! Here's your weekly motivation to crush your goals 💪",
       created_at: format(subDays(new Date(), 14), 'yyyy-MM-dd'),
       impressions: 6890,
       engagements: 389,

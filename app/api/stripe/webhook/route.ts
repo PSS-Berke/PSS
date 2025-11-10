@@ -29,10 +29,7 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('stripe-signature');
 
     if (!signature) {
-      return NextResponse.json(
-        { error: 'Missing stripe-signature header' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
     }
 
     // TODO: Verify webhook signature
@@ -78,13 +75,13 @@ export async function POST(request: NextRequest) {
         message: 'Webhook endpoint not yet implemented',
         note: 'This will handle Stripe subscription events once configured',
       },
-      { status: 501 } // 501 Not Implemented
+      { status: 501 }, // 501 Not Implemented
     );
   } catch (error: any) {
     console.error('Webhook error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed', details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
