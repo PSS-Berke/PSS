@@ -19,7 +19,7 @@ export default function PricingPage() {
     {
       title: 'Pro',
       price: '$50',
-      annualPrice: '$66',
+      annualPrice: '$420',
       annualPriceID: 'price_1SRuACPqeVBvE9tI0iIo0kKt',
       monthlyPriceID: 'price_1SRu6RPqeVBvE9tIW2VqQRRx',
       description: 'For individual sales professionals building their personal brand',
@@ -41,7 +41,7 @@ export default function PricingPage() {
     {
       title: 'Max',
       price: '$100',
-      annualPrice: '$166',
+      annualPrice: '$840',
       annualPriceID: 'price_1SRu7oPqeVBvE9tIIk6fkDMV',
       monthlyPriceID: 'price_1SRwG5PqeVBvE9tIANzO1aYG',
       description: 'For power users and small teams who need the full suite',
@@ -65,7 +65,7 @@ export default function PricingPage() {
     {
       title: 'Enterprise',
       price: '$150',
-      annualPrice: '$416',
+      annualPrice: '$1,260',
       annualPriceID: 'price_1SRu8gPqeVBvE9tIhWixuErG',
       monthlyPriceID: 'price_1SRrt4PqeVBvE9tIUMSEdV8y',
       description: 'For growing sales teams that need advanced collaboration',
@@ -92,7 +92,7 @@ export default function PricingPage() {
     {
       title: 'Agency',
       price: '$150',
-      annualPrice: '$833',
+      annualPrice: '$1,260',
       annualPriceID: 'price_1SRu9OPqeVBvE9tILSMDEhzN',
       monthlyPriceID: 'price_1SRrssPqeVBvE9tIG45qW4gi',
       description: 'For agencies managing multiple clients',
@@ -173,16 +173,14 @@ export default function PricingPage() {
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                isAnnual ? 'bg-primary' : 'bg-muted'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isAnnual ? 'bg-primary' : 'bg-muted'
+                }`}
               role="switch"
               aria-checked={isAnnual}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isAnnual ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAnnual ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
             <span
