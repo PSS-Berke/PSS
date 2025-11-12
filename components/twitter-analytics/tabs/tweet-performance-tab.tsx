@@ -11,18 +11,89 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, Eye, Heart, Repeat2, MessageCircle, MousePointer } from 'lucide-react';
-import type { MockTwitterAnalytics } from '../interfaces';
+import {
+  TrendingUp,
+  Eye,
+  Heart,
+  Repeat2,
+  MessageCircle,
+  Quote,
+  Bookmark,
+  Loader2,
+} from 'lucide-react';
+import { XTweetsResponse } from '@/@types/analytics';
 
 interface TweetPerformanceTabProps {
-  data: MockTwitterAnalytics;
+  tweets?: XTweetsResponse;
+  isLoading?: boolean;
 }
 
-export function TweetPerformanceTab({ data }: TweetPerformanceTabProps) {
-  const { top_tweets } = data;
+type ProcessedTweet = {
+  id: string;
+  text: string;
+  created_at: string;
+  impressions: number;
+  engagements: number;
+  engagement_rate: number;
+  likes: number;
+  retweets: number;
+  replies: number;
+  quotes: number;
+  bookmarks: number;
+};
+
+const buildTweetMetrics = (tweets: XTweetsResponse): ProcessedTweet[] => {
+  return tweets.map((tweet) => {
+    const metrics = tweet.public_metrics;
+    const impressions = metrics?.impression_count ?? 0;
+    const likes = metrics?.like_count ?? 0;
+    const replies = metrics?.reply_count ?? 0;
+    const retweets = metrics?.retweet_count ?? 0;
+    const quotes = metrics?.quote_count ?? 0;
+    const bookmarks = metrics?.bookmark_count ?? 0;
+    const engagements = likes + replies + retweets + quotes;
+    const engagementRate = impressions > 0 ? (engagements / impressions) * 100 : 0;
+    return {
+      id: tweet.id,
+      text: tweet.text,
+      created_at: tweet.created_at,
+      impressions,
+      engagements,
+      engagement_rate: engagementRate,
+      likes,
+      retweets,
+      replies,
+      quotes,
+      bookmarks,
+    };
+  });
+};
+
+export function TweetPerformanceTab({ tweets, isLoading }: TweetPerformanceTabProps) {
   const [sortBy, setSortBy] = useState<'impressions' | 'engagement_rate' | 'engagements'>(
     'impressions',
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!tweets || tweets.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No Tweets Found</CardTitle>
+          <CardDescription>We couldn&apos;t find any recent tweets to analyze.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  const processedTweets = buildTweetMetrics(tweets);
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -30,11 +101,13 @@ export function TweetPerformanceTab({ data }: TweetPerformanceTabProps) {
     return num.toString();
   };
 
-  const sortedTweets = [...top_tweets].sort((a, b) => {
-    if (sortBy === 'impressions') return b.impressions - a.impressions;
-    if (sortBy === 'engagement_rate') return b.engagement_rate - a.engagement_rate;
-    return b.engagements - a.engagements;
-  });
+  const sortedTweets = [...processedTweets]
+    .sort((a, b) => {
+      if (sortBy === 'impressions') return b.impressions - a.impressions;
+      if (sortBy === 'engagement_rate') return b.engagement_rate - a.engagement_rate;
+      return b.engagements - a.engagements;
+    })
+    .slice(0, 25);
 
   const truncateText = (text: string, maxLength: number = 80) => {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -192,10 +265,17 @@ export function TweetPerformanceTab({ data }: TweetPerformanceTabProps) {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MousePointer className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm text-muted-foreground">Clicks</span>
+                  <Quote className="h-4 w-4 text-orange-500" />
+                  <span className="text-sm text-muted-foreground">Quotes</span>
                 </div>
-                <span className="font-semibold">{formatNumber(tweet.clicks)}</span>
+                <span className="font-semibold">{formatNumber(tweet.quotes)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bookmark className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm text-muted-foreground">Bookmarks</span>
+                </div>
+                <span className="font-semibold">{formatNumber(tweet.bookmarks)}</span>
               </div>
               <div className="pt-3 border-t">
                 <div className="flex items-center justify-between">

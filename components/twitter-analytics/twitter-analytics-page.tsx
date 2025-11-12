@@ -24,7 +24,7 @@ export function TwitterAnalyticsPage({
   isLoadingXTweetsMetrics,
 }: TwitterAnalyticsPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
-  if (isLoadingXMetrics) {
+  if (isLoadingXMetrics || isLoadingXTweetsMetrics) {
     return (
       <div className="w-full h-full space-y-6">
         <div className="sticky top-0 bg-background z-10 pb-4">
@@ -108,7 +108,7 @@ export function TwitterAnalyticsPage({
           </TabsContent>
 
           <TabsContent value="tweets" className="m-0">
-            <TweetPerformanceTab data={MOCK_TWITTER_DATA} />
+            <TweetPerformanceTab tweets={xTweetsMetrics} isLoading={isLoadingXTweetsMetrics} />
           </TabsContent>
 
           <TabsContent value="audience" className="m-0">
