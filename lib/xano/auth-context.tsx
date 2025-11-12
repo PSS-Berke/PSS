@@ -179,20 +179,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
     }
 
+    setIsLoading(true);
+
     try {
       const response = await authApi.login(credentials);
-      setUser(response.user);
-      setToken(response.token);
-      setStoredToken(response.token);
+      const { token: authToken, refresh_token: refreshToken } = response;
 
-      if (response.refresh_token) {
-        setStoredRefreshToken(response.refresh_token);
+      setStoredToken(authToken);
+      setToken(authToken);
+
+      if (refreshToken) {
+        setStoredRefreshToken(refreshToken);
+      }
+
+      try {
+        const userData = await authApi.getMe(authToken);
+        setUser(userData);
+      } catch (fetchError) {
+        console.error('Fetching user profile after login failed:', fetchError);
+        setUser(response.user);
       }
 
       // Navigation is handled by the signin page to support redirect param
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
