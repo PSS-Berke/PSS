@@ -9,9 +9,18 @@ import { AudienceInsightsTab } from './tabs/audience-insights-tab';
 import { ContentAnalyticsTab } from './tabs/content-analytics-tab';
 import { AICopilotTab } from './tabs/ai-copilot-tab';
 import { MOCK_TWITTER_DATA } from './mock-data';
-
-export function TwitterAnalyticsPage() {
+import { XMetrics } from '@/@types/analytics';
+type TwitterAnalyticsPageProps = {
+  xMetrics?: XMetrics;
+  isLoadingXMetrics: boolean;
+}
+export function TwitterAnalyticsPage({ xMetrics: XMetrics, isLoadingXMetrics }: TwitterAnalyticsPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  if (isLoadingXMetrics) {
+    return <div className="w-full h-full">Loading...</div>;
+  }
+
+  console.log({ XMetrics });
 
   return (
     <div className="w-full h-full">

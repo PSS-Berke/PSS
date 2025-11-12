@@ -7,6 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Twitter, ChevronDown, ChevronUp, X, Radio } from 'lucide-react';
 import { TwitterAnalyticsPage } from './twitter-analytics-page';
+import { useAuth } from '@/lib/xano/auth-context';
+import useSWR from 'swr';
+import { XMetrics } from '@/@types/analytics';
+import { apiGetXMetrics } from '@/lib/services/XMetricsService';
 
 interface TwitterAnalyticsModuleProps {
   className?: string;
@@ -19,7 +23,18 @@ export function TwitterAnalyticsModule({
 }: TwitterAnalyticsModuleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { user } = useAuth();
+  const companyId = user?.company_id || 0;
 
+  const {
+    data: xMetrics,
+    error: xMetricsError,
+    isLoading: isLoadingXMetrics,
+    mutate: mutateXMetrics,
+  } = useSWR<XMetrics>('/api:pEDfedqJ/twitter/user/analytics', () => apiGetXMetrics({ company_id: companyId }));
+
+
+  console.log({ xMetrics, isLoadingXMetrics, xMetricsError });
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -87,7 +102,7 @@ export function TwitterAnalyticsModule({
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0">
               <div className="h-full overflow-auto p-6">
-                <TwitterAnalyticsPage />
+                <TwitterAnalyticsPage xMetrics={xMetrics} isLoadingXMetrics={isLoadingXMetrics} />
               </div>
             </CardContent>
           </Card>
