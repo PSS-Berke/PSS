@@ -9,8 +9,8 @@ import { Twitter, ChevronDown, ChevronUp, X, Radio } from 'lucide-react';
 import { TwitterAnalyticsPage } from './twitter-analytics-page';
 import { useAuth } from '@/lib/xano/auth-context';
 import useSWR from 'swr';
-import { XMetrics } from '@/@types/analytics';
-import { apiGetXMetrics } from '@/lib/services/XMetricsService';
+import { XMetrics, XTweetsResponse } from '@/@types/analytics';
+import { apiGetXMetrics, apiGetXTweetsMetrics } from '@/lib/services/XMetricsService';
 
 interface TwitterAnalyticsModuleProps {
   className?: string;
@@ -35,7 +35,16 @@ export function TwitterAnalyticsModule({
     apiGetXMetrics({ company_id: companyId }),
   );
 
-  console.log({ xMetrics, isLoadingXMetrics, xMetricsError });
+  const {
+    data: xTweetsMetrics,
+    error: xTweetsMetricsError,
+    isLoading: isLoadingXTweetsMetrics,
+    mutate: mutateXTweetsMetrics,
+  } = useSWR<XTweetsResponse>('/api:pEDfedqJ/twitter/user/engagement_analytics', () =>
+    apiGetXTweetsMetrics({ company_id: companyId }),
+  );
+
+  console.log({ xTweetsMetrics, isLoadingXTweetsMetrics, xTweetsMetricsError });
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -103,7 +112,12 @@ export function TwitterAnalyticsModule({
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0">
               <div className="h-full overflow-auto p-6">
-                <TwitterAnalyticsPage xMetrics={xMetrics} isLoadingXMetrics={isLoadingXMetrics} />
+                <TwitterAnalyticsPage
+                  xMetrics={xMetrics}
+                  xTweetsMetrics={xTweetsMetrics}
+                  isLoadingXMetrics={isLoadingXMetrics}
+                  isLoadingXTweetsMetrics={isLoadingXTweetsMetrics}
+                />
               </div>
             </CardContent>
           </Card>

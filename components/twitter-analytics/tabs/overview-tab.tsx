@@ -15,15 +15,14 @@ import {
   Bar,
 } from 'recharts';
 import { TrendingUp, TrendingDown, Users, Twitter, Heart, Eye } from 'lucide-react';
-import type { MockTwitterAnalytics } from '../interfaces';
-import { XMetrics } from '@/@types/analytics';
+import { XMetrics, XTweetsResponse } from '@/@types/analytics';
 
 interface OverviewTabProps {
-  data: MockTwitterAnalytics;
   xMetrics?: XMetrics;
+  xTweetsMetrics?: XTweetsResponse;
 }
 
-export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
+export function OverviewTab({ xMetrics, xTweetsMetrics }: OverviewTabProps) {
   if (!xMetrics) {
     return (
       <Card>
@@ -37,8 +36,47 @@ export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
     );
   }
 
-  const { account_summary, engagement_over_time } = data;
   const { public_metrics } = xMetrics;
+  if (!xTweetsMetrics || xTweetsMetrics.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No Tweet Metrics Available</CardTitle>
+          <CardDescription>
+            We couldn&apos;t load tweet performance data. Please try again later.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  const tweets = xTweetsMetrics;
+  const tweetAggregate = tweets.reduce(
+    (acc, tweet) => {
+      const metrics = tweet.public_metrics;
+      if (!metrics) {
+        return acc;
+      }
+      const impressions = metrics.impression_count ?? 0;
+      const engagements =
+        (metrics.like_count ?? 0) +
+        (metrics.reply_count ?? 0) +
+        (metrics.retweet_count ?? 0) +
+        (metrics.quote_count ?? 0);
+      acc.impressions += impressions;
+      acc.engagements += engagements;
+      return acc;
+    },
+    { impressions: 0, engagements: 0 },
+  );
+  const totalImpressionsFromTweets = tweetAggregate.impressions;
+  const engagementRateFromTweets =
+    tweetAggregate.impressions > 0
+      ? (tweetAggregate.engagements / tweetAggregate.impressions) * 100
+      : 0;
+  const totalImpressions = totalImpressionsFromTweets;
+  const totalEngagements = tweetAggregate.engagements;
+  const engagementRate = engagementRateFromTweets;
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -50,32 +88,60 @@ export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
     {
       title: 'Total Followers',
       value: formatNumber(public_metrics.followers_count),
-      change: account_summary.followers_change_30d,
-      changeLabel: '30 days',
       icon: Users,
       color: 'text-blue-500',
     },
     {
       title: 'Total Tweets',
-      value: formatNumber(public_metrics.tweet_count),
+      value: formatNumber(tweets.length),
+      subtitle: 'Recent tweets',
       icon: Twitter,
       color: 'text-sky-500',
     },
     {
       title: 'Total Impressions',
-      value: formatNumber(account_summary.total_impressions_30d),
-      subtitle: 'Last 30 days',
+      value: formatNumber(totalImpressions),
+      subtitle: totalImpressionsFromTweets ? 'Across recent tweets' : 'Last 30 days',
       icon: Eye,
       color: 'text-purple-500',
     },
     {
       title: 'Avg Engagement Rate',
-      value: account_summary.avg_engagement_rate.toFixed(1) + '%',
-      subtitle: 'Last 30 days',
+      value: engagementRate.toFixed(1) + '%',
+      subtitle: 'Across recent tweets',
       icon: Heart,
       color: 'text-pink-500',
     },
   ];
+
+  const tweetsByDate = tweets.reduce<
+    Record<string, { date: string; impressions: number; engagements: number; tweets: number }>
+  >((acc, tweet) => {
+    const metrics = tweet.public_metrics;
+    if (!metrics) {
+      return acc;
+    }
+    const date = new Date(tweet.created_at);
+    if (Number.isNaN(date.getTime())) {
+      return acc;
+    }
+    const dateKey = date.toISOString().split('T')[0];
+    if (!acc[dateKey]) {
+      acc[dateKey] = { date: dateKey, impressions: 0, engagements: 0, tweets: 0 };
+    }
+    acc[dateKey].impressions += metrics.impression_count ?? 0;
+    acc[dateKey].engagements +=
+      (metrics.like_count ?? 0) +
+      (metrics.reply_count ?? 0) +
+      (metrics.retweet_count ?? 0) +
+      (metrics.quote_count ?? 0);
+    acc[dateKey].tweets += 1;
+    return acc;
+  }, {});
+
+  const engagementOverTimeData = Object.values(tweetsByDate).sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
 
   return (
     <div className="space-y-6">
@@ -99,25 +165,6 @@ export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{card.value}</div>
-                {card.change !== undefined && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {card.change > 0 ? (
-                      <>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-green-500">
-                          +{formatNumber(card.change)} {card.changeLabel}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <TrendingDown className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-red-500">
-                          {formatNumber(card.change)} {card.changeLabel}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
                 {card.subtitle && (
                   <p className="text-xs text-muted-foreground mt-1">{card.subtitle}</p>
                 )}
@@ -135,7 +182,7 @@ export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={engagement_over_time}>
+            <LineChart data={engagementOverTimeData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="date"
@@ -181,7 +228,7 @@ export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={engagement_over_time}>
+            <BarChart data={engagementOverTimeData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="date"
@@ -232,10 +279,8 @@ export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
             <CardTitle className="text-sm">Total Engagements</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
-              {formatNumber(account_summary.total_engagements_30d)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
+            <p className="text-2xl font-bold">{formatNumber(totalEngagements)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Across recent tweets</p>
           </CardContent>
         </Card>
       </div>

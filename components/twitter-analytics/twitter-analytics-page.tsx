@@ -9,15 +9,19 @@ import { AudienceInsightsTab } from './tabs/audience-insights-tab';
 import { ContentAnalyticsTab } from './tabs/content-analytics-tab';
 import { AICopilotTab } from './tabs/ai-copilot-tab';
 import { MOCK_TWITTER_DATA } from './mock-data';
-import { XMetrics } from '@/@types/analytics';
+import { XMetrics, XTweetsResponse } from '@/@types/analytics';
 import { Skeleton } from '../ui/skeleton';
 type TwitterAnalyticsPageProps = {
   xMetrics?: XMetrics;
+  xTweetsMetrics?: XTweetsResponse;
   isLoadingXMetrics: boolean;
+  isLoadingXTweetsMetrics: boolean;
 };
 export function TwitterAnalyticsPage({
-  xMetrics: XMetrics,
+  xMetrics,
+  xTweetsMetrics,
   isLoadingXMetrics,
+  isLoadingXTweetsMetrics,
 }: TwitterAnalyticsPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
   if (isLoadingXMetrics) {
@@ -100,7 +104,7 @@ export function TwitterAnalyticsPage({
         {/* Tab Contents */}
         <div className="mt-4">
           <TabsContent value="overview" className="m-0">
-            <OverviewTab data={MOCK_TWITTER_DATA} xMetrics={XMetrics} />
+            <OverviewTab xMetrics={xMetrics} xTweetsMetrics={xTweetsMetrics} />
           </TabsContent>
 
           <TabsContent value="tweets" className="m-0">
