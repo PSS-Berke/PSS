@@ -9,9 +9,58 @@ import { AudienceInsightsTab } from './tabs/audience-insights-tab';
 import { ContentAnalyticsTab } from './tabs/content-analytics-tab';
 import { AICopilotTab } from './tabs/ai-copilot-tab';
 import { MOCK_TWITTER_DATA } from './mock-data';
-
-export function TwitterAnalyticsPage() {
+import { XMetrics, XTweetsResponse } from '@/@types/analytics';
+import { Skeleton } from '../ui/skeleton';
+type TwitterAnalyticsPageProps = {
+  xMetrics?: XMetrics;
+  xTweetsMetrics?: XTweetsResponse;
+  isLoadingXMetrics: boolean;
+  isLoadingXTweetsMetrics: boolean;
+};
+export function TwitterAnalyticsPage({
+  xMetrics,
+  xTweetsMetrics,
+  isLoadingXMetrics,
+  isLoadingXTweetsMetrics,
+}: TwitterAnalyticsPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  if (isLoadingXMetrics) {
+    return (
+      <div className="w-full h-full space-y-6">
+        <div className="sticky top-0 bg-background z-10 pb-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96 max-w-full" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-32 w-full" />
+            ))}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Skeleton className="h-[350px] w-full" />
+            <Skeleton className="h-[250px] w-full lg:h-[350px]" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full">
@@ -55,7 +104,7 @@ export function TwitterAnalyticsPage() {
         {/* Tab Contents */}
         <div className="mt-4">
           <TabsContent value="overview" className="m-0">
-            <OverviewTab data={MOCK_TWITTER_DATA} />
+            <OverviewTab xMetrics={xMetrics} xTweetsMetrics={xTweetsMetrics} />
           </TabsContent>
 
           <TabsContent value="tweets" className="m-0">
