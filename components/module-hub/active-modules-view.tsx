@@ -99,44 +99,6 @@ export function ActiveModulesView() {
     fetchUserModules();
   }, [token]);
 
-  // Twitter OAuth callback handler
-  useEffect(() => {
-    const handleTwitterCallback = async () => {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-
-      if (code && state && token) {
-        try {
-          console.log('Twitter OAuth callback detected:', { code, state });
-
-          const callbackUrl = `https://xnpm-iauo-ef2d.n7e.xano.io/api:pEDfedqJ/twitter/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
-
-          const response = await fetch(callbackUrl, {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            console.log('Twitter OAuth callback successful:', result);
-            await refreshUser();
-            await fetchTwitterAccounts();
-          } else {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('Twitter OAuth callback failed:', response.status, errorData);
-          }
-        } catch (error) {
-          console.error('Twitter OAuth callback error:', error);
-        }
-      }
-    };
-
-    handleTwitterCallback();
-  }, [searchParams, token, refreshUser]);
-
   const handleConnectGoogleAnalytics = async () => {
     const company_id = user?.company_id;
     const connect = await fetch(
@@ -193,6 +155,7 @@ export function ActiveModulesView() {
           authStartResponse.status,
           authStartResponse.statusText,
         );
+
         setIsConnectingX(false);
         return;
       }
