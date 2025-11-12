@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { apiDisconnectGoogleAnalytics } from '@/lib/services/AnalyticsService';
 import { AxiosError } from 'axios';
+import toast from '../ui/toast';
 
 type UserModule = {
   id: number;
@@ -193,6 +194,7 @@ export function ActiveModulesView() {
           authStartResponse.status,
           authStartResponse.statusText,
         );
+
         setIsConnectingX(false);
         return;
       }
@@ -207,6 +209,9 @@ export function ActiveModulesView() {
 
       window.open(authData.authorization_url, '_blank');
     } catch (error) {
+      toast.push('X account issue! Please try again.', {
+        placement: 'top-center',
+      });
       console.error('Error connecting X account:', error);
       setIsConnectingX(false);
     }

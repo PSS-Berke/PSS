@@ -24,7 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import { addDays, endOfDay, format, isToday, isWithinInterval } from 'date-fns';
-
+import { Notification } from '../ui/Notification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,7 @@ import { SocialMediaCalendar } from './social-media-calendar';
 import { UnicodeTextFormatter } from '@/components/ui/unicode-text-formatter';
 import { useSearchParams } from 'next/navigation';
 import { socialCopilotApi } from '@/lib/xano/api';
+import toast from '../ui/toast';
 
 type TabKey = 'calendar' | 'tasks';
 
@@ -224,9 +225,9 @@ export function SocialMediaModule({
         setSelectedPost((prev) =>
           prev
             ? {
-                ...prev,
-                scheduled_date: nextPublishDate,
-              }
+              ...prev,
+              scheduled_date: nextPublishDate,
+            }
             : prev,
         );
         setFormState((prev) => ({ ...prev, scheduled_date: nextPublishDate }));
@@ -895,6 +896,15 @@ export function SocialMediaModule({
                       );
                     }
                   } catch (error) {
+                    toast.push(
+                      <Notification type="error">
+                        Failed to post to Twitter. Please try again.
+                      </Notification>,
+                      {
+                        placement: 'top-center',
+
+                      },
+                    );
                     console.error('Failed to post to Twitter:', error);
                     return;
                   }
@@ -1183,7 +1193,7 @@ export function SocialMediaModule({
                         : activeFormData.content_type === 'all'
                           ? 'All Platforms'
                           : (activeFormData.content_type || 'LinkedIn').charAt(0).toUpperCase() +
-                            (activeFormData.content_type || 'LinkedIn').slice(1)}
+                          (activeFormData.content_type || 'LinkedIn').slice(1)}
                 </DialogTitle>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {isEditing
@@ -1415,8 +1425,8 @@ export function SocialMediaModule({
                     className={cn(
                       'w-full sm:w-auto',
                       activeFormData.content_type === 'x' &&
-                        activeFormData.published &&
-                        'bg-black hover:bg-black/90',
+                      activeFormData.published &&
+                      'bg-black hover:bg-black/90',
                     )}
                   >
                     {isSaving
