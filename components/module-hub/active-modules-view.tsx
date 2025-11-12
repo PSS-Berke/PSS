@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/dialog';
 import { apiDisconnectGoogleAnalytics } from '@/lib/services/AnalyticsService';
 import { AxiosError } from 'axios';
-import toast from '../ui/toast';
 
 type UserModule = {
   id: number;
@@ -100,8 +99,6 @@ export function ActiveModulesView() {
     fetchUserModules();
   }, [token]);
 
-
-
   const handleConnectGoogleAnalytics = async () => {
     const company_id = user?.company_id;
     const connect = await fetch(
@@ -173,9 +170,6 @@ export function ActiveModulesView() {
 
       window.open(authData.authorization_url, '_blank');
     } catch (error) {
-      toast.push('X account issue! Please try again.', {
-        placement: 'top-center',
-      });
       console.error('Error connecting X account:', error);
       setIsConnectingX(false);
     }

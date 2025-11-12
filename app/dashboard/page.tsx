@@ -31,7 +31,6 @@ import { SortableModuleWrapper } from '@/components/sortable-module-wrapper';
 import { getAuthHeaders } from '@/lib/xano/config';
 import { useSearchParams } from 'next/navigation';
 
-
 // Define module configuration
 interface ModuleConfig {
   id: number;
@@ -226,7 +225,6 @@ export default function DashboardPage() {
           if (response.ok) {
             const result = await response.json();
             console.log('Twitter OAuth callback successful:', result);
-
           } else {
             const errorData = await response.json().catch(() => ({}));
             console.error('Twitter OAuth callback failed:', response.status, errorData);
