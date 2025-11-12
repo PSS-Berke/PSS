@@ -46,6 +46,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { SocialMediaCalendar } from './social-media-calendar';
 import { UnicodeTextFormatter } from '@/components/ui/unicode-text-formatter';
 import { useSearchParams } from 'next/navigation';
+import { socialCopilotApi } from '@/lib/xano/api';
 
 type TabKey = 'calendar' | 'tasks';
 
@@ -655,7 +656,6 @@ export function SocialMediaModule({
       if (contentType === 'x' && formState.published && token) {
         try {
           // Step 1: Publish to X (Twitter)
-          const { socialCopilotApi } = await import('@/lib/xano/api');
           const imageName = attachedFile?.name ?? null;
           const company_id = user?.company_id || 0;
           await socialCopilotApi.postToTwitter(
