@@ -149,7 +149,7 @@ export function OverviewTab({ xMetrics, xTweetsMetrics }: OverviewTabProps) {
       <div>
         <h2 className="text-2xl font-bold">Account Overview</h2>
         <p className="text-muted-foreground mt-1">
-          @{xMetrics.username}'s account performance at a glance
+          @{xMetrics.username}&apos;s account performance at a glance
         </p>
       </div>
 
