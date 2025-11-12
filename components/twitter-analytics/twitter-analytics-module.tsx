@@ -31,8 +31,9 @@ export function TwitterAnalyticsModule({
     error: xMetricsError,
     isLoading: isLoadingXMetrics,
     mutate: mutateXMetrics,
-  } = useSWR<XMetrics>('/api:pEDfedqJ/twitter/user/analytics', () => apiGetXMetrics({ company_id: companyId }));
-
+  } = useSWR<XMetrics>('/api:pEDfedqJ/twitter/user/analytics', () =>
+    apiGetXMetrics({ company_id: companyId }),
+  );
 
   console.log({ xMetrics, isLoadingXMetrics, xMetricsError });
   useEffect(() => {

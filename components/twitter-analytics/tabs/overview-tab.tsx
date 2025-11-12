@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   LineChart,
   Line,
@@ -17,13 +16,29 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, Users, Twitter, Heart, Eye } from 'lucide-react';
 import type { MockTwitterAnalytics } from '../interfaces';
+import { XMetrics } from '@/@types/analytics';
 
 interface OverviewTabProps {
   data: MockTwitterAnalytics;
+  xMetrics?: XMetrics;
 }
 
-export function OverviewTab({ data }: OverviewTabProps) {
+export function OverviewTab({ data, xMetrics }: OverviewTabProps) {
+  if (!xMetrics) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No X Metrics Available</CardTitle>
+          <CardDescription>
+            Connect your X account to view live analytics in the overview.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   const { account_summary, engagement_over_time } = data;
+  const { public_metrics } = xMetrics;
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -34,7 +49,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
   const summaryCards = [
     {
       title: 'Total Followers',
-      value: formatNumber(account_summary.followers_count),
+      value: formatNumber(public_metrics.followers_count),
       change: account_summary.followers_change_30d,
       changeLabel: '30 days',
       icon: Users,
@@ -42,7 +57,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
     },
     {
       title: 'Total Tweets',
-      value: formatNumber(account_summary.tweet_count),
+      value: formatNumber(public_metrics.tweet_count),
       icon: Twitter,
       color: 'text-sky-500',
     },
@@ -67,7 +82,9 @@ export function OverviewTab({ data }: OverviewTabProps) {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Account Overview</h2>
-        <p className="text-muted-foreground mt-1">Your Twitter/X account performance at a glance</p>
+        <p className="text-muted-foreground mt-1">
+          @{xMetrics.username}'s account performance at a glance
+        </p>
       </div>
 
       {/* Summary Cards Grid */}
@@ -195,7 +212,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
             <CardTitle className="text-sm">Following</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatNumber(account_summary.following_count)}</p>
+            <p className="text-2xl font-bold">{formatNumber(public_metrics.following_count)}</p>
             <p className="text-xs text-muted-foreground mt-1">Accounts you follow</p>
           </CardContent>
         </Card>
@@ -205,7 +222,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
             <CardTitle className="text-sm">Listed</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatNumber(account_summary.listed_count)}</p>
+            <p className="text-2xl font-bold">{formatNumber(public_metrics.listed_count)}</p>
             <p className="text-xs text-muted-foreground mt-1">Times added to lists</p>
           </CardContent>
         </Card>
