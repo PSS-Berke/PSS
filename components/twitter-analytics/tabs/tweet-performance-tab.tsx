@@ -70,6 +70,10 @@ const buildTweetMetrics = (tweets: XTweetsResponse): ProcessedTweet[] => {
 };
 
 export function TweetPerformanceTab({ tweets, isLoading }: TweetPerformanceTabProps) {
+  const [sortBy, setSortBy] = useState<'impressions' | 'engagement_rate' | 'engagements'>(
+    'impressions',
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -90,10 +94,6 @@ export function TweetPerformanceTab({ tweets, isLoading }: TweetPerformanceTabPr
   }
 
   const processedTweets = buildTweetMetrics(tweets);
-
-  const [sortBy, setSortBy] = useState<'impressions' | 'engagement_rate' | 'engagements'>(
-    'impressions',
-  );
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
