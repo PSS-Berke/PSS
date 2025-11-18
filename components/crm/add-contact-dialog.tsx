@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Plus } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
 import { useCrm } from '@/lib/xano/crm-context';
 import { useAuth } from '@/lib/xano/auth-context';
 import { AddCustomerDialog } from './add-customer-dialog';
@@ -38,9 +38,9 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
   const { createContact, fetchCustomers } = useCrm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
-  const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [hasFetchedCustomers, setHasFetchedCustomers] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,10 +52,8 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
 
   const handleFetchCustomers = async (forceRefetch = false) => {
     // Don't fetch if already loading
-    if (isLoadingCustomers || (!forceRefetch && customers.length > 0)) {
-      if (!isLoadingCustomers) {
-        console.log('Customers already loaded, skipping fetch.'); 
-      }
+    if (isLoadingCustomers || (!forceRefetch && hasFetchedCustomers)) {
+      console.log('Customers already loaded or loading, skipping fetch.');
       return;
     }
     
@@ -68,6 +66,7 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
       console.log('Fetched customers:', customersList); 
       
       setCustomers(customersList);
+      setHasFetchedCustomers(true);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       setCustomers([]);
@@ -112,6 +111,12 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
     }
   };
 
+
+  useEffect(() => {
+    if (open) {
+      handleFetchCustomers(true);
+    }
+  }, [open]);
 
   return (
     <>
@@ -158,47 +163,33 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
                 <div className="space-y-2">
                   <Label htmlFor="customer">Customer *</Label>
                   <div className="flex gap-2">
-                    <Select
-                      value={formData.crm_customer_id > 0 ? formData.crm_customer_id.toString() : ""}
-                      onValueChange={(value) => {
-                        if (value && value !== "loading" && value !== "no-customers") {
-                          setFormData((prev) => ({ ...prev, crm_customer_id: parseInt(value) }));
-                        }
-                        setIsSelectOpen(false);
-                      }}
-                      open={isSelectOpen}
-                      onOpenChange={(open) => {
-                        setIsSelectOpen(open);
-                        if (open) {
-                          handleFetchCustomers();
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue
-                          placeholder={isLoadingCustomers ? "Loading customers..." : "Select customer"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent position="popper">
+                    <div className="flex-1">
+                      <select
+                        id="customer"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={formData.crm_customer_id > 0 ? formData.crm_customer_id.toString() : ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value && value !== "loading" && value !== "no-customers") {
+                            setFormData(prev => ({ ...prev, crm_customer_id: parseInt(value) }));
+                          }
+                        }}
+                        disabled={isLoadingCustomers || customers.length === 0}
+                      >
+                        <option value="">Select customer</option>
                         {isLoadingCustomers ? (
-                          <SelectItem value="loading" disabled>
-                            Loading customers...
-                          </SelectItem>
+                          <option value="loading" disabled>Loading customers...</option>
                         ) : customers.length === 0 ? (
-                          <SelectItem value="no-customers" disabled>
-                            No customers available
-                          </SelectItem>
+                          <option value="no-customers" disabled>No customers available</option>
                         ) : (
-                          <>
-                            {customers.map((customer) => (
-                              <SelectItem key={customer.id} value={customer.id.toString()}>
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                          </>
+                          customers.map((customer) => (
+                            <option key={customer.id} value={customer.id.toString()}>
+                              {customer.name}
+                            </option>
+                          ))
                         )}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                    </div>
                     <Button
                       type="button"
                       variant="outline"
@@ -221,7 +212,7 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select stage" />
                     </SelectTrigger>
                     <SelectContent>
                       {STAGES.map((stage) => (
