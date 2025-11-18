@@ -17,7 +17,7 @@ import { useAuth } from '@/lib/xano/auth-context';
 interface AddCustomerDialogProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newCustomerId: number) => void;
 }
 
 export function AddCustomerDialog({ open, onClose, onSuccess }: AddCustomerDialogProps) {
@@ -30,11 +30,14 @@ export function AddCustomerDialog({ open, onClose, onSuccess }: AddCustomerDialo
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await createCustomer({
+      const newCustomer = await createCustomer({
         name,
         company_id: user?.company_id || 0,
       });
-      onSuccess();
+      
+      if (newCustomer.id) {
+        onSuccess(newCustomer.id);
+      }
       setName('');
     } catch (error) {
       console.error('Failed to create customer:', error);

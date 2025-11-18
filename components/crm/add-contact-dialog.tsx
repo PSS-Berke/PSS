@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -50,9 +50,12 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
     expected_close_date: '',
   });
 
-  const handleFetchCustomers = async () => {
+  const handleFetchCustomers = async (forceRefetch = false) => {
     // Don't fetch if already loading
-    if (isLoadingCustomers) {
+    if (isLoadingCustomers || (!forceRefetch && customers.length > 0)) {
+      if (!isLoadingCustomers) {
+        console.log('Customers already loaded, skipping fetch.'); 
+      }
       return;
     }
     
@@ -61,6 +64,9 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
       const data = await apiGetCrmCustomers();
       // Handle case where API might return data wrapped in an object
       const customersList = Array.isArray(data) ? data : (data as any)?.data || [];
+      
+      console.log('Fetched customers:', customersList); 
+      
       setCustomers(customersList);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
@@ -173,7 +179,7 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
                           placeholder={isLoadingCustomers ? "Loading customers..." : "Select customer"}
                         />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper">
                         {isLoadingCustomers ? (
                           <SelectItem value="loading" disabled>
                             Loading customers...
@@ -256,16 +262,14 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
       <AddCustomerDialog
         open={showAddCustomer}
         onClose={() => setShowAddCustomer(false)}
-        onSuccess={async () => {
-          await fetchCustomers();
-          // Refresh local customers list
-          try {
-            const data = await apiGetCrmCustomers();
-            const customersList = Array.isArray(data) ? data : (data as any)?.data || [];
-            setCustomers(customersList);
-          } catch (error) {
-            console.error('Failed to refresh customers:', error);
-          }
+        onSuccess={async (newCustomerId: number) => {
+          await handleFetchCustomers(true);
+          
+          setFormData((prev) => ({ 
+            ...prev, 
+            crm_customer_id: newCustomerId 
+          }));
+
           setShowAddCustomer(false);
         }}
       />
