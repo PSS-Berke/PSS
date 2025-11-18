@@ -38,6 +38,7 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
   const { createContact, fetchCustomers } = useCrm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,15 +59,8 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
     setIsLoadingCustomers(true);
     try {
       const data = await apiGetCrmCustomers();
-      console.log('Fetched customers data:', data);
-      console.log('Data type:', typeof data);
-      console.log('Is array:', Array.isArray(data));
-      
       // Handle case where API might return data wrapped in an object
       const customersList = Array.isArray(data) ? data : (data as any)?.data || [];
-      console.log('Customers list:', customersList);
-      console.log('Customers count:', customersList.length);
-      
       setCustomers(customersList);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
@@ -159,9 +153,11 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
                   <Label htmlFor="customer">Customer *</Label>
                   <div className="flex gap-2">
                     <Select
-                      value={formData.crm_customer_id > 0 ? formData.crm_customer_id.toString() : undefined}
+                      value={formData.crm_customer_id > 0 ? formData.crm_customer_id.toString() : ""}
                       onValueChange={(value) => {
-                        setFormData((prev) => ({ ...prev, crm_customer_id: parseInt(value) }));
+                        if (value && value !== "loading" && value !== "no-customers") {
+                          setFormData((prev) => ({ ...prev, crm_customer_id: parseInt(value) }));
+                        }
                         setIsSelectOpen(false);
                       }}
                       open={isSelectOpen}
@@ -173,7 +169,9 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
                       }}
                     >
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder={isLoadingCustomers ? "Loading customers..." : "Select customer"} />
+                        <SelectValue
+                          placeholder={isLoadingCustomers ? "Loading customers..." : "Select customer"}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {isLoadingCustomers ? (
@@ -181,20 +179,17 @@ export function AddContactDialog({ open, onClose, onSuccess }: AddContactDialogP
                             Loading customers...
                           </SelectItem>
                         ) : customers.length === 0 ? (
-                          <div className="px-2 py-6 text-center">
-                            <p className="text-sm font-semibold text-destructive">
-                              ⚠️ No customers available
-                            </p>
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              Click the + button to add a customer first
-                            </p>
-                          </div>
+                          <SelectItem value="no-customers" disabled>
+                            No customers available
+                          </SelectItem>
                         ) : (
-                          customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id.toString()}>
-                              {customer.name}
-                            </SelectItem>
-                          ))
+                          <>
+                            {customers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id.toString()}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
+                          </>
                         )}
                       </SelectContent>
                     </Select>
