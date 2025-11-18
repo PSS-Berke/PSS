@@ -21,11 +21,13 @@ import { BattleCardModule } from '@/components/battle-card/battle-card-module';
 import { LinkedInModule } from '@/components/linkedin/linkedin-module';
 import { SocialMediaModule } from '@/components/social/social-media-module';
 import { AnalyticsModule } from '@/components/analytics/analytics-module';
+import { CrmModule } from '@/components/crm/crm-module';
 import { CallPrepProvider } from '@/lib/xano/call-prep-context';
 import { BattleCardProvider } from '@/lib/xano/battle-card-context';
 import { LinkedInProvider } from '@/lib/xano/linkedin-context';
 import { SocialMediaProvider } from '@/lib/xano/social-media-context';
 import { WixAnalyticsProvider } from '@/lib/xano/wix-analytics-context';
+import { CrmProvider } from '@/lib/xano/crm-context';
 import { useAuth } from '@/lib/xano/auth-context';
 import { SortableModuleWrapper } from '@/components/sortable-module-wrapper';
 import { getAuthHeaders } from '@/lib/xano/config';
@@ -48,6 +50,7 @@ const ALL_MODULES: ModuleConfig[] = [
   { id: 5, sortId: 'social', Component: SocialMediaModule, Provider: SocialMediaProvider },
   { id: 6, sortId: 'callprep', Component: CallPrepModule, Provider: CallPrepProvider },
   { id: 7, sortId: 'battlecard', Component: BattleCardModule, Provider: BattleCardProvider },
+  { id: 8, sortId: 'crm', Component: CrmModule, Provider: CrmProvider },
 ];
 
 export default function DashboardPage() {
